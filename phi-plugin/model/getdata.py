@@ -127,16 +127,16 @@ class GetData:
                 return [0, 0]
             err = await user.buildRecord()
             if err:
-                e.send(f"以下曲目无信息，可能导致b19显示错误\n{chr(10).join(err)}", reply=True)
+                e.send(f"以下曲目无信息，可能导致b19显示错误\n{chr(10).join(err)}", reply_to=True)
         except Exception as ex:
             error_msg = f"更新失败！QAQ\n{ex}"
-            e.send(error_msg, reply=True)
+            e.send(error_msg, reply_to=True)
             logger.error(str(ex))
             return False
         try:
             await self.putsave(user_id, user)
         except Exception as ex:
-            e.send(f"保存存档失败！{ex}", reply=True)
+            e.send(f"保存存档失败！{ex}", reply_to=True)
             logger.error(str(ex))
             return False
         now = Save(user)

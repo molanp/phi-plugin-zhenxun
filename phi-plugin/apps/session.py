@@ -83,7 +83,7 @@ async def _(session: Uninfo, sessionToken: str | None):
                     f"二维码有效期：{expires_in // 60} 分钟",
                 ]
             ).send(
-                reply=True,
+                reply_to=True,
             )
 
             # 定期检查扫描状态
@@ -101,26 +101,26 @@ async def _(session: Uninfo, sessionToken: str | None):
                     await PhigrosUserData.set_session_token(
                         session.user.id, session_token
                     )
-                    await bind.send("绑定成功！", reply=True)
+                    await bind.send("绑定成功！", reply_to=True)
                     return
                 await asyncio.sleep(2)
             await qr.recall(index=0)
-            await bind.send("二维码已过期，请重新绑定！", reply=True)
+            await bind.send("二维码已过期，请重新绑定！", reply_to=True)
 
         except Exception as e:
             logger.error("绑定失败", session=session, e=e)
-            await bind.send(f"绑定失败：{e!s}", reply=True)
+            await bind.send(f"绑定失败：{e!s}", reply_to=True)
     else:
         if len(sessionToken) != 25 or not re.match(r"^[a-zA-Z0-9]+$", sessionToken):
-            await bind.send("无效的 sessionToken 格式！", reply=True)
+            await bind.send("无效的 sessionToken 格式！", reply_to=True)
             return
         try:
             # 保存 sessionToken
             await PhigrosUserData.set_session_token(session.user.id, sessionToken)
-            await bind.send("绑定成功！", reply=True)
+            await bind.send("绑定成功！", reply_to=True)
         except Exception as e:
             logger.error("绑定失败", session=session, e=e)
-            await bind.send(f"绑定失败：{e!s}", reply=True)
+            await bind.send(f"绑定失败：{e!s}", reply_to=True)
 
 
 @update.handle()
@@ -128,7 +128,7 @@ async def _(session: Uninfo):
     """更新存档"""
     session_token = await PhigrosUserData.get_session_token(session.user.id)
     if session_token is None:
-        await update.send("未绑定 sessionToken，请先绑定！", reply=True)
+        await update.send("未绑定 sessionToken，请先绑定！", reply_to=True)
         return
 
     try:
