@@ -1,0 +1,284 @@
+{{extend defaultLayout}}
+{{block 'css'}}
+
+<link rel="stylesheet" href="{{_res_path}}html/userinfo/userinfo.css">
+
+{{/block}}
+{{block 'main'}}
+
+    {{if background}}
+    <div class="background">
+        <img src="{{background}}" alt="{{background}}">
+    </div>
+    {{/if}}
+    <div class="left">
+        <div class="Player_Info">
+            <p>PLAYER_INFO</p>
+        </div>
+        <div class="Player_Info-after"></div>
+        <div class="basic-box">
+            <div class="basic-img">
+                <img src="{{gameuser.backgroundurl}}" alt="{{gameuser.backgroundurl}}">
+            </div>
+            <div class="Player_Id">
+                <div class="avatar">
+                    <img src="{{_res_path}}html/avatar/{{gameuser.avatar}}.png" alt="{{gameuser.avatar}}">
+                </div>
+                <div class="Player_Id-box">
+                    <div class="Player_Id-left">
+                        <p>ID</p>
+                    </div>
+                    <div class="Player_Id-right">
+                        <p name="pvis">{{#gameuser.PlayerId}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="left_title">
+            <div class="left_title-left">
+                <p>PLAYER_DETAIL</p>
+            </div>
+        </div>
+        <div class="Player_data_line">
+            <div class="Player_data_line-left">
+                <div class="Player_data_title" id="Player_data_left">
+                    <p>RKS</p>
+                </div>
+                <div class="Player_data_value" id="Player_data_left">
+                    <p>{{gameuser.rks.toFixed(4)}}</p>
+                </div>
+            </div>
+            <div class="Player_data_line-right">
+                <div class="Player_data_title" id="Player_data_right">
+                    <p>CLG MOD</p>
+                </div>
+                <div class="Challenge" id="Challenge{{gameuser.CLGMOD ? '1' : '2'}}">
+                    <img src="{{_res_path}}html/otherimg/{{gameuser.ChallengeMode}}.png"
+                        alt="{{gameuser.ChallengeMode}}">
+                    <span>{{gameuser.ChallengeModeRank}}</span>
+                </div>
+                {{if gameuser.CLGMOD}}
+                <div class="Player_data_value CLG{{gameuser.EX ? ' colorful' : ''}}" id="Player_data_right">
+                    <p name="pvis">{{gameuser.CLGMOD}}</p>
+                </div>
+                {{/if}}
+            </div>
+        </div>
+        <div class="Player_data_box" id="data_box">
+            <div class="Player_box_title">
+                <p>DATA</p>
+            </div>
+            <div class="Player_box_value">
+                <p name="pvis">{{gameuser.data}}</p>
+            </div>
+        </div>
+        <div class="Player_profile_box">
+            {{if gameuser.selfIntro}}
+            <p color='white' name="pvis">{{#gameuser.selfIntro}}</p>
+            {{else}}
+            <p color='skyblue' name="pvis">{{'介个人的简介被胡桃吃掉惹……'}}</p>
+            {{/if}}
+        </div>
+        <div class="createdbox">
+            <div class="phi-plugin">
+                <p>{{_plugin}}</p>
+            </div>
+            <div class="ver">
+                <p>{{Version.ver}}</p>
+            </div>
+        </div>
+    </div>
+    <div class="right">
+        <div class="file-content">
+            <div class="file-content-left">
+                <p>PLAYER_DATA</p>
+            </div>
+        </div>
+        <div class="data_title">
+            <div class="data_title-left">
+                <p>RKS_HISTORY</p>
+            </div>
+        </div>
+        <div class="svg-box">
+            {{if rks_history[0]}}
+            <div class="value_box">
+                <p>{{rks_range[1].toFixed(4)}}</p>
+                <p>{{rks_range[0].toFixed(4)}}</p>
+            </div>
+            <div class="line-box">
+                <div class="line">
+                    <svg>
+                        <defs>
+                            <marker id="dot" viewBox="0 0 10 10" markerWidth="8" markerHeight="8" refX="2" refY="2">
+                                <circle cx="2" cy="2" r="1"></circle>
+                            </marker>
+                        </defs>
+                        {{each rks_history}}
+                        <line x1="{{$value[0]}}%" y1="{{$value[1]}}%" x2="{{$value[2]}}%" y2="{{$value[3]}}%">
+                        </line>
+                        {{/each}}
+                    </svg>
+                </div>
+                <div class="date_box">
+                    <p>{{rks_date[0]}}</p>
+                    <p>{{rks_date[1]}}</p>
+                </div>
+            </div>
+            {{else}}
+            <p>NO_INFO</p>
+            {{/if}}
+        </div>
+        <div class="data_title">
+            <div class="data_title-left">
+                <p>DATA_HISTORY</p>
+            </div>
+        </div>
+        <div class="svg-box">
+            {{if data_history[0]}}
+            <div class="value_box">
+                <p>{{data_range[1]}}</p>
+                <p>{{data_range[0]}}</p>
+            </div>
+            <div class="line-box">
+                <div class="line">
+                    <svg>
+                        <defs>
+                            <marker id="dot" viewBox="0 0 10 10" markerWidth="8" markerHeight="8" refX="2" refY="2">
+                                <circle cx="2" cy="2" r="1"></circle>
+                            </marker>
+                        </defs>
+                        {{each data_history}}
+                        <line x1="{{$value[0]}}%" y1="{{$value[1]}}%" x2="{{$value[2]}}%" y2="{{$value[3]}}%">
+                        </line>
+                        {{/each}}
+                    </svg>
+                </div>
+                <div class="date_box">
+                    <p>{{data_date[0]}}</p>
+                    <p>{{data_date[1]}}</p>
+                </div>
+            </div>
+            {{else}}
+            <p>NO_INFO</p>
+            {{/if}}
+        </div>
+        <div class="data_title">
+            <div class="data_title-left">
+                <p>Limit-ACC_RKS</p>
+            </div>
+            <p>将您的成绩中所有 ACC【小于某一值(横坐标)】的成绩筛去后计算得到的 RKS 值</p>
+        </div>
+        <div class="svg-box">
+            {{if acc_rks_data[0]}}
+            <div class="value_box">
+                <p>{{((acc_rks_range[1] - acc_rks_range[0]) / 4 * 4 + acc_rks_range[0]).toFixed(4)}}</p>
+                <p>{{((acc_rks_range[1] - acc_rks_range[0]) / 4 * 3 + acc_rks_range[0]).toFixed(4)}}</p>
+                <p>{{((acc_rks_range[1] - acc_rks_range[0]) / 4 * 2 + acc_rks_range[0]).toFixed(4)}}</p>
+                <p>{{((acc_rks_range[1] - acc_rks_range[0]) / 4 * 1 + acc_rks_range[0]).toFixed(4)}}</p>
+                <p>{{((acc_rks_range[1] - acc_rks_range[0]) / 4 * 0 + acc_rks_range[0]).toFixed(4)}}</p>
+            </div>
+            <div class="line-box">
+                <div class="line">
+                    <svg>
+                        <defs>
+                            <marker id="dot" viewBox="0 0 10 10" markerWidth="8" markerHeight="8" refX="2" refY="2">
+                                <circle cx="2" cy="2" r="1"></circle>
+                            </marker>
+                        </defs>
+                        {{each acc_rks_data}}
+                        <line x1="{{$value[0]}}%" y1="{{$value[1]}}%" x2="{{$value[2]}}%" y2="{{$value[3]}}%">
+                        </line>
+                        {{/each}}
+                    </svg>
+                </div>
+                <div class="date_box">
+                    {{each acc_rks_AccRange acc}}
+                    <p style="position: absolute;left: {{acc[1]}}%;white-space: nowrap;width: 0px;display: flex;justify-content: center;">
+                        {{acc[0]%1==0?acc[0]:acc[0].toFixed(2)}}%</p>
+                    {{/each}}
+                </div>
+            </div>
+            {{else}}
+            <p>NO_INFO</p>
+            {{/if}}
+        </div>
+        <div class="data_title">
+            <div class="data_title-left">
+                <p>STATS</p>
+            </div>
+        </div>
+        <div class="stats-box">
+            {{each userstats e}}
+            <div class="one-stats-box" id="{{e.Rating}}">
+                <div class="rank">
+                    <p>{{e.tatle}}</p>
+                </div>
+                <div class="stats-up">
+                    <div class="Rating"> <img src="{{_res_path}}html/otherimg/{{e.Rating}}.png" alt="{{e.Rating}}">
+                    </div>
+                    <div class="stats-group">
+                        <div class="stats-group-real">
+                            <p>{{e.unlock}}</p>
+                        </div>
+                        <div class="stats-group-tot">
+                            <p id="{{e.Rating}}p">/{{e.tot}}</p>
+                        </div>
+                    </div>
+                    <div class="stats-rating-group">
+                        <div class="rating-group">
+                            <div class="rating-value">
+                                <p>{{e.cleared}}</p>
+                            </div>
+                            <div class="rating-tatle">
+                                <p id="{{e.Rating}}p">Cleared</p>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-value">
+                                <p>{{e.fc}}</p>
+                            </div>
+                            <div class="rating-tatle">
+                                <p id="{{e.Rating}}p">FC</p>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <div class="rating-value">
+                                <p>{{e.phi}}</p>
+                            </div>
+                            <div class="rating-tatle">
+                                <p id="{{e.Rating}}p">PHI</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="stats-group">
+                    <div class="stats-group-real">
+                        <p>{{e.real_score}}</p>
+                    </div>
+                    <div class="stats-group-tot">
+                        <p id="{{e.Rating}}p">/{{e.tot_score}}</p>
+                    </div>
+                </div>
+                <div class="stats-score">
+                    <div class="stats-group">
+                        <div class="stats-group-real">
+                            <p>{{e.highest.toFixed(2)}}</p>
+                        </div>
+                        <div class="stats-group-tot">
+                            <p id="{{e.Rating}}p">Highest</p>
+                        </div>
+                    </div>
+                    <div class="stats-group">
+                        <div class="stats-group-real">
+                            <p>{{e.lowest.toFixed(2)}}</p>
+                        </div>
+                        <div class="stats-group-tot">
+                            <p id="{{e.Rating}}p">Lowest</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{/each}}
+        </div>
+    </div>
+{{/block}}

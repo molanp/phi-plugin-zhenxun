@@ -1,0 +1,314 @@
+{{extend defaultLayout}}
+{{block 'css'}}
+
+<link rel="stylesheet" href="{{_res_path}}html/lvsco/lvsco.css">
+
+{{/block}}
+
+{{block 'main'}}
+
+    <div class="full-box">
+        <div class="left">
+            <div class="left-top">
+                <img src="{{illustration}}" alt="{{illustration}}">
+            </div>
+            <div class="left-content">
+                <div class="left-content-left">
+                </div>
+                <div class="left-content-right"></div>
+            </div>
+            <div class="left-mid">
+                <div class="left-mid-box-{{tot.at ? 'true' : 'false'}}">
+                    <div class="rank-left">
+                        <p>AT</p>
+                    </div>
+                    {{if tot.at}}
+                    <div class="rank-right">
+                        <p>{{tot.at}} charts</p>
+                        <p>{{real.at}} unlocked</p>
+                    </div>
+                    {{/if}}
+                </div>
+                <div class="left-mid-box-{{tot.in ? 'true' : 'false'}}">
+                    <div class="rank-left">
+                        <p>IN</p>
+                    </div>
+                    {{if tot.in}}
+                    <div class="rank-right">
+                        <p>{{tot.in}} charts</p>
+                        <p>{{real.in}} unlocked</p>
+                    </div>
+                    {{/if}}
+                </div>
+                <div class="left-mid-box-{{tot.hd ? 'true' : 'false'}}">
+                    <div class="rank-left">
+                        <p>HD</p>
+                    </div>
+                    {{if tot.hd}}
+                    <div class="rank-right">
+                        <p>{{tot.hd}} charts</p>
+                        <p>{{real.hd}} unlocked</p>
+                    </div>
+                    {{/if}}
+                </div>
+                <div class="left-mid-box-{{tot.ez ? 'true' : 'false'}}">
+                    <div class="rank-left">
+                        <p>EZ</p>
+                    </div>
+                    {{if tot.ez}}
+                    <div class="rank-right">
+                        <p>{{tot.ez}} charts</p>
+                        <p>{{real.ez}} unlocked</p>
+                    </div>
+                    {{/if}}
+                </div>
+            </div>
+            <div class="left-mid-bottom"></div>
+            <div class="createdbox">
+                <div class="phi-plugin">
+                    <p>{{_plugin}}</p>
+                </div>
+                <div class="ver">
+                    <p>{{Version.ver}}</p>
+                </div>
+            </div>
+        </div>
+        <div class="left-up">
+            <div class="left-top">
+                <div class="illustration">
+                    <img src="{{illustration}}" alt="{{illustration}}">
+                </div>
+                <div class="user_info">
+                    <div class="info_up">
+                        <div class="avatar">
+                            <img src="{{_res_path}}html//avatar/{{avatar}}.png" alt="{{avatar}}">
+                        </div>
+                        <div class="basic_info">
+                            <div class="user_name">
+                                <p name="pvis">{{#PlayerId}}</p>
+                            </div>
+                            <div class="user_rks">
+                                <div class="player_rks">
+                                    <p>{{rks.toFixed(4)}}</p>
+                                </div>
+                                <div class="Challenge"><img src="{{_res_path}}html//otherimg/{{ChallengeMode}}.png"
+                                        alt="{{ChallengeMode}}">
+                                    <p>{{ChallengeModeRank}}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="user_info_right"></div>
+                    </div>
+                </div>
+                <div class="difficulty_box">
+                    <div class="difficulty_box_p">
+                        <p>已选定数区间</p>
+                    </div>
+                    <div class="difficulty_value" style="margin-left: {{range.left}}%;">
+                        <p>{{range.bottom}}</p>
+                    </div>
+                    <div class="difficulty_bar-out">
+                        <div class="difficulty_bar-in" style="margin-left: {{range.left}}%;width: {{range.length}}%;">
+                        </div>
+                    </div>
+                    <div class="difficulty_value" style="margin-left: {{range.left + range.length}}%;">
+                        <p>{{range.top}}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="left-content">
+                <div class="left-content-left">
+                    <p>CONTENT</p>
+                </div>
+                <div class="left-content-right"></div>
+            </div>
+            <div class="left-mid">
+                <div class="left-up-mid-box-{{tot.at ? 'true' : 'false'}}">
+                    <div class="rank-left">
+                        <p>AT</p>
+                    </div>
+                    {{if tot.at}}
+                    <div class="rank-right">
+                        <p>{{tot.at}} charts</p>
+                        <p>{{real.at}} unlocked</p>
+                    </div>
+                    {{/if}}
+                </div>
+                <div class="left-up-mid-box-{{tot.in ? 'true' : 'false'}}">
+                    <div class="rank-left">
+                        <p>IN</p>
+                    </div>
+                    {{if tot.in}}
+                    <div class="rank-right">
+                        <p>{{tot.in}} charts</p>
+                        <p>{{real.in}} unlocked</p>
+                    </div>
+                    {{/if}}
+                </div>
+                <div class="left-up-mid-box-{{tot.hd ? 'true' : 'false'}}">
+                    <div class="rank-left">
+                        <p>HD</p>
+                    </div>
+                    {{if tot.hd}}
+                    <div class="rank-right">
+                        <p>{{tot.hd}} charts</p>
+                        <p>{{real.hd}} unlocked</p>
+                    </div>
+                    {{/if}}
+                </div>
+                <div class="left-up-mid-box-{{tot.ez ? 'true' : 'false'}}">
+                    <div class="rank-left">
+                        <p>EZ</p>
+                    </div>
+                    {{if tot.ez}}
+                    <div class="rank-right">
+                        <p>{{tot.ez}} charts</p>
+                        <p>{{real.ez}} unlocked</p>
+                    </div>
+                    {{/if}}
+                </div>
+            </div>
+            <div class="left-up-mid-bottom"></div>
+        </div>
+
+        <div class="right" id="{{rating.tot}}">
+            <div class="file-content">
+                <div class="file-content-left">
+                    <p>FILE_CONTENT</p>
+                </div>
+                <div class="progress_bar-out">
+                    <div class="progress_bar-in-phi" style="width: {{progress_phi}}%;">
+                        <p>{{progress_phi}}% PHI.</p>
+                    </div>
+                    <div class="progress_bar-in-fc" style="width: {{progress_fc - progress_phi}}%;">
+                        <p>{{progress_fc}}% FullCombo.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="right_title">
+                <p>TOT</p>
+                <div class="title_group">
+                    <div class="title_group-real">
+                        <p>{{real.songs}}</p>
+                    </div>
+                    <div class="title_group-tot">
+                        <p>/{{tot.songs}} songs</p>
+                    </div>
+                </div>
+                <div class="title_group">
+                    <div class="title_group-real">
+                        <p>{{real.charts}}</p>
+                    </div>
+                    <div class="title_group-tot">
+                        <p>/{{tot.charts}} charts</p>
+                    </div>
+                </div>
+            </div>
+            <div class="right_content">
+                <div class="right_content-title">
+                    <p>收集日期</p>
+                </div>
+                <p>{{date}}</p>
+                <div class="right_content-title">
+                    <p>保管单位</p>
+                </div>
+                <p>{{#PlayerId}}</p>
+                <div class="right_content-title">
+                    <p>等级</p>
+                </div>
+                <p>{{rks.toFixed(8)}}</p>
+            </div>
+            <div class="tot_Rating">
+                <img src="{{_res_path}}html/otherimg/{{rating.tot}}.png" alt="{{rating.tot}}">
+            </div>
+            <div class="title_group" id="score">
+                <div class="title_group-real" id="real-score">
+                    <p>{{real.score}}</p>
+                </div>
+                <div class="title_group-tot" id="tot-score">
+                    <p>/{{tot.score}}</p>
+                </div>
+            </div>
+            <div class="title_group" id="highest">
+                <div class="title_group-real" id="real-highlow">
+                    <p>{{highest.toFixed(4)}}</p>
+                </div>
+                <div class="title_group-tot" id="tot-highlow">
+                    <p>Highest</p>
+                </div>
+            </div>
+            <div class="title_group" id="lowest">
+                <div class="title_group-real" id="real-highlow">
+                    <p>{{lowest.toFixed(4)}}</p>
+                </div>
+                <div class="title_group-tot" id="tot-highlow">
+                    <p>Lowest</p>
+                </div>
+            </div>
+            <div class="tot_acc-box">
+                <div class="tot_acc-left">
+                    {{if rating.tot == 'phi'}}
+                    <span style="color: rgb(255, 253, 44);">{{tot_acc - (tot_acc % 1)}}</span>
+                    {{else if rating.tot == 'FC'}}
+                    <span style="color: rgb(0, 132, 255);">{{tot_acc - (tot_acc % 1)}}</span>
+                    {{else}}
+                    <span>{{tot_acc - (tot_acc % 1)}}</span>
+                    {{/if}}
+                </div>
+                <div class="tot_acc-right">
+                    <span id="acc_word">ACC</span>
+                    {{if rating.tot == 'phi'}}
+                    <span style="color: rgb(255, 253, 44);">.{{((tot_acc % 1).toFixed(4)).replace('0.','')}}%</span>
+                    {{else if rating.tot == 'FC'}}
+                    <span style="color: rgb(0, 132, 255);">.{{((tot_acc % 1).toFixed(4)).replace('0.','')}}%</span>
+                    {{else}}
+                    <span>.{{((tot_acc % 1).toFixed(4)).replace('0.','')}}%</span>
+                    {{/if}}
+                </div>
+            </div>
+            <div class="stats-rating-group">
+                <div class="rating-group">
+                    <div class="rating-value">
+                        <p>{{tot_cleared}}</p>
+                    </div>
+                    <div class="rating-tatle">
+                        <p>Cleared</p>
+                    </div>
+                </div>
+                <div class="rating-group">
+                    <div class="rating-value">
+                        <p>{{tot_fc}}</p>
+                    </div>
+                    <div class="rating-tatle">
+                        <p>FC</p>
+                    </div>
+                </div>
+                <div class="rating-group">
+                    <div class="rating-value">
+                        <p>{{tot_phi}}</p>
+                    </div>
+                    <div class="rating-tatle">
+                        <p>PHI</p>
+                    </div>
+                </div>
+            </div>
+            <div class="rating_stats">
+                {{set maxv = 0}}
+                {{each rating}}
+                {{if $index != "tot" && $value > maxv}}
+                <% maxv = $value %>
+                {{/if}}
+                {{/each}}
+                {{each rating}}
+                {{if $index != "tot"}}
+                <div class="rating_stats_group">
+                    <img src="{{_res_path}}html/otherimg/{{$index}}.png" alt="{{$index}}">
+                    <p>{{$value}}</p>
+                    <div class="rating_stats_bar" style="height: {{$value / maxv * 100}}%;"></div>
+                </div>
+                {{/if}}
+                {{/each}}
+            </div>
+        </div>
+    </div>
+{{/block}}

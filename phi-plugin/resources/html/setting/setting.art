@@ -1,0 +1,72 @@
+{{extend defaultLayout}}
+{{block 'css'}}
+<link rel="stylesheet" href="{{_res_path}}html/setting/setting.css">
+{{/block}}
+
+{{block 'main'}}
+<div class="background">
+    {{if theme == "star"}}
+    <img src="{{_res_path}}html/otherimg/Star1.png" alt="曲绘-模糊">
+    <img src="{{_res_path}}html/otherimg/Star2.png" alt="曲绘-模糊"
+        style="min-height: 0;width: 100%;height: auto;bottom: 0;filter: none;">
+    {{else}}
+    {{if background}}
+    <img src="{{background}}" alt="曲绘-模糊">
+    {{else}}
+    <img src="{{_res_path}}html/otherimg/phigros.png" alt="曲绘-模糊">
+    {{/if}}
+    {{/if}}
+</div>
+<div class="big-title">
+    <p>Phi-Plugin 控制面板</p>
+</div>
+<div class="box">
+    {{each data as value}}
+    <div class="lineBox{{value.type == "divider"?" divider":''}}">
+        <div class="line">
+            <div class="square"></div>
+            <div class="left">
+                <div class="title">
+                    <p>{{value.label}}</p>
+                </div>
+                <div class="info">
+                    <p>{{value.bottomHelpMessage}}</p>
+                </div>
+            </div>
+            <div class="right">
+                {{if value.type == "space"}}
+                <div class="space">
+                    <p name="pvis">{{value.value}}</p>
+                </div>
+                <div class="drc">
+                    <p>{{value.drc}}</p>
+                </div>
+                {{else if value.type == "switch"}}
+                <div class="space">
+                    {{if value.value == true}}
+                    <div class="switchDrc-true">
+                        <p>ON</p>
+                    </div>
+                    <div class="switch-true"></div>
+                    {{else}}
+                    <div class="switch-false"></div>
+                    <div class="switchDrc-false">
+                        <p>OFF</p>
+                    </div>
+                    {{/if}}
+                </div>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+    {{/each}}
+</div>
+<div class="createdbox">
+    <div class="phi-plugin">
+        <p>{{_plugin}}</p>
+    </div>
+    <div class="ver">
+        <p>{{Version.ver}}</p>
+    </div>
+</div>
+{{/block}}

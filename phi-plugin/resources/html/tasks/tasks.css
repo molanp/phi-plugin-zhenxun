@@ -1,0 +1,334 @@
+@import "../common/common.css";
+@import "../b19/b19title.css";
+
+body {
+    flex-direction: column;
+    display: flex;
+    width: 800px;
+    height: fit-content;
+}
+
+body p {
+    color: white;
+    margin: 0px;
+    margin-block: 0;
+    margin-inline: 0;
+}
+
+.background img {
+    height: 100%;
+}
+
+.box {
+    writing-mode: horizontal-tb;
+    display: flex;
+    z-index: 1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+}
+
+.abox {
+    width: 30%;
+    height: auto;
+    position: relative;
+    display: flex;
+    filter: drop-shadow(0px 0px 5px black);
+    flex-direction: column;
+    margin-bottom: 5%;
+    z-index: 1;
+    align-items: flex-start;
+}
+
+
+.imgbox {
+    width: 100%;
+    height: auto;
+    clip-path: none;
+    z-index: 1;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.imgbox img {
+    width: 100%;
+}
+
+.infobox {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 2;
+}
+
+.coinbox_ed,
+.coinbox_un {
+    height: 0;
+    width: 100%;
+    position: absolute;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    z-index: 2;
+}
+
+.coinbox_ed p,
+.coinbox_un p {
+    font-size: unset;
+}
+
+.coinbox_ed p {
+    color: #ffef00;
+    filter: drop-shadow(0px 0px 5px #000000aa);
+}
+
+.coinbox_un p {
+    color: #ffffff;
+    filter: drop-shadow(0px 0px 5px #000000aa);
+}
+
+.namebox {
+    background: linear-gradient(#000000aa 25%, #ffffff00);
+}
+
+.namebox_ed {
+    background: linear-gradient(#ffd900c0 25%, #ffffff00);
+}
+
+.namebox_un {
+    background: linear-gradient(#ff0000c0 25%, #ffffff00);
+}
+
+.namebox,
+.namebox_ed,
+.namebox_un {
+    display: flex;
+    width: 100%;
+    height: 15%;
+}
+
+
+.songsname {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.songsname p {
+    font-size: small;
+    filter: drop-shadow(0px 0px 5px #000000aa);
+    text-align: center;
+}
+
+.new-box {
+    width: 16%;
+    height: 100%;
+    display: flex;
+    z-index: 1;
+    justify-content: center;
+    align-items: center;
+    filter: drop-shadow(0px 04px 5px black);
+}
+
+.new-box img {
+    height: 140%;
+}
+
+.songsinfo {
+    background: linear-gradient(#ffffff00, #000000aa 75%);
+}
+
+.songsinfo_ed {
+    background: linear-gradient(#ffffff00, #ffd900c0 75%);
+}
+
+.songsinfo_un {
+    background: linear-gradient(#ffffff00, #ff0000c0 75%);
+}
+
+.songsinfo,
+.songsinfo_ed,
+.songsinfo_un {
+    width: 100%;
+    height: 15%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.songsinfo p,
+.songsinfo_ed p,
+.songsinfo_un p {
+    font-size: large;
+    height: 35%;
+    display: flex;
+    align-items: center;
+    filter: drop-shadow(0px 0px 5px #000000aa);
+}
+
+
+.Nosignal {
+    width: 87%;
+    height: 150px;
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    background-color: rgba(112, 112, 112, 0.4);
+    margin-bottom: 5%;
+}
+
+.border_corner {
+    z-index: 2500;
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: rgba(0, 0, 0, 0);
+    border: 6px solid #ffffff;
+}
+
+.border_corner_left_top {
+    top: 5px;
+    left: 5px;
+    border-right: none;
+    border-bottom: none;
+    border-top-left-radius: 4px;
+}
+
+.border_corner_right_top {
+    top: 5px;
+    right: 5px;
+    border-left: none;
+    border-bottom: none;
+    border-top-right-radius: 4px;
+}
+
+.border_corner_left_bottom {
+    bottom: 5px;
+    left: 5px;
+    border-right: none;
+    border-top: none;
+    border-bottom-left-radius: 4px;
+}
+
+.border_corner_right_bottom {
+    bottom: 5px;
+    right: 5px;
+    border-left: none;
+    border-top: none;
+    border-bottom-right-radius: 4px;
+}
+
+.Nosignal .border_corner,
+.Nosignal .line,
+.Nosignal .sqrt {
+    filter: drop-shadow(0 0 5px #fff);
+}
+
+.Nosignal .timeout,
+.Nosignal .client {
+    width: 90%;
+    margin-top: -0.5%;
+    margin-bottom: -0.5%;
+    z-index: 5;
+}
+
+.Nosignal .timeout p {
+    text-shadow:
+        0 0 1px #d8f9ffab,
+        1px 0 2px #d8f9ffab,
+        -1px 0 2px #d8f9ffab,
+        1px 0 5px #d8f9ffab,
+        -1px 0 10px #d8f9ffab;
+    margin-left: 5%;
+    font-size: xx-large;
+    color: white;
+}
+
+.Nosignal .client p {
+    text-shadow:
+        0 0 1px #8eeeff,
+        1px 0 2px #8eeeff,
+        -1px 0 2px #8eeeff,
+        1px 0 5px #8eeeff88,
+        -1px 0 10px #8eeeff88;
+    margin-left: 5%;
+    font-size: unset;
+    color: #00B0F0;
+}
+
+.Nosignal .line {
+    width: 20%;
+    margin: 0;
+    border-bottom: 5px solid;
+    border-color: white;
+    margin-left: 5%;
+}
+
+.Nosignal .sqrt {
+    width: 89%;
+    height: 20%;
+    border: 3px solid;
+    border-color: white;
+    background-color: rgb(255 255 255 / 58%);
+    margin-left: 5%;
+    margin-top: 16;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: repeating-linear-gradient(-45deg, #ffffff, #ffffff 5px, rgb(255 255 255 / 0%) 0, rgb(255 255 255 / 0%) 10px);
+}
+
+.Nosignal .sqrt p {
+    color: white;
+    font-size: large;
+    filter: blur(3px);
+}
+
+.createdbox {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    margin-bottom: 5%;
+    writing-mode: horizontal-tb;
+    justify-content: center;
+}
+
+.createdbox p {
+    color: white;
+    font-size: 70px;
+    font-family: 'Aldrich', 'PHI';
+}
+
+.phi-plugin {
+    display: flex;
+    z-index: 1;
+    justify-content: center;
+    align-items: center;
+}
+
+.ver {
+    display: flex;
+    z-index: 1;
+}
+
+.phi-plugin p {
+    font-size: xx-large;
+    text-shadow: 0 0 20px rgb(0 186 255);
+}
+
+.ver p {
+    font-size: large;
+    text-shadow: 0 0 20px #fff700;
+}

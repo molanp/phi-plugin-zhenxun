@@ -1,0 +1,19 @@
+@import "../common/common.css";
+
+body {
+    width: 1920px;
+    height: 2000px;
+    border: 5px solid white;
+}
+
+.createdbox {
+    position: absolute;
+    left: 10px;
+    width: auto;
+}
+
+.helpbox {
+    width: 400px;
+    height: 200px;
+    
+}
