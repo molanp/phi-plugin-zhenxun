@@ -1,4 +1,4 @@
-# zhenxun_plugin_phigros
+# zhenxun_plugin_phi-plugin
 适用于 zhenxun_bot 的 phigros 辅助插件，支持查询分数信息等功能，以及猜曲目等小游戏
 
 ## 插件正在火热开发中...
