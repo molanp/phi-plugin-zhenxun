@@ -1,6 +1,13 @@
 # zhenxun_plugin_phi-plugin
 适用于 zhenxun_bot 的 phigros 辅助插件，支持查询分数信息等功能，以及猜曲目等小游戏
 
+<details>
+<summary>当前同步版本号</summary>
+2025-04-18T15:15:01.000Z
+
+[8dd9eeb52af4baf2fee959e5108583d3024b3c01](https://github.com/Catrong/phi-plugin/commit/8dd9eeb52af4baf2fee959e5108583d3024b3c01)
+</details>
+
 ## 插件正在火热开发中...
 
 ## 📚 插件功能
