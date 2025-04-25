@@ -3,9 +3,11 @@
 
 <details>
 <summary>当前同步版本号</summary>
-2025-04-18T15:15:01.000Z
+2025-04-22T13:12:32.000Z
 
-[8dd9eeb52af4baf2fee959e5108583d3024b3c01](https://github.com/Catrong/phi-plugin/commit/8dd9eeb52af4baf2fee959e5108583d3024b3c01)
+[965e649e8c1ee0a519dd8bbadb08238e606332a5](https://github.com/Catrong/phi-plugin/commit/965e649e8c1ee0a519dd8bbadb08238e606332a5)
+
+[已落后的变更](https://github.com/Catrong/phi-plugin/compare/965e649e8c1ee0a519dd8bbadb08238e606332a5...main)
 </details>
 
 ## 插件正在火热开发中...
@@ -41,7 +43,7 @@
 | `phi new` | 查询更新的曲目
 | `phi tips` | 随机tips
 | `phi jrrp` | 今日人品
-| `phi nick xxx` | 查询某一曲目的别名
+| `phi alias xxx` | 查询某一曲目的别名
 | `phi (rand\|随机) [定数] [难度]` | 根据条件随机曲目，条件支持难度、定数，难度可以多选，定数以-作为分隔
 | `phi randclg [课题总值] [难度] ([曲目定数范围])` | 随机课题 eg: /rand 40 (IN 13-15)
 | `phi (曲绘\|ill\|Ill) xxx` | 查询phigros中某一曲目的曲绘
