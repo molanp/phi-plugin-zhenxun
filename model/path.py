@@ -28,9 +28,6 @@ savePath = dataPath / "saveData"
 # /**用户设置路径 */
 configPath = dataPath / "config"
 
-# /**默认设置路径 */
-defaultPath = dataPath / "default_config"
-
 # /**默认图片路径 */
 imgPath = pluginResources / "html" / "otherimg"
 

@@ -3,7 +3,7 @@ from nonebot.plugin import PluginMetadata
 from zhenxun.configs.utils import PluginExtraData
 from zhenxun.services.log import logger
 
-from .config import CONFIG
+from .config import CONFIG, VERSION
 
 __plugin_meta__ = PluginMetadata(
     name="phi-plugin",
@@ -13,7 +13,7 @@ __plugin_meta__ = PluginMetadata(
     """.strip(),
     extra=PluginExtraData(
         author="molanp",
-        version="0.1",
+        version=VERSION,
         configs=CONFIG[0],
     ).dict(),
 )

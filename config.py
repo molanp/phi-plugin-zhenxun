@@ -6,6 +6,8 @@ from zhenxun.configs.utils import RegisterConfig
 
 PATH = Path(__file__).parent
 
+VERSION = "0.1.0"
+
 CONFIG = (
     [
         RegisterConfig(

@@ -9,17 +9,17 @@ from .path import savePath
 
 class getSave:
     @classmethod
-    async def add_user_token(cls, user_id, sstk):
+    async def add_user_token(cls, user_id: str, sstk: str):
         """添加 user_id 号对应的 Token"""
         return await SstkData.add_sstk(user_id, sstk)
 
     @classmethod
-    async def get_user_token(cls, user_id):
+    async def get_user_token(cls, user_id: str):
         """获取 user_id 号对应的 Token"""
         return await SstkData.get_sstk(user_id)
 
     @classmethod
-    async def del_user_token(cls, user_id):
+    async def del_user_token(cls, user_id: str):
         """移除 user_id 对应的 Token"""
         return await SstkData.delete_sstk(user_id)
 
@@ -81,6 +81,7 @@ class getSave:
         sstk = data.get("sessionToken")
         if await cls.isBanSessionToken(sstk):
             raise ValueError(f"{sstk} 已被禁用")
+        assert sstk is not None
         await cls.add_user_token(user_id, sstk)
         return await readFile.SetFile(savePath / sstk / "save.json", data)
 
@@ -99,7 +100,7 @@ class getSave:
             raise ValueError(f"{sstk} 已被禁用")
         result = await readFile.FileReader(savePath / sstk / "history.json")
         return saveHistory(result)
-    
+
     @classmethod
     async def getHistoryBySessionToken(cls, sstk:str) -> "saveHistory":
         if await cls.isBanSessionToken(sstk):
@@ -182,7 +183,7 @@ class getSave:
         """
         return await SstkData.ban_sstk(token)
     @classmethod
-    async def allowSessionToken(cls, token:str):
+    async def allowSessionToken(cls, token: str):
         """
         解禁 sessionToken
         :param str token: sessionToken
@@ -190,12 +191,12 @@ class getSave:
         return await SstkData.unban_sstk(token)
 
     @classmethod
-    async def isBanSessionToken(cls, token:str):
+    async def isBanSessionToken(cls, token: str | None):
         """
         检查 sessionToken 是否被禁用
-        :param str token: sessionToken
+        :param str|None token: sessionToken
         """
-        return await SstkData.is_ban_sessionToken(token)
+        return False if token is None else await SstkData.is_ban_sessionToken(token)
 
     @classmethod
     async def getGod(cls):
