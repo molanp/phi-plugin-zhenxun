@@ -20,7 +20,7 @@ class SstkData(Model):
     """是否被封禁"""
 
     class Meta:  # pyright: ignore [reportIncompatibleVariableOverride]
-        table = "phiPlugin_sstk_data"
+        table = "phiPlugin_sstkData"
         table_description = "Phi sstk 数据表"
         indexes: ClassVar = [("uid", "sessionToken")]
 
@@ -135,7 +135,7 @@ class RksRank(Model):
     """最后更新时间"""
 
     class Meta:  # type: ignore
-        table = "phiPlugin_rks_rank"
+        table = "phiPlugin_rksRank"
         table_description = "Phi RKS数据表"
         indexes: ClassVar = [
             ("sessionToken", "rks"),

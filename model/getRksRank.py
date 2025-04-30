@@ -5,7 +5,7 @@ class getRksRank:
     @classmethod
     async def addUserRks(cls, sessionToken, rks):
         """添加成绩"""
-        return await RksRank.set_user_rks(sessionToken, rks)
+        return await RksRank.set_user_rks(sessionToken, rks * -1)
 
     @classmethod
     async def delUserRks(cls, sessionToken):

@@ -1,6 +1,10 @@
+{{extend defaultLayout}}
+{{block 'css'}}
 <link rel="stylesheet" href="{{_res_path}}html/atlas/atlas.css">
 
+{{/block}}
 
+{{block 'main'}}
 
     <div class="background" style="background: url({{illustration}}) no-repeat; background-size: cover;">
         <img src="{{illustration}}" alt="曲绘-模糊">
@@ -35,14 +39,14 @@
                         <div class="rankbkg">
                             <div class="sqr"></div>
                             {{each chart}}
-                            <div class="sqr rank-{{ chart_item.difficulty }}" style="background-color: rgba({{ value.rgba }});"></div>
+                            <div class="sqr rank-{{$index}}" style="background-color: rgba({{$value.rgba}});"></div>
                             {{/each}}
                         </div>
                         <div class="rank">
                             <p>\</p>
                             {{each chart}}
                             <div class="pBox">
-                                <p name="pvis">{{$chart_item.difficulty}}</p>
+                                <p name="pvis">{{$index}}</p>
                             </div>
                             {{/each}}
                         </div>
@@ -95,8 +99,10 @@
                 </div>
                 <div class="dcr">
                     <p>{{bpm}}</p>
-                </div>{% for chart_item in chart %}
-        {%if illustrator%}
+                </div>
+            </div>
+        {{/if}}
+        {{if illustrator}}
             <div class="other-box">
                 <div class="title">
                     <p>Illustrator</p>
@@ -105,8 +111,8 @@
                     <p>{{illustrator}}</p>
                 </div>
             </div>
-        {%endif%}
-        {%if chapter%}
+        {{/if}}
+        {{if chapter}}
             <div class="other-box">
                 <div class="title">
                     <p>Chapter</p>
@@ -115,30 +121,30 @@
                     <p>{{chapter}}</p>
                 </div>
             </div>
-        {%endif%}
+        {{/if}}
         </div>
         <div class="leave">
             <div class="leave-box">
-                {% for chart_item in chart %}
+                {{each chart}}
 
-                {%if chart_item.difficulty == 'EZ'%}
+                {{if $index == 'EZ'}}
                 <div class="leave-ez">
-                {%elif chart_item.difficulty == 'HD'%}
+                {{else if $index == 'HD'}}
                 <div class="leave-hd">
-                {%elif chart_item.difficulty == 'IN'%}
+                {{else if $index == 'IN'}}
                 <div class="leave-in">
-                {%elif chart_item.difficulty == 'AT'%}
+                {{else if $index == 'AT'}}
                 <div class="leave-at">
-                {%elif chart_item.difficulty == 'SP'%}
+                {{else if $index == 'SP'}}
                 <div class="leave-sp">
-                {%else%}
-                <div class="leave-sp" style="background-color: rgba({{chart_item.rgba}});">
-                {%endif%}
+                {{else}}
+                <div class="leave-sp" style="background-color: rgba({{$value.rgba}});">
+                {{/if}}
                 <div class="ldif">
-                    <p name="pvis">{{chart_item.difficulty}}</p>
+                    <p name="pvis">{{$value.difficulty}}</p>
                 </div>
                 <div class="lrank">
-                    <p name="pvis">{{chart_item}}</p> ##############
+                    <p name="pvis">{{$index}}</p>
                 </div>
                 </div>
 
@@ -156,43 +162,4 @@
 </div>
 <div class="snow-box"> </div>
 
-<script>
-    function adjustFontSize() {
-        //获取p元素
-        var a = document.getElementsByName('pvis')
-        for (var i = 0; i < a.length; ++i) {
-
-            const songName = a[i]
-
-            if (!songName) continue
-
-
-            /*调整曲目名称字体大小*/
-            var parentElement = songName.parentElement
-
-            // var maxFontSize = 100 //设置最大字体大小
-
-            // //如果字体宽度小于父元素宽度，则增大字体大小
-            // while (songName.scrollWidth < parentElement.offsetWidth && songName.scrollHeight < parentElement.offsetHeight) {
-            //     var style = window.getComputedStyle(songName, null).getPropertyValue('font-size')
-            //     var fontSize = parseFloat(style)
-
-            //     //检查是否已经达到最大字体大小
-            //     if (fontSize >= maxFontSize) {
-            //         break
-            //     }
-
-            //     songName.style.fontSize = (fontSize + 1) + "px"
-            // }
-
-            // 如果字体宽度大于父元素宽度，则减小字体大小
-            while (songName.scrollWidth > parentElement.offsetWidth || songName.scrollHeight > parentElement.offsetHeight) {
-                var style = window.getComputedStyle(songName, null).getPropertyValue('font-size')
-                var fontSize = parseFloat(style);
-                songName.style.fontSize = (fontSize - 1) + "px";
-            }
-        }
-    }
-    window.onload = adjustFontSize
-    window.onresize = adjustFontSize
-</script>
+{{/block}}
