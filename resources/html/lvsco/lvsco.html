@@ -1,0 +1,61 @@
+{% extends defaultLayout %}
+
+{% block css %}
+    <link rel="stylesheet" href="{{ _res_path }}html/list/list.css">
+{% endblock %}
+
+{% block main %}
+    <div class="head_title">
+        <p>{{ head_title }}</p>
+    </div>
+
+    <div class="list_box">
+        {% for line in song %}
+        <div class="line">
+            <div class="song_name">
+                <div class="num"><span name="pvis">{{ loop.index + 1 }}</span></div>
+                <div class="song"><span name="pvis">{{ line.song }} - {{ line.composer }}</span></div>
+                <div class="dif {{ line.rank }}"><span name="pvis">{{ line.difficulty }}</span></div>
+            </div>
+            <div class="ill_box">
+                <img src="{{ line.illustration }}" alt="{{ line.illustration }}">
+            </div>
+            <div class="info_box">
+                <div class="down">
+                    <div class="acc">
+                        <div class="box-content">{{ "%.4f"|format(line.acc) if line.acc else '---' }}%</div>
+                        <div class="suggest">> {{ line.suggest if line.suggest else '---' }}</div>
+                    </div>
+                    <div class="score_rating">
+                        <div class="score">{{ line.score }}</div>
+                        <div class="rating">
+                            <img src="{{ _res_path }}html/otherimg/{{ line.Rating if line.Rating else 'NEW' }}.png"
+                                alt="{{ line.Rating }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="createdbox">
+        <div class="phi-plugin">
+            <p>{{ _plugin }}</p>
+        </div>
+        <div class="ver">
+            <p>{{ Version.ver }}</p>
+        </div>
+    </div>
+
+    {% if theme == "snow" %}
+    <div class="snow-box"> </div>
+    <script> themeSnow(); </script>
+    {% elif theme in ["topText", "foolsDay"] %}
+    <div class="topTextBox" id="topTextBox"></div>
+    <script> themeTopText(); </script>
+    {% elif theme == "star" %}
+    <canvas id="stars"></canvas>
+    <script> themeStar(); </script>
+    {% endif %}
+{% endblock %}

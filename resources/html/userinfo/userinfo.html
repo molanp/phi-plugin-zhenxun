@@ -1,0 +1,139 @@
+{% extends defaultLayout %}
+
+{% block css %}
+    <link rel="stylesheet" href="{{ _res_path }}html/userinfo/userinfo.css">
+{% endblock %}
+
+{% block main %}
+    {% if background %}
+    <div class="background">
+        <img src="{{ background }}" alt="{{ background }}">
+    </div>
+    {% endif %}
+    
+    <div class="left">
+        <div class="Player_Info">
+            <p>PLAYER_INFO</p>
+        </div>
+        <div class="Player_Info-after"></div>
+        <div class="basic-box">
+            <div class="basic-img">
+                <img src="{{ gameuser.backgroundurl }}" alt="{{ gameuser.backgroundurl }}">
+            </div>
+            <div class="Player_Id">
+                <div class="avatar">
+                    <img src="{{ _res_path }}html/avatar/{{ gameuser.avatar }}.png" alt="{{ gameuser.avatar }}">
+                </div>
+                <div class="Player_Id-box">
+                    <div class="Player_Id-left">
+                        <p>ID</p>
+                    </div>
+                    <div class="Player_Id-right">
+                        <p name="pvis">{{ gameuser.PlayerId }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="left_title">
+            <div class="left_title-left">
+                <p>PLAYER_DETAIL</p>
+            </div>
+        </div>
+
+        <div class="Player_data_line">
+            <div class="Player_data_line-left">
+                <div class="Player_data_title" id="Player_data_left">
+                    <p>RKS</p>
+                </div>
+                <div class="Player_data_value" id="Player_data_left">
+                    <p>{{ "%.4f"|format(gameuser.rks) }}</p>
+                </div>
+            </div>
+            <div class="Player_data_line-right">
+                <div class="Player_data_title" id="Player_data_right">
+                    <p>CLG MOD</p>
+                </div>
+                <div class="Challenge" id="Challenge{% if gameuser.CLGMOD %}1{% else %}2{% endif %}">
+                    <img src="{{ _res_path }}html/otherimg/{{ gameuser.ChallengeMode }}.png"
+                        alt="{{ gameuser.ChallengeMode }}">
+                    <span>{{ gameuser.ChallengeModeRank }}</span>
+                </div>
+                {% if gameuser.CLGMOD %}
+                <div class="Player_data_value CLG{% if gameuser.EX %} colorful{% endif %}" id="Player_data_right">
+                    <p name="pvis">{{ gameuser.CLGMOD }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="Player_data_box" id="data_box">
+            <div class="Player_box_title">
+                <p>DATA</p>
+            </div>
+            <div class="Player_box_value">
+                <p name="pvis">{{ gameuser.data }}</p>
+            </div>
+        </div>
+
+        <div class="Player_profile_box">
+            {% if gameuser.selfIntro %}
+            <p color='white' name="pvis">{{ gameuser.selfIntro }}</p>
+            {% else %}
+            <p color='skyblue' name="pvis">介个人的简介被胡桃吃掉惹……</p>
+            {% endif %}
+        </div>
+
+        <div class="createdbox">
+            <div class="phi-plugin">
+                <p>{{ _plugin }}</p>
+            </div>
+            <div class="ver">
+                <p>{{ Version.ver }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="right">
+        <div class="file-content">
+            <div class="file-content-left">
+                <p>PLAYER_DATA</p>
+            </div>
+        </div>
+
+        <div class="data_title">
+            <div class="data_title-left">
+                <p>RKS_HISTORY</p>
+            </div>
+        </div>
+
+        <div class="svg-box">
+            {% if rks_history %}
+            <div class="value_box">
+                <p>{{ "%.4f"|format(rks_range[1]) }}</p>
+                <p>{{ "%.4f"|format(rks_range[0]) }}</p>
+            </div>
+            <div class="line-box">
+                <div class="line">
+                    <svg>
+                        <defs>
+                            <marker id="dot" viewBox="0 0 10 10" markerWidth="8" markerHeight="8" refX="2" refY="2">
+                                <circle cx="2" cy="2" r="1"></circle>
+                            </marker>
+                        </defs>
+                        {% for value in rks_history %}
+                        <line x1="{{ value[0] }}%" y1="{{ value[1] }}%" x2="{{ value[2] }}%" y2="{{ value[3] }}%"></line>
+                        {% endfor %}
+                    </svg>
+                </div>
+                <div class="date_box">
+                    <p>{{ rks_date[0] }}</p>
+                    <p>{{ rks_date[1] }}</p>
+                </div>
+            </div>
+            {% else %}
+            <p>NO_INFO</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

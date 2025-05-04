@@ -1,0 +1,106 @@
+{% extends defaultLayout %}
+
+{% block css %}
+    <link rel="stylesheet" href="{{ _res_path }}html/tasks/tasks.css">
+{% endblock %}
+
+{% block main %}
+    <div class="title">
+        <div class="l">
+            <img src="{{ _res_path }}html/otherimg/Phigros_Icon_3.0.0.png" alt="icon">
+            <div class="doc">
+                <p>Phi-Plugin任务列表</p>
+                <p style="font-size: 20px;">{{ task_ans }}</p>
+                <p style="font-size: 20px;">{{ task_ans1 }}</p>
+            </div>
+        </div>
+        <div class="m"></div>
+        <div class="r">
+            <p>Player: {{ PlayerId }}</p>
+            <p>RankingScore: {{ Rks }}</p>
+            <div class="Challenge">
+                <p>ChallengeMode:</p>
+                {% if dan %}
+                <div class="CLG {% if dan.EX %}colorful{% endif %}">
+                    <p>{{ dan.Dan }}</p>
+                </div>
+                {% endif %}
+                <div class="Challenge-r">
+                    <img src="{{ _res_path }}html/otherimg/{{ ChallengeMode }}.png" alt="Challenge">
+                    <p>{{ ChallengeModeRank }}</p>
+                </div>
+            </div>
+            <p>Notes: {{ Notes }}{% if change_notes %}
+                <span style="color: {% if '+' in change_notes %}gold{% else %}red{% endif %};">{{ change_notes }}</span>
+            {% endif %}
+            </p>
+            <p>Date: {{ Date }}</p>
+        </div>
+    </div>
+    <div class="box">
+        {% if task %}
+            {% for song in task %}
+                {% if song %}
+                <div class="abox">
+                    <div class="imgbox">
+                        <img src="{{ song.illustration }}" alt="{{ song.song }}">
+                    </div>
+                    <div class="coinbox_{% if song.finished %}ed{% else %}un{% endif %}">
+                        <p>+{{ song.reward }} Notes</p>
+                    </div>
+                    <div class="infobox">
+                        <div class="namebox_{% if song.finished %}ed{% else %}un{% endif %}">
+                            <div class="songsname">
+                                <p id="{{ loop.index }}">{{ song.song }}</p>
+                            </div>
+                        </div>
+                        <div class="songsinfo_{% if song.finished %}ed{% else %}un{% endif %}">
+                            <p>{{ song.request.rank }}&ensp;&ensp;{{ song.request.type.upper() }}&ensp;&ensp;{{ song.request.value }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+        <div class="Nosignal">
+            <div class="border_corner border_corner_left_top"></div>
+            <div class="border_corner border_corner_right_top"></div>
+            <div class="border_corner border_corner_left_bottom"></div>
+            <div class="border_corner border_corner_right_bottom"></div>
+            <div class="line"></div>
+            <div class="timeout">
+                <p>NOT_FOUND&ensp;&ensp;tip: try /sign or /retask</p>
+            </div>
+            <div class="client">
+                <p>>>> PhigrOS Client Finding Tasks</p>
+            </div>
+            <div class="sqrt">
+                <p>////////////////////////////////////////////////////////////////////////////////////////</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    <div class="createdbox">
+        <div class="phi-plugin">
+            <p>{{ _plugin }}</p>
+        </div>
+        <div class="ver">
+            <p>{{ Version.ver }}</p>
+        </div>
+    </div>
+    {% if tips %}
+    <div class="tips">
+        <p>Tip:{{ tips }}</p>
+    </div>
+    {% endif %}
+    {% if theme == "snow" %}
+    <div class="snow-box"> </div>
+    <script> themeSnow(); </script>
+    {% elif theme in ["topText", "foolsDay"] %}
+    <div class="topTextBox" id="topTextBox"></div>
+    <script> themeTopText(); </script>
+    {% elif theme == "star" %}
+    <canvas id="stars"></canvas>
+    <script> themeStar(); </script>
+    {% endif %}
+{% endblock %}
