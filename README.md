@@ -3,11 +3,11 @@
 
 <details>
 <summary>当前同步版本号</summary>
-2025-04-28T08:05:25.000Z
+2025-05-06T14:52:11.000Z
 
-[ad0642fe01bdf2687d5e2dbe05fa0088462ee004](https://github.com/Catrong/phi-plugin/commit/ad0642fe01bdf2687d5e2dbe05fa0088462ee004)
+[8660e28b65110b5fc30fe86e2a6cdee89d773a94](https://github.com/Catrong/phi-plugin/commit/8660e28b65110b5fc30fe86e2a6cdee89d773a94)
 
-[已落后的变更](https://github.com/Catrong/phi-plugin/compare/ad0642fe01bdf2687d5e2dbe05fa0088462ee004...main)
+[已落后的变更](https://github.com/Catrong/phi-plugin/compare/8660e28b65110b5fc30fe86e2a6cdee89d773a94...main)
 </details>
 
 # 插件正在火热开发中...
@@ -101,6 +101,8 @@
 | `phi (ltr\|开字母)` | 根据字母猜曲名，#出/#open... 开指定的字母，#第n个/#nX.xxx 进行回答，#ans 获取答案
 | `phi (tipgame\|提示猜曲)` | 根据提示猜曲名，#tip获得下一条提示，#ans 获取答案，回答直接回复
 | `phi (song\|曲) xxx` | 查询phigros中某一曲目的图鉴，支持设定别名
+| `#phi (comment\|cmt\|评论\|评价) <曲名> <难度?>(换行)<内容>` | 评论曲目，难度默认为IN
+| `#phi recmt <评论ID>` | 查看并确认是否删评，仅发送者和主人权限，需要二次确认
 | `phi (table\|定数表) <定数>` | 查询phigros定数表（B站[@yuhao7370](space.bilibili.com/275661582)）
 | `phi new` | 查询更新的曲目
 | `phi tips` | 随机tips
@@ -137,7 +139,7 @@
 | bind | 绑定功能 | /bind /unbind
 | b19 | 图片查分功能 | /pgr /update /info /list /pb30 /score /lvsco /chap /suggest
 | wb19 | 文字查分功能 | /data /best
-| song | 图鉴功能 | /song /ill /search /alias /rand /randclg /table
+| song | 图鉴功能 | /song /ill /search /alias /rand /randclg /table /cmt /recmt
 | ranklist | 排行榜功能，不会禁用用户排名 | /ranklist /godlist
 | fnc | 小功能 | /com /tips /lmtacc /new
 | tipgame | tip猜歌 | /tipgame

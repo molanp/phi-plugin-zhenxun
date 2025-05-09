@@ -6,7 +6,7 @@ from ..config import PATH
 
 class picmodle:
     @classmethod
-    async def picmodle(cls, info):
+    async def alias(cls, info):
         """曲目图鉴"""
         return await cls.common(
             "atlas",
@@ -108,7 +108,7 @@ class picmodle:
     @classmethod
     async def common(cls, kind: str, data: dict):
         """
-        :param {'task'|'b19'|'arcgrosB19'|'update'|'tasks'|'lvsco'|'list'|'ill'|'guess'|'rand'|'help'|'chap'|'rankingList'|'clg'} kind: 类型
+        :param {'alias'|'task'|'b19'|'arcgrosB19'|'update'|'tasks'|'lvsco'|'list'|'ill'|'guess'|'rand'|'help'|'chap'|'rankingList'|'clg'} kind: 类型
         :param dict data: 数据
         """  # noqa: E501
         return await cls.render(

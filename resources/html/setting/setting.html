@@ -1,95 +1,70 @@
-{% block css %}
-<link rel="stylesheet" href="{{ _res_path }}html/score/scoreOld.css">
-{% endblock %}
-
-{% block main %}
+{% extends defaultLayout %} {% block css %}
+<link rel="stylesheet" href="{{ _res_path }}html/setting/setting.css" />
+{% endblock %} {% block main %}
 <div class="background">
-   <img src="{{ illustration }}" alt="曲绘-模糊">
+  {% if theme == "star" %}
+  <img src="{{ _res_path }}html/otherimg/Star1.png" alt="曲绘-模糊" />
+  <img
+    src="{{ _res_path }}html/otherimg/Star2.png"
+    alt="曲绘-模糊"
+    style="min-height: 0; width: 100%; height: auto; bottom: 0; filter: none"
+  />
+  {% else %} {% if background %}
+  <img src="{{ background }}" alt="曲绘-模糊" />
+  {% else %}
+  <img src="{{ _res_path }}html/otherimg/phigros.png" alt="曲绘-模糊" />
+  {% endif %} {% endif %}
 </div>
-<div class="playerbox">
-   <div class="player">
-      <div class="playerid-right"></div>
-      <div class="playerid">
-         <p>{{ PlayerId }}</p>
-      </div>
-      <div class="avatar">
-         <img src="{{ _res_path }}html/avatar/{{ avatar }}.png" alt="{{ avatar }}">
-      </div>
-      <div class="player-info">
-         <div class="Challenge">
-            <img src="{{ _res_path }}html/otherimg/{{ ChallengeMode }}.png" alt="{{ ChallengeMode }}">
-            <p>{{ ChallengeModeRank }}</p>
-         </div>
-         <div class="player-rks">
-            <p>{{ Rks }}</p>
-         </div>
-      </div>
-   </div>
+<div class="big-title">
+  <p>Phi-Plugin 控制面板</p>
 </div>
 <div class="box">
-   <div class="song">
-      <div class="ill-box">
-         <img src="{{ illustration }}" alt="曲绘">
+  {% for value in data %}
+  <div class="lineBox{% if value.type == 'divider' %} divider{% endif %}">
+    <div class="line">
+      <div class="square"></div>
+      <div class="left">
+        <div class="title">
+          <p>{{ value.label }}</p>
+        </div>
+        <div class="info">
+          <p>{{ value.bottomHelpMessage }}</p>
+        </div>
       </div>
-      <div class="score-box">
-         {% for rank in ['AT', 'IN', 'HD', 'EZ'] %}
-         <div class="rank-{{ rank }}">
-            {% if vars()[rank] %}
-            {% if vars()[rank].Rating == 'NEW' %}
-            <img src="{{ _res_path }}html/otherimg/{{ vars()[rank].Rating }}.png" alt="Rating" style="margin-left: -35%; height: 100%; filter: blur(5px);">
-            {% else %}
-            <div class="Rating">
-               <img src="{{ _res_path }}html/otherimg/{{ vars()[rank].Rating }}.png" alt="{{ vars()[rank].Rating }}">
-            </div>
-            {% endif %}
-            <div class="rank">
-               <p>{{ rank }}</p>
-            </div>
-            {% if vars()[rank].score %}
-            <div class="info">
-               <div class="score">
-                  <p>{{ vars()[rank].score }}</p>
-               </div>
-               <div class="line"></div>
-               <div class="acc-box">
-                  <div class="acc">
-                     <p>{{ vars()[rank].acc }}%</p>
-                  </div>
-                  <div class="rks">
-                     <p>{{ vars()[rank].rks }}</p>
-                  </div>
-               </div>
-               <div class="suggest">
-                  <p>>> {{ vars()[rank].suggest }}</p>
-               </div>
-            </div>
-            {% endif %}
-            {% else %}
-            <p style="margin-left: -35%;">NO_INFO</p>
-            {% endif %}
-         </div>
-         {% endfor %}
+      <div class="right">
+        {% if value.type == "space" %}
+        <div class="space">
+          <p name="pvis">{{ value.value }}</p>
+        </div>
+        <div class="drc">
+          <p>{{ value.drc }}</p>
+        </div>
+        {% elif value.type == "switch" %}
+        <div class="space">
+          {% if value.value %}
+          <div class="switchDrc-true">
+            <p>ON</p>
+          </div>
+          <div class="switch-true"></div>
+          {% else %}
+          <div class="switch-false"></div>
+          <div class="switchDrc-false">
+            <p>OFF</p>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
       </div>
-   </div>
-</div>
-<div class="leave">
-   <div class="leave-box">
-      {% for rank in ['AT', 'IN', 'HD', 'EZ'] %}
-      {% if vars()[rank] %}
-      <div class="leave-{{ rank.lower() }}">
-         <p style="margin-left: 3px;">{{ vars()[rank].difficulty }}</p>
-         <p style="font-size: 15px; margin-right: 13px;">{{ rank }}</p>
-      </div>
-      {% endif %}
-      {% endfor %}
-   </div>
+    </div>
+  </div>
+  {% endfor %}
 </div>
 <div class="createdbox">
-   <div class="phi-plugin">
-      <p>{{ _plugin }}</p>
-   </div>
-   <div class="ver">
-      <p>{{ Version.ver }}</p>
-   </div>
+  <div class="phi-plugin">
+    <p>{{ _plugin }}</p>
+  </div>
+  <div class="ver">
+    <p>{{ Version.ver }}</p>
+  </div>
 </div>
 {% endblock %}

@@ -1,87 +1,109 @@
 <!DOCTYPE html>
 <html lang="zh-cn">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="shortcut icon" href="#" />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ _res_path }}html/common/common.css"
+    />
 
-<head>
-   <meta charset="utf-8">
-   <meta name="viewport" content="width=device-width">
-   <link rel="shortcut icon" href="#" />
-   <link rel="stylesheet" type="text/css" href="{{ _res_path }}html/common/common.css" />
+    {% if theme == "snow" %}
+    <link
+      rel="stylesheet"
+      href="{{ _res_path }}html/common/theme/snow/snow.css"
+    />
+    {% elif theme in ["topText", "foolsDay"] %}
+    <link
+      rel="stylesheet"
+      href="{{ _res_path }}html/common/theme/topText/topText.css"
+    />
+    {% endif %} {% block css %} {% endblock %}
+    <title>phi-plugin</title>
+  </head>
 
-   {% if theme == "snow" %}
-   <link rel="stylesheet" href="{{ _res_path }}html/common/theme/snow/snow.css">
-   {% elif theme in ["topText", "foolsDay"] %}
-   <link rel="stylesheet" href="{{ _res_path }}html/common/theme/topText/topText.css">
-   {% endif %}
-
-   {% block css %}
-   {% endblock %}
-   <title>phi-plugin</title>
-</head>
-
-<body class="elem-{{ element or elem or 'hydro' }} {{ displayMode or mode or 'default' }}-mode  {{ bodyClass }}" {{ sys.scale }}>
-
-   <div class="background">
+  <body
+    class="elem-{{ element or elem or 'hydro' }} {{ displayMode or mode or 'default' }}-mode  {{ bodyClass }}"
+    {{
+    sys.scale
+    }}
+  >
+    <div class="background">
       {% if theme == "star" %}
-      <img src="{{ _res_path }}html/otherimg/Star1.png" alt="曲绘-模糊">
-      <img src="{{ _res_path }}html/otherimg/Star2.png" alt="曲绘-模糊" style="min-height: 0;width: 100%;height: auto;bottom: 0;filter: none;">
+      <img src="{{ _res_path }}html/otherimg/Star1.png" alt="曲绘-模糊" />
+      <img
+        src="{{ _res_path }}html/otherimg/Star2.png"
+        alt="曲绘-模糊"
+        style="
+          min-height: 0;
+          width: 100%;
+          height: auto;
+          bottom: 0;
+          filter: none;
+        "
+      />
+      {% else %} {% if background %}
+      <img src="{{ background }}" alt="曲绘-模糊" />
       {% else %}
-      {% if background %}
-      <img src="{{ background }}" alt="曲绘-模糊">
-      {% else %}
-      <img src="{{ _res_path }}html/otherimg/phigros.png" alt="曲绘-模糊">
-      {% endif %}
-      {% endif %}
-   </div>
+      <img src="{{ _res_path }}html/otherimg/phigros.png" alt="曲绘-模糊" />
+      {% endif %} {% endif %}
+    </div>
 
-   <script>
+    <script>
       var _res_path = "{{ _res_path }}";
-   </script>
+    </script>
 
-   {% if theme == "snow" %}
-   <script src="{{ _res_path }}html/common/theme/snow/snow.js"></script>
-   {% elif theme in ["topText", "foolsDay"] %}
-   <script src="{{ _res_path }}html/common/theme/topText/topText.js"></script>
-   {% elif theme == "star" %}
-   <script src="{{ _res_path }}html/common/theme/star/star.js"></script>
-   {% endif %}
+    {% if theme == "snow" %}
+    <script src="{{ _res_path }}html/common/theme/snow/snow.js"></script>
+    {% elif theme in ["topText", "foolsDay"] %}
+    <script src="{{ _res_path }}html/common/theme/topText/topText.js"></script>
+    {% elif theme == "star" %}
+    <script src="{{ _res_path }}html/common/theme/star/star.js"></script>
+    {% endif %} {% block main %} {% endblock %}
 
-   {% block main %}
-   {% endblock %}
-
-   <script>
+    <script>
       function isBiggerThanParent(songName, parentElement) {
-         return songName.scrollWidth > parentElement.offsetWidth || songName.scrollHeight > parentElement.offsetHeight;
+        return (
+          songName.scrollWidth > parentElement.offsetWidth ||
+          songName.scrollHeight > parentElement.offsetHeight
+        );
       }
 
       function adjustFontSize() {
-         let elements = document.getElementsByName('pvis');
-         for (let i = 0; i < elements.length; ++i) {
-            let songName = elements[i];
-            if (!songName) continue;
+        let elements = document.getElementsByName("pvis");
+        for (let i = 0; i < elements.length; ++i) {
+          let songName = elements[i];
+          if (!songName) continue;
 
-            let parentElement = songName.parentElement;
-            if (!isBiggerThanParent(songName, parentElement)) continue;
+          let parentElement = songName.parentElement;
+          if (!isBiggerThanParent(songName, parentElement)) continue;
 
-            let fontSize = Number(window.getComputedStyle(songName, null).getPropertyValue('font-size').replace("px", ""));
+          let fontSize = Number(
+            window
+              .getComputedStyle(songName, null)
+              .getPropertyValue("font-size")
+              .replace("px", "")
+          );
 
-            let l = 0,
-               r = fontSize;
-            while (l < r) {
-               let mid = Math.floor((l + r + 1) / 2);
-               songName.style.fontSize = mid + "px";
-               if (isBiggerThanParent(songName, parentElement)) {
-                  r = mid - 1;
-               } else {
-                  l = mid;
-               }
+          let l = 0,
+            r = fontSize;
+          while (l < r) {
+            let mid = Math.floor((l + r + 1) / 2);
+            songName.style.fontSize = mid + "px";
+            if (isBiggerThanParent(songName, parentElement)) {
+              r = mid - 1;
+            } else {
+              l = mid;
             }
-            songName.style.fontSize = l + "px";
-         }
+          }
+          songName.style.fontSize = l + "px";
+        }
       }
 
       window.onload = adjustFontSize;
       window.onresize = adjustFontSize;
-   </script>
-</body>
-
+    </script>
+  </body>
 </html>

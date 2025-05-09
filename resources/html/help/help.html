@@ -1,71 +1,71 @@
-{% extends defaultLayout %}
-
-{% block css %}
-    <link rel="stylesheet" href="{{ _res_path }}html/help/help.css">
-{% endblock %}
-
-{% block main %}
-    {% for group in helpGroup %}
-        {% if group.auth != "master" or isMaster %}
-            {% set len = group.list | length %}
-            <div class="help_box">
-                <div class="help-group">——·{{ group.group }}·——</div>
-                {% if len > 0 %}
-                    {% for help in group.list %}
-                        <div class="line">
-                            <div class="order">
-                                {% if cmdHead %}
-                                    <p name="pvis">{{ help.title | replace('/', '/' ~ cmdHead ~ ' ') }}</p>
-                                {% else %}
-                                    <p name="pvis">{{ help.title }}</p>
-                                {% endif %}
-                            </div>
-                            <div class="info_box">
-                                <div class="up">
-                                    <div class="num">{{ loop.index }}</div>
-                                    <div class="song">
-                                        {% if cmdHead %}
-                                            <p name="pvis">{{ (help.eg or help.title) | replace('/', '/' ~ cmdHead ~ ' ') }}</p>
-                                        {% else %}
-                                            <p name="pvis">{{ help.eg or help.title }}</p>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="down">
-                                    <div class="desc">
-                                        {% if help.desc %}
-                                            <p name="pvis">{{ help.desc | replace(' ', '&ensp;') }}</p>
-                                        {% endif %}
-                                        {% if help.img %}
-                                            <img src="{{ _res_path }}html/otherimg/{{ help.img }}" alt="{{ help.img }}">
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            </div>
-        {% endif %}
-    {% endfor %}
-
-    <div class="createdbox">
-        <div class="phi-plugin">
-            <p>{{ _plugin }}</p>
-        </div>
-        <div class="ver">
-            <p>{{ Version.ver }}</p>
-        </div>
+{% extends defaultLayout %} {% block css %}
+<link rel="stylesheet" href="{{ _res_path }}html/help/help.css" />
+{% endblock %} {% block main %} {% for group in helpGroup %} {% if group.auth !=
+"master" or isMaster %} {% set len = group.list | length %}
+<div class="help_box">
+  <div class="help-group">——·{{ group.group }}·——</div>
+  {% if len > 0 %} {% for help in group.list %}
+  <div class="line">
+    <div class="order">
+      {% if cmdHead %}
+      <p name="pvis">{{ help.title | replace('/', '/' ~ cmdHead ~ ' ') }}</p>
+      {% else %}
+      <p name="pvis">{{ help.title }}</p>
+      {% endif %}
     </div>
+    <div class="info_box">
+      <div class="up">
+        <div class="num">{{ loop.index }}</div>
+        <div class="song">
+          {% if cmdHead %}
+          <p name="pvis">
+            {{ (help.eg or help.title) | replace('/', '/' ~ cmdHead ~ ' ') }}
+          </p>
+          {% else %}
+          <p name="pvis">{{ help.eg or help.title }}</p>
+          {% endif %}
+        </div>
+      </div>
+      <div class="down">
+        <div class="desc">
+          {% if help.desc %}
+          <p name="pvis">{{ help.desc | replace(' ', '&ensp;') }}</p>
+          {% endif %} {% if help.img %}
+          <img
+            src="{{ _res_path }}html/otherimg/{{ help.img }}"
+            alt="{{ help.img }}"
+          />
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %} {% endif %}
+</div>
+{% endif %} {% endfor %}
 
-    {% if theme == "snow" %}
-        <div class="snow-box"> </div>
-        <script> themeSnow(); </script>
-    {% elif theme in ["topText", "foolsDay"] %}
-        <div class="topTextBox" id="topTextBox"></div>
-        <script> themeTopText(); </script>
-    {% elif theme == "star" %}
-        <canvas id="stars"></canvas>
-        <script> themeStar(); </script>
-    {% endif %}
-{% endblock %}
+<div class="createdbox">
+  <div class="phi-plugin">
+    <p>{{ _plugin }}</p>
+  </div>
+  <div class="ver">
+    <p>{{ Version.ver }}</p>
+  </div>
+</div>
+
+{% if theme == "snow" %}
+<div class="snow-box"></div>
+<script>
+  themeSnow();
+</script>
+{% elif theme in ["topText", "foolsDay"] %}
+<div class="topTextBox" id="topTextBox"></div>
+<script>
+  themeTopText();
+</script>
+{% elif theme == "star" %}
+<canvas id="stars"></canvas>
+<script>
+  themeStar();
+</script>
+{% endif %} {% endblock %}

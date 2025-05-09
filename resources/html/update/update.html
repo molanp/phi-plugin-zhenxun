@@ -1,186 +1,207 @@
-{% extends defaultLayout %}
-
-{% block css %}
-<link rel="stylesheet" href="{{ _res_path }}html/update/update.css">
-{% endblock %}
-
-{% block main %}
+{% extends defaultLayout %} {% block css %}
+<link rel="stylesheet" href="{{ _res_path }}html/update/update.css" />
+{% endblock %} {% block main %}
 <div class="title">
-   <div class="r">
-      <p>Player: {{ PlayerId }}</p>
-      <p>RankingScore: {{ Rks }}
-         {% if added_rks_notes[0] %}
-         <span style="color: {% if '+' in added_rks_notes[0] %}gold{% else %}red{% endif %};">
-            {{ added_rks_notes[0] }}
-         </span>
-         {% endif %}
-      </p>
-      <div class="Challenge">
-         <p>ChallengeMode:</p>
-         {% if dan %}
-         <div class="CLG {% if dan.EX %}colorful{% endif %}">
-            <p>{{ dan.Dan }}</p>
-         </div>
-         {% endif %}
-         <div class="Challenge-r">
-            <img src="{{ _res_path }}html/otherimg/{{ ChallengeMode }}.png" alt="Challenge">
-            <p>{{ ChallengeModeRank }}</p>
-         </div>
+  <div class="r">
+    <p>Player: {{ PlayerId }}</p>
+    <p>
+      RankingScore: {{ Rks }} {% if added_rks_notes[0] %}
+      <span
+        style="color: {% if '+' in added_rks_notes[0] %}gold{% else %}red{% endif %};"
+      >
+        {{ added_rks_notes[0] }}
+      </span>
+      {% endif %}
+    </p>
+    <div class="Challenge">
+      <p>ChallengeMode:</p>
+      {% if dan %}
+      <div class="CLG {% if dan.EX %}colorful{% endif %}">
+        <p>{{ dan.Dan }}</p>
       </div>
-      <p>Notes: {{ Notes }}
-         {% if added_rks_notes[1] %}
-         <span style="color: {% if '+' in added_rks_notes[1] %}gold{% else %}red{% endif %};">
-            {{ added_rks_notes[1] }}
-         </span>
-         {% endif %}
-      </p>
-      <p>Date: {{ Date }}</p>
-   </div>
-   <div class="rks_line">
-      <div class="svg-box">
-         {% if rks_history %}
-         <div class="value_box">
-            <p>{{ "%.4f"|format(rks_range[1]) }}</p>
-            <p>{{ "%.4f"|format(rks_range[0]) }}</p>
-         </div>
-         <div class="line-box">
-            <div class="line">
-               <svg>
-                  <defs>
-                     <marker id="dot" viewBox="0 0 10 10" markerWidth="8" markerHeight="8" refX="2" refY="2">
-                        <circle cx="2" cy="2" r="1"></circle>
-                     </marker>
-                  </defs>
-                  {% for value in rks_history %}
-                  <line x1="{{ value[0] }}%" y1="{{ value[1] }}%" x2="{{ value[2] }}%" y2="{{ value[3] }}%"></line>
-                  {% endfor %}
-               </svg>
-            </div>
-            <div class="date_box">
-               <p>{{ rks_date[0] }}</p>
-               <p>{{ rks_date[1] }}</p>
-            </div>
-         </div>
-         {% else %}
-         <p>NO_INFO</p>
-         {% endif %}
+      {% endif %}
+      <div class="Challenge-r">
+        <img
+          src="{{ _res_path }}html/otherimg/{{ ChallengeMode }}.png"
+          alt="Challenge"
+        />
+        <p>{{ ChallengeModeRank }}</p>
       </div>
-   </div>
+    </div>
+    <p>
+      Notes: {{ Notes }} {% if added_rks_notes[1] %}
+      <span
+        style="color: {% if '+' in added_rks_notes[1] %}gold{% else %}red{% endif %};"
+      >
+        {{ added_rks_notes[1] }}
+      </span>
+      {% endif %}
+    </p>
+    <p>Date: {{ Date }}</p>
+  </div>
+  <div class="rks_line">
+    <div class="svg-box">
+      {% if rks_history %}
+      <div class="value_box">
+        <p>{{ "%.4f"|format(rks_range[1]) }}</p>
+        <p>{{ "%.4f"|format(rks_range[0]) }}</p>
+      </div>
+      <div class="line-box">
+        <div class="line">
+          <svg>
+            <defs>
+              <marker
+                id="dot"
+                viewBox="0 0 10 10"
+                markerWidth="8"
+                markerHeight="8"
+                refX="2"
+                refY="2"
+              >
+                <circle cx="2" cy="2" r="1"></circle>
+              </marker>
+            </defs>
+            {% for value in rks_history %}
+            <line
+              x1="{{ value[0] }}%"
+              y1="{{ value[1] }}%"
+              x2="{{ value[2] }}%"
+              y2="{{ value[3] }}%"
+            ></line>
+            {% endfor %}
+          </svg>
+        </div>
+        <div class="date_box">
+          <p>{{ rks_date[0] }}</p>
+          <p>{{ rks_date[1] }}</p>
+        </div>
+      </div>
+      {% else %}
+      <p>NO_INFO</p>
+      {% endif %}
+    </div>
+  </div>
 </div>
 
 {% if box_line or task_data %}
 <div class="record_box">
-   {% if task_data %}
-   <div class="title_box">
-      <div class="box_title" style="width: 755px; filter: drop-shadow(0px 2px 2px #fff382);">
-         <div class="box_title-right-down" style="background-color: #fff382;"></div>
-         <div class="box_title-left" style="background-color: #fff382;">
-            <p style="color: black; text-shadow: 0px 0px 3px rgb(255, 255, 255);">Task_table</p>
-         </div>
-         <div class="box_title-right">
-            <p>{{ task_time }}</p>
-         </div>
+  {% if task_data %}
+  <div class="title_box">
+    <div
+      class="box_title"
+      style="width: 755px; filter: drop-shadow(0px 2px 2px #fff382)"
+    >
+      <div class="box_title-right-down" style="background-color: #fff382"></div>
+      <div class="box_title-left" style="background-color: #fff382">
+        <p style="color: black; text-shadow: 0px 0px 3px rgb(255, 255, 255)">
+          Task_table
+        </p>
       </div>
-   </div>
-   <div class="song_box" style="padding-top: 3%;">
-      {% for song in task_data %}
-      {% if song %}
-      <div class="abox">
-         <div class="imgbox">
-            <img src="{{ song.illustration }}" alt="{{ song.song }}">
-         </div>
-         <div class="coinbox_{% if song.finished %}ed{% else %}un{% endif %}">
-            <p>+{{ song.reward }} Notes</p>
-         </div>
-         <div class="infobox">
-            <div class="namebox_{% if song.finished %}ed{% else %}un{% endif %}">
-               <div class="songsname">
-                  <p name="pvis">{{ song.song }}</p>
-               </div>
-            </div>
-            <div class="songsinfo_{% if song.finished %}ed{% else %}un{% endif %}">
-               <div class="rank">
-                  <p>{{ song.request.rank }}</p>
-               </div>
-               <div class="score">
-                  <p>{{ song.request.value }}</p>
-               </div>
-            </div>
-         </div>
+      <div class="box_title-right">
+        <p>{{ task_time }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="song_box" style="padding-top: 3%">
+    {% for song in task_data %} {% if song %}
+    <div class="abox">
+      <div class="imgbox">
+        <img src="{{ song.illustration }}" alt="{{ song.song }}" />
+      </div>
+      <div class="coinbox_{% if song.finished %}ed{% else %}un{% endif %}">
+        <p>+{{ song.reward }} Notes</p>
+      </div>
+      <div class="infobox">
+        <div class="namebox_{% if song.finished %}ed{% else %}un{% endif %}">
+          <div class="songsname">
+            <p name="pvis">{{ song.song }}</p>
+          </div>
+        </div>
+        <div class="songsinfo_{% if song.finished %}ed{% else %}un{% endif %}">
+          <div class="rank">
+            <p>{{ song.request.rank }}</p>
+          </div>
+          <div class="score">
+            <p>{{ song.request.value }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %} {% endfor %}
+  </div>
+  {% endif %} {% for time_line in box_line %}
+  <div class="title_box">
+    {% for date in time_line %}
+    <div
+      class="box_title"
+      style="width: {{ date.width }}px; filter: drop-shadow(0px 2px 2px {{ date.color }});"
+    >
+      <div
+        class="box_title-right-down"
+        style="background-color: {{ date.color }};"
+      ></div>
+      {% if date.date %}
+      <div class="box_title-left" style="background-color: {{ date.color }};">
+        <p name="pvis">{{ date.date }}</p>
+      </div>
+      {% endif %} {% if date.update_num > 1 %}
+      <div class="box_title-right">
+        <p name="pvis">Updated × {{ date.update_num }}</p>
       </div>
       {% endif %}
-      {% endfor %}
-   </div>
-   {% endif %}
-
-   {% for time_line in box_line %}
-   <div class="title_box">
-      {% for date in time_line %}
-      <div class="box_title" style="width: {{ date.width }}px; filter: drop-shadow(0px 2px 2px {{ date.color }});">
-         <div class="box_title-right-down" style="background-color: {{ date.color }};"></div>
-         {% if date.date %}
-         <div class="box_title-left" style="background-color: {{ date.color }};">
-            <p name="pvis">{{ date.date }}</p>
-         </div>
-         {% endif %}
-         {% if date.update_num > 1 %}
-         <div class="box_title-right">
-            <p name="pvis">Updated × {{ date.update_num }}</p>
-         </div>
-         {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  <div class="song_box">
+    {% for date in time_line %} {% for song in date.song %}
+    <div class="abox">
+      <div class="imgbox">
+        <img src="{{ song.illustration }}" alt="{{ song.song }}" />
       </div>
-      {% endfor %}
-   </div>
-   <div class="song_box">
-      {% for date in time_line %}
-      {% for song in date.song %}
-      <div class="abox">
-         <div class="imgbox">
-            <img src="{{ song.illustration }}" alt="{{ song.song }}">
-         </div>
-         {% if song.isB19 %}
-         <div class="coinbox">
-            <p>Best {{ song.isB19 }}</p>
-         </div>
-         {% endif %}
-         <div class="infobox">
-            <div class="namebox">
-               {% if song.Rating %}
-               <div class="new-box">
-                  <img src="{{ _res_path }}html/otherimg/{{ song.Rating }}.png" alt="{{ song.Rating }}">
-               </div>
-               {% endif %}
-               <div class="songsname">
-                  <p name="pvis">{{ song.song }}</p>
-               </div>
-            </div>
-            <div class="songsinfo">
-               <div class="rank">
-                  <p>{{ song.rank }}</p>
-               </div>
-               <div class="score">
-                  <p>{{ song.score_new }}</p>
-               </div>
-               <div class="acc">
-                  <div class="acc_1">
-                     <p>{{ song.acc_new | int }}</p>
-                  </div>
-                  <div class="acc_2">
-                     <p>.{{ "%.4f"|format(song.acc_new % 1)[2:] }}%</p>
-                  </div>
-               </div>
-               {% if song.rks_new %}
-               <div class="rks">
-                  <p>{{ "%.4f"|format(song.rks_new) }}</p>
-               </div>
-               {% endif %}
-            </div>
-         </div>
+      {% if song.isB19 %}
+      <div class="coinbox">
+        <p>Best {{ song.isB19 }}</p>
       </div>
-      {% endfor %}
-      {% endfor %}
-   </div>
-   {% endfor %}
+      {% endif %}
+      <div class="infobox">
+        <div class="namebox">
+          {% if song.Rating %}
+          <div class="new-box">
+            <img
+              src="{{ _res_path }}html/otherimg/{{ song.Rating }}.png"
+              alt="{{ song.Rating }}"
+            />
+          </div>
+          {% endif %}
+          <div class="songsname">
+            <p name="pvis">{{ song.song }}</p>
+          </div>
+        </div>
+        <div class="songsinfo">
+          <div class="rank">
+            <p>{{ song.rank }}</p>
+          </div>
+          <div class="score">
+            <p>{{ song.score_new }}</p>
+          </div>
+          <div class="acc">
+            <div class="acc_1">
+              <p>{{ song.acc_new | int }}</p>
+            </div>
+            <div class="acc_2">
+              <p>.{{ "%.4f"|format(song.acc_new % 1)[2:] }}%</p>
+            </div>
+          </div>
+          {% if song.rks_new %}
+          <div class="rks">
+            <p>{{ "%.4f"|format(song.rks_new) }}</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %} {% endfor %}
+  </div>
+  {% endfor %}
 </div>
-{% endif %}
-{% endblock %}
+{% endif %} {% endblock %}

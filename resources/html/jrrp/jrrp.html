@@ -1,58 +1,54 @@
-{% extends defaultLayout %}
-
-{% block css %}
-<link rel="stylesheet" href="{{ _res_path }}html/jrrp/jrrp.css">
-{% endblock %}
-
-{% block main %}
+{% extends defaultLayout %} {% block css %}
+<link rel="stylesheet" href="{{ _res_path }}html/jrrp/jrrp.css" />
+{% endblock %} {% block main %}
 
 <div class="jrrpBkg">
-   <img src="{{ bkg }}" alt="{{ bkg }}">
+  <img src="{{ bkg }}" alt="{{ bkg }}" />
 </div>
 <div class="upperImg">
-   <img src="{{ _res_path }}html/jrrp/ShineAfter.removebg.png" alt="upper">
+  <img src="{{ _res_path }}html/jrrp/ShineAfter.removebg.png" alt="upper" />
 </div>
 <div class="title">
-   <p>——·今日运势·——</p>
+  <p>——·今日运势·——</p>
 </div>
 <div class="lucky ac-{{ luckRank }}">
-   <p>{{ lucky }}</p>
+  <p>{{ lucky }}</p>
 </div>
 <div class="date">
-   <div class="year">
-      <p>{{ year }}</p>
-      <p>YYYY</p>
-   </div>
-   <div class="mounth">
-      <p>{{ month }}</p>
-      <p>MM</p>
-   </div>
-   <div class="day">
-      <p>{{ day }}</p>
-      <p>DD</p>
-   </div>
+  <div class="year">
+    <p>{{ year }}</p>
+    <p>YYYY</p>
+  </div>
+  <div class="mounth">
+    <p>{{ month }}</p>
+    <p>MM</p>
+  </div>
+  <div class="day">
+    <p>{{ day }}</p>
+    <p>DD</p>
+  </div>
 </div>
 <div class="left">
-   <div class="afont">
-      <p><i>宜</i></p>
-   </div>
-   {% for word in good %}
-   <p>{{ word }}</p>
-   {% endfor %}
+  <div class="afont">
+    <p><i>宜</i></p>
+  </div>
+  {% for word in good %}
+  <p>{{ word }}</p>
+  {% endfor %}
 </div>
 <div class="right">
-   <div class="afont">
-      <p><i>忌</i></p>
-   </div>
-   {% for word in bad %}
-   <p>{{ word }}</p>
-   {% endfor %}
+  <div class="afont">
+    <p><i>忌</i></p>
+  </div>
+  {% for word in bad %}
+  <p>{{ word }}</p>
+  {% endfor %}
 </div>
 <div class="sentences">
-   <p name="pvis">{{ sentence.hitokoto }}</p>
+  <p name="pvis">{{ sentence.hitokoto }}</p>
 </div>
 <div class="from">
-   <p name="pvis">——「{{ sentence.from }}」</p>
+  <p name="pvis">——「{{ sentence.from }}」</p>
 </div>
 
 {% endblock %}

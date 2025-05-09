@@ -20,7 +20,7 @@ class pic:
         if data is None:
             return f"未找到{name}的相关曲目信息!QAQ"
         data["illustration"] = getInfo.getill(name)
-        return await picmodle.picmodle(data)
+        return await picmodle.alias(data)
 
     @staticmethod
     async def GetSongsIllAtlas(name: str, data: dict | None = None):

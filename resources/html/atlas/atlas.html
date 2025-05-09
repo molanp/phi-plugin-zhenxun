@@ -1,159 +1,219 @@
-{% extends defaultLayout %}
-{% block css %}
-<link rel="stylesheet" href="{{ _res_path }}html/atlas/atlas.css">
-{% endblock %}
-
-{% block main %}
-<div class="background" style="background: url({{ illustration }}) no-repeat; background-size: cover;">
-   <img src="{{ illustration }}" alt="曲绘-模糊">
+{% extends defaultLayout %} {% block css %}
+<link rel="stylesheet" href="{{ _res_path }}html/atlas/atlas.css" />
+{% endblock %} {% block main %}
+<div
+  class="background"
+  style="background: url({{ illustration }}) no-repeat; background-size: cover;"
+>
+  <img src="{{ illustration }}" alt="曲绘-模糊" />
 </div>
 <div class="big-box">
-   <div class="box">
-      <div class="info-box">
-         <div class="name-box">
-            <div class="song">
-               <p name="pvis">{{ song }}</p>
+  <div class="box">
+    <div class="info-box">
+      <div class="name-box">
+        <div class="song">
+          <p name="pvis">{{ song }}</p>
+        </div>
+        <div class="composer">
+          <p name="pvis">{{ composer }}</p>
+        </div>
+      </div>
+      <div class="charts-box">
+        <div class="length">
+          <p name="pvis">{{ length }}</p>
+        </div>
+        <div class="txt">
+          <div class="sqrt">
+            <p>SONG'S_INFO</p>
+          </div>
+          <div class="line">
+            {% if spinfo %}
+            <p name="pvis">{{ spinfo | replace('\n', '<br />') | safe }}</p>
+            {% endif %}
+          </div>
+        </div>
+        <div class="chart">
+          <div class="rankbkg">
+            <div class="sqr"></div>
+            {% for chart in charts %}
+            <div
+              class="sqr rank-{{ loop.index }}"
+              style="background-color: rgba({{ chart.rgba }});"
+            ></div>
+            {% endfor %}
+          </div>
+          <div class="rank">
+            <p>\</p>
+            {% for chart in charts %}
+            <div class="pBox">
+              <p name="pvis">{{ loop.index }}</p>
             </div>
-            <div class="composer">
-               <p name="pvis">{{ composer }}</p>
+            {% endfor %}
+          </div>
+          <div class="note-box">
+            <p>Difficulty</p>
+            {% for chart in charts %}
+            <p>{{ chart.difficulty }}</p>
+            {% endfor %}
+          </div>
+          <div class="rank-box">
+            <div class="charter">
+              <p>Charter</p>
             </div>
-         </div>
-         <div class="charts-box">
-            <div class="length">
-               <p name="pvis">{{ length }}</p>
+            <div class="chart-info">
+              <p>Tap</p>
+              <p>Drag</p>
+              <p>Hold</p>
+              <p>Flick</p>
             </div>
-            <div class="txt">
-               <div class="sqrt">
-                  <p>SONG'S_INFO</p>
-               </div>
-               <div class="line">
-                  {% if spinfo %}
-                  <p name="pvis">{{ spinfo | replace('\n', '<br>') | safe }}</p>
+            {% for chart in charts %}
+            <div class="charter">
+              <p name="pvis">{{ chart.charter }}</p>
+            </div>
+            <div class="chart-info">
+              <p>{{ chart.tap }}</p>
+              <p>{{ chart.drag }}</p>
+              <p>{{ chart.hold }}</p>
+              <p>{{ chart.flick }}</p>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="note-box">
+            <p>Total</p>
+            {% for chart in charts %}
+            <p>{{ chart.combo }}</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ill-box">
+      <img src="{{ illustration }}" alt="曲绘" />
+    </div>
+  </div>
+  <div class="other-info">
+    {% if bpm %}
+    <div class="other-box">
+      <div class="title">
+        <p>BPM</p>
+      </div>
+      <div class="dcr">
+        <p>{{ bpm }}</p>
+      </div>
+    </div>
+    {% endif %} {% if illustrator %}
+    <div class="other-box">
+      <div class="title">
+        <p>Illustrator</p>
+      </div>
+      <div class="dcr">
+        <p>{{ illustrator }}</p>
+      </div>
+    </div>
+    {% endif %} {% if chapter %}
+    <div class="other-box">
+      <div class="title">
+        <p>Chapter</p>
+      </div>
+      <div class="dcr">
+        <p>{{ chapter }}</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <div class="leave">
+    <div class="leave-box">
+      {% for chart in charts %} {% if loop.index == 'EZ' %}
+      <div class="leave-ez">
+        {% elif loop.index == 'HD' %}
+        <div class="leave-hd">
+          {% elif loop.index == 'IN' %}
+          <div class="leave-in">
+            {% elif loop.index == 'AT' %}
+            <div class="leave-at">
+              {% elif loop.index == 'SP' %}
+              <div class="leave-sp">
+                {% else %}
+                <div
+                  class="leave-sp"
+                  style="background-color: rgba({{ chart.rgba }});"
+                >
                   {% endif %}
-               </div>
+                  <div class="ldif">
+                    <p name="pvis">{{ chart.difficulty }}</p>
+                  </div>
+                  <div class="lrank">
+                    <p name="pvis">{{ loop.index }}</p>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
             </div>
-            <div class="chart">
-               <div class="rankbkg">
-                  <div class="sqr"></div>
-                  {% for chart in charts %}
-                  <div class="sqr rank-{{ loop.index }}" style="background-color: rgba({{ chart.rgba }});"></div>
-                  {% endfor %}
-               </div>
-               <div class="rank">
-                  <p>\</p>
-                  {% for chart in charts %}
-                  <div class="pBox">
-                     <p name="pvis">{{ loop.index }}</p>
-                  </div>
-                  {% endfor %}
-               </div>
-               <div class="note-box">
-                  <p>Difficulty</p>
-                  {% for chart in charts %}
-                  <p>{{ chart.difficulty }}</p>
-                  {% endfor %}
-               </div>
-               <div class="rank-box">
-                  <div class="charter">
-                     <p>Charter</p>
-                  </div>
-                  <div class="chart-info">
-                     <p>Tap</p>
-                     <p>Drag</p>
-                     <p>Hold</p>
-                     <p>Flick</p>
-                  </div>
-                  {% for chart in charts %}
-                  <div class="charter">
-                     <p name="pvis">{{ chart.charter }}</p>
-                  </div>
-                  <div class="chart-info">
-                     <p>{{ chart.tap }}</p>
-                     <p>{{ chart.drag }}</p>
-                     <p>{{ chart.hold }}</p>
-                     <p>{{ chart.flick }}</p>
-                  </div>
-                  {% endfor %}
-               </div>
-               <div class="note-box">
-                  <p>Total</p>
-                  {% for chart in charts %}
-                  <p>{{ chart.combo }}</p>
-                  {% endfor %}
-               </div>
+          </div>
+          {%if comment%}
+          <div class="comment-box">
+            <div class="comment_title">
+              <p>Comments</p>
+              <p>{{ comment.command }}</p>
             </div>
-         </div>
-      </div>
-      <div class="ill-box">
-         <img src="{{ illustration }}" alt="曲绘">
-      </div>
-   </div>
-   <div class="other-info">
-      {% if bpm %}
-      <div class="other-box">
-         <div class="title">
-            <p>BPM</p>
-         </div>
-         <div class="dcr">
-            <p>{{ bpm }}</p>
-         </div>
-      </div>
-      {% endif %}
-      {% if illustrator %}
-      <div class="other-box">
-         <div class="title">
-            <p>Illustrator</p>
-         </div>
-         <div class="dcr">
-            <p>{{ illustrator }}</p>
-         </div>
-      </div>
-      {% endif %}
-      {% if chapter %}
-      <div class="other-box">
-         <div class="title">
-            <p>Chapter</p>
-         </div>
-         <div class="dcr">
-            <p>{{ chapter }}</p>
-         </div>
-      </div>
-      {% endif %}
-   </div>
-   <div class="leave">
-      <div class="leave-box">
-         {% for chart in charts %}
-         {% if loop.index == 'EZ' %}
-         <div class="leave-ez">
-            {% elif loop.index == 'HD' %}
-            <div class="leave-hd">
-               {% elif loop.index == 'IN' %}
-               <div class="leave-in">
-                  {% elif loop.index == 'AT' %}
-                  <div class="leave-at">
-                     {% elif loop.index == 'SP' %}
-                     <div class="leave-sp">
-                        {% else %}
-                        <div class="leave-sp" style="background-color: rgba({{ chart.rgba }});">
-                           {% endif %}
-                           <div class="ldif">
-                              <p name="pvis">{{ chart.difficulty }}</p>
-                           </div>
-                           <div class="lrank">
-                              <p name="pvis">{{ loop.index }}</p>
-                           </div>
-                        </div>
-                        {% endfor %}
-                     </div>
+            {% for user in comment.list %}
+            <div class="a_comment">
+              <div class="avatar">
+                <img
+                  src="{{ _res_path }}html/avatar/{{ user.avatar }}.png"
+                  alt="{{ user.avatar }}"
+                />
+              </div>
+              <div class="userInfo">
+                <div class="playerId">
+                  <p>{{ user.PlayerId }}</p>
+                </div>
+                <div class="rks">
+                  <p>{{ "%.4f"|format(user.rks) }}</p>
+                </div>
+                <div class="score {{user.rank}}-BKG">
+                  <p>{{ user.score }}</p>
+                </div>
+                <div class="acc {{user.rank}}-BKG">
+                  <p>{{ "%.2f"|format(user.acc) }}%</p>
+                </div>
+                {% if user.spInfo %}
+                <div class="spInfo colorful-background">
+                  <p>{{ user.spInfo }}</p>
+                </div>
+                {% endif %}
+                <div class="clg_box">
+                  <div class="Challenge">
+                    <img
+                      src="{{ _res_path }}html/otherimg/{{ user.challenge // 100 }}.png"
+                      alt="{{ user.challenge }}"
+                    />
+                    <p>{{user.challenge % 100}}</p>
                   </div>
-               </div>
-               <div class="createdbox">
-                  <div class="phi-plugin">
-                     <p>{{ _plugin }}</p>
-                  </div>
-                  <div class="ver">
-                     <p>{{ Version.ver }}</p>
-                  </div>
-               </div>
-               <div class="snow-box"> </div>
-               {% endblock %}
+                </div>
+                <div class="time">
+                  <p>{{ user.time }}&ensp;ID:{{ user.thisId }}</p>
+                </div>
+              </div>
+              <div class="comment">
+                <p name="pvis">#{{ user.comment }}</p>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+          <div class="createdbox">
+            <div class="phi-plugin">
+              <p>{{ _plugin }}</p>
+            </div>
+            <div class="ver">
+              <p>{{ Version.ver }}</p>
+            </div>
+          </div>
+          <div class="snow-box"></div>
+          {% endblock %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

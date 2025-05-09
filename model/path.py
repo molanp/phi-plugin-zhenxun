@@ -25,6 +25,9 @@ pluginDataPath = dataPath / "pluginData"
 # /**用户存档数据路径 */
 savePath = dataPath / "saveData"
 
+# /**其他插件数据路径 */
+otherDataPath = dataPath / "otherData"
+
 # /**用户设置路径 */
 configPath = dataPath / "config"
 

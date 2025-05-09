@@ -1,165 +1,184 @@
-{% extends defaultLayout %}
-
-{% block css %}
-<link rel="stylesheet" href="{{ _res_path }}html/userinfo/userinfo-old.css">
+{% extends defaultLayout %} {% block css %}
+<link rel="stylesheet" href="{{ _res_path }}html/userinfo/userinfo-old.css" />
 <style>
-   .basis-box {
-      background-image: url('{{ gameuser.backgroundurl }}');
-      background-size: cover;
-      background-position: top;
-      display: flex;
-      width: 98.5%;
-   }
+  .basis-box {
+    background-image: url("{{ gameuser.backgroundurl }}");
+    background-size: cover;
+    background-position: top;
+    display: flex;
+    width: 98.5%;
+  }
 </style>
-{% endblock %}
-
-{% block main %}
+{% endblock %} {% block main %}
 <div class="basis-box">
-   <div class="basis-box-out">
-      <div class="box-in" id="basis">
-         <div class="box-title">
-            <p>Basis-Info</p>
-         </div>
-         <div class="basis-info">
-            <div class="avatar">
-               <img src="{{ _res_path }}html/avatar/{{ gameuser.avatar }}.png" alt="{{ gameuser.avatar }}">
-            </div>
-            <div class="name">
-               <div class="user-info-line">
-                  <div class="user-info-box">
-                     <div class="name-title">
-                        <p>Player ID</p>
-                     </div>
-                     <div class="name-value">
-                        <p>{{ gameuser.PlayerId }}</p>
-                     </div>
-                  </div>
-                  <div class="Challenge">
-                     <img src="{{ _res_path }}html/otherimg/{{ gameuser.ChallengeMode }}.png" alt="{{ gameuser.ChallengeMode }}">
-                     <p>{{ gameuser.ChallengeModeRank }}</p>
-                  </div>
-               </div>
-               <div class="user-info-line">
-                  <div class="user-info-box">
-                     <div class="name-title">
-                        <p>RankingScore</p>
-                     </div>
-                     <div class="name-value">
-                        <p>{{ "%.4f"|format(gameuser.rks) }}</p>
-                     </div>
-                  </div>
-                  <div class="user-info-box">
-                     <div class="name-title">
-                        <p>Data</p>
-                     </div>
-                     <div class="name-value">
-                        <p>{{ gameuser.data }}</p>
-                     </div>
-                  </div>
-               </div>
-            </div>
-         </div>
-         {% if gameuser.selfIntro %}
-         <div class="box-title">
-            <p>Profile</p>
-         </div>
-         <div class="profile">
-            <font color='white'>{{ gameuser.selfIntro | replace("\n", "<br>") }}</font>
-         </div>
-         {% endif %}
+  <div class="basis-box-out">
+    <div class="box-in" id="basis">
+      <div class="box-title">
+        <p>Basis-Info</p>
       </div>
-   </div>
+      <div class="basis-info">
+        <div class="avatar">
+          <img
+            src="{{ _res_path }}html/avatar/{{ gameuser.avatar }}.png"
+            alt="{{ gameuser.avatar }}"
+          />
+        </div>
+        <div class="name">
+          <div class="user-info-line">
+            <div class="user-info-box">
+              <div class="name-title">
+                <p>Player ID</p>
+              </div>
+              <div class="name-value">
+                <p>{{ gameuser.PlayerId }}</p>
+              </div>
+            </div>
+            <div class="Challenge">
+              <img
+                src="{{ _res_path }}html/otherimg/{{ gameuser.ChallengeMode }}.png"
+                alt="{{ gameuser.ChallengeMode }}"
+              />
+              <p>{{ gameuser.ChallengeModeRank }}</p>
+            </div>
+          </div>
+          <div class="user-info-line">
+            <div class="user-info-box">
+              <div class="name-title">
+                <p>RankingScore</p>
+              </div>
+              <div class="name-value">
+                <p>{{ "%.4f"|format(gameuser.rks) }}</p>
+              </div>
+            </div>
+            <div class="user-info-box">
+              <div class="name-title">
+                <p>Data</p>
+              </div>
+              <div class="name-value">
+                <p>{{ gameuser.data }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% if gameuser.selfIntro %}
+      <div class="box-title">
+        <p>Profile</p>
+      </div>
+      <div class="profile">
+        <font color="white"
+          >{{ gameuser.selfIntro | replace("\n", "<br />") }}</font
+        >
+      </div>
+      {% endif %}
+    </div>
+  </div>
 </div>
 <div class="box-out">
-   <div class="box-in">
-      <div class="box-title">
-         <p>Stats</p>
+  <div class="box-in">
+    <div class="box-title">
+      <p>Stats</p>
+    </div>
+    <div class="stats-box">
+      {% for e in userstats %}
+      <div class="one-stats-box">
+        <div class="rank">
+          <p>{{ e.title }}</p>
+        </div>
+        <div class="stats-up">
+          <div class="Rating">
+            <img
+              src="{{ _res_path }}html/otherimg/{{ e.Rating }}.png"
+              alt="{{ e.Rating }}"
+            />
+          </div>
+          <div class="stats-group">
+            <div class="stats-group-real">
+              <p>{{ e.unlock }}</p>
+            </div>
+            <div class="stats-group-tot">
+              <p>/{{ e.tot }}</p>
+            </div>
+          </div>
+          <div class="stats-rating-group">
+            {% for key in ["cleared", "fc", "phi"] %}
+            <div class="rating-group">
+              <div class="rating-value">
+                <p>{{ e[key] }}</p>
+              </div>
+              <div class="rating-title">
+                <p>{{ key | upper }}</p>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="stats-group">
+          <div class="stats-group-real">
+            <p>{{ e.real_score }}</p>
+          </div>
+          <div class="stats-group-tot">
+            <p>/{{ e.tot_score }}</p>
+          </div>
+        </div>
+        <div class="stats-score">
+          {% for key in ["highest", "lowest"] %}
+          <div class="stats-group">
+            <div class="stats-group-real">
+              <p>{{ "%.2f"|format(e[key]) }}</p>
+            </div>
+            <div class="stats-group-tot">
+              <p>{{ key | upper }}</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
       </div>
-      <div class="stats-box">
-         {% for e in userstats %}
-         <div class="one-stats-box">
-            <div class="rank">
-               <p>{{ e.title }}</p>
-            </div>
-            <div class="stats-up">
-               <div class="Rating">
-                  <img src="{{ _res_path }}html/otherimg/{{ e.Rating }}.png" alt="{{ e.Rating }}">
-               </div>
-               <div class="stats-group">
-                  <div class="stats-group-real">
-                     <p>{{ e.unlock }}</p>
-                  </div>
-                  <div class="stats-group-tot">
-                     <p>/{{ e.tot }}</p>
-                  </div>
-               </div>
-               <div class="stats-rating-group">
-                  {% for key in ["cleared", "fc", "phi"] %}
-                  <div class="rating-group">
-                     <div class="rating-value">
-                        <p>{{ e[key] }}</p>
-                     </div>
-                     <div class="rating-title">
-                        <p>{{ key | upper }}</p>
-                     </div>
-                  </div>
-                  {% endfor %}
-               </div>
-            </div>
-            <div class="stats-group">
-               <div class="stats-group-real">
-                  <p>{{ e.real_score }}</p>
-               </div>
-               <div class="stats-group-tot">
-                  <p>/{{ e.tot_score }}</p>
-               </div>
-            </div>
-            <div class="stats-score">
-               {% for key in ["highest", "lowest"] %}
-               <div class="stats-group">
-                  <div class="stats-group-real">
-                     <p>{{ "%.2f"|format(e[key]) }}</p>
-                  </div>
-                  <div class="stats-group-tot">
-                     <p>{{ key | upper }}</p>
-                  </div>
-               </div>
-               {% endfor %}
-            </div>
-         </div>
-         {% endfor %}
-      </div>
-   </div>
+      {% endfor %}
+    </div>
+  </div>
 </div>
 <div class="box-out">
-   <div class="box-in">
-      <div class="box-title">
-         <p>RKS History</p>
+  <div class="box-in">
+    <div class="box-title">
+      <p>RKS History</p>
+    </div>
+    <div class="svg-box">
+      {% if rks_history %}
+      <div class="value_box">
+        <p>{{ "%.4f"|format(rks_range[1]) }}</p>
+        <p>{{ "%.4f"|format(rks_range[0]) }}</p>
       </div>
-      <div class="svg-box">
-         {% if rks_history %}
-         <div class="value_box">
-            <p>{{ "%.4f"|format(rks_range[1]) }}</p>
-            <p>{{ "%.4f"|format(rks_range[0]) }}</p>
-         </div>
-         <div class="line-box">
-            <div class="line">
-               <svg>
-                  <defs>
-                     <marker id="dot" viewBox="0 0 10 10" markerWidth="8" markerHeight="8" refX="2" refY="2">
-                        <circle cx="2" cy="2" r="1"></circle>
-                     </marker>
-                  </defs>
-                  {% for value in rks_history %}
-                  <line x1="{{ value[0] }}%" y1="{{ value[1] }}%" x2="{{ value[2] }}%" y2="{{ value[3] }}%"></line>
-                  {% endfor %}
-               </svg>
-            </div>
-         </div>
-         {% else %}
-         <p>NO_INFO</p>
-         {% endif %}
+      <div class="line-box">
+        <div class="line">
+          <svg>
+            <defs>
+              <marker
+                id="dot"
+                viewBox="0 0 10 10"
+                markerWidth="8"
+                markerHeight="8"
+                refX="2"
+                refY="2"
+              >
+                <circle cx="2" cy="2" r="1"></circle>
+              </marker>
+            </defs>
+            {% for value in rks_history %}
+            <line
+              x1="{{ value[0] }}%"
+              y1="{{ value[1] }}%"
+              x2="{{ value[2] }}%"
+              y2="{{ value[3] }}%"
+            ></line>
+            {% endfor %}
+          </svg>
+        </div>
       </div>
-   </div>
+      {% else %}
+      <p>NO_INFO</p>
+      {% endif %}
+    </div>
+  </div>
 </div>
 {% endblock %}
