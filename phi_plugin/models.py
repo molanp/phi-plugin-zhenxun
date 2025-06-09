@@ -212,3 +212,43 @@ class RksRank(Model):
             cls.filter().order_by("-rks").offset(min_rank).limit(max_rank - min_rank)
         )
         return await query.values()
+
+
+class userApiId(Model):
+    id = fields.IntField(pk=True, generated=True, auto_increment=True)
+    """自增id"""
+    uid = fields.CharField(255, description="用户uid")
+    """用户uid"""
+    apiId = fields.CharField(255, description="用户的apiIId")
+    """用户的apiId"""
+
+    class Meta:  # type: ignore
+        table = "phiPlugin_userApiId"
+        table_description = "Phi 用户apiId"
+        indexes: ClassVar = [
+            ("uid", "apiId"),
+        ]
+
+    @classmethod
+    async def add_user_apiId(cls, user_id, apiId) -> bool:
+        data = await cls.get_or_none(uid=user_id)
+        if data:
+            data.apiId = apiId
+        else:
+            data = cls(uid=user_id, apiId=apiId)
+        await data.save()
+        return True
+
+    @classmethod
+    async def get_user_apiId(cls, user_id) -> str | None:
+        data = await cls.get_or_none(uid=user_id)
+        return data.apiId if data else None
+
+    @classmethod
+    async def del_user_apiId(cls, user_id) -> bool:
+        """删除 user_id 号对应的 apiId"""
+        data = await cls.get_or_none(uid=user_id)
+        if data:
+            await data.delete()
+            return True
+        return False

@@ -1,7 +1,9 @@
 from .class.Save import getSave
 from .getSave import getSave
 
-from nonebot import get_bot
+from nonebot import get_bot, require
+require("nonebot_plugin_alconna")
+require("nonebot_plugin_uninfo")
 from nonebot_plugin_alconna import Image, Text, UniMessage
 from nonebot_plugin_uninfo import Uninfo
 
