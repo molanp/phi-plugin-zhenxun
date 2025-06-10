@@ -4,7 +4,7 @@ from typing import Any, TypedDict
 import httpx
 
 from ..config import PluginConfig
-from .models.saveHistory import saveHistory
+from .cls.saveHistory import saveHistory
 
 
 class baseAu(TypedDict):

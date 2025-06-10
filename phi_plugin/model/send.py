@@ -1,11 +1,12 @@
 from nonebot import get_bot, require
+from nonebot.adapters import Event
 
+from .cls.Save import getSave
 from .getSave import getSave
-from .models.Save import getSave
 
 require("nonebot_plugin_alconna")
 require("nonebot_plugin_uninfo")
-from nonebot_plugin_alconna import Image, Text, UniMessage
+from nonebot_plugin_alconna import Image, Text
 from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.services.log import logger
@@ -18,19 +19,20 @@ from .getUpdateSave import getUpdateSave
 
 class send:
     @classmethod
-    async def send_with_At(cls, msg: list[Text | Image] | Text | str, quote=True):
+    async def send_with_At(
+        cls, e: Event, msg: list[Text | Image] | Text | str, quote=True
+    ):
         """
-        私聊省略@
-
+        :param Event e: 事件对象
         :param list[Text | Image] | Text msg: 消息内容
         :param bool quote: 是否引用回复
         """
-        if isinstance(msg, str):
-            msg = [Text(msg)]
-        await UniMessage(msg).send(at_sender=True, reply=quote)
+        await MessageUtils.build_message(msg).send(e, at_sender=True, reply=quote)  # type: ignore
 
     @classmethod
-    async def getsave_result(cls, session: Uninfo, ver, send=True) -> bool | Save:
+    async def getsave_result(
+        cls, e: Event, session: Uninfo, ver, send=True
+    ) -> bool | Save:
         """
         检查存档部分
 
@@ -52,13 +54,14 @@ class send:
                         if not sessionToken:
                             if send:
                                 await cls.send_with_At(
+                                    e,
                                     "请先绑定sessionToken哦！\n"
                                     "如果不知道自己的sessionToken可以尝试扫码绑定嗷！\n"
                                     f"获取二维码：{PluginConfig.get('cmdhead')}"
                                     " bind qrcode\n"
                                     f"帮助：{PluginConfig.get('cmdhead')} tk help\n"
                                     f"格式：{PluginConfig.get('cmdhead')} bind"
-                                    " <sessionToken>"
+                                    " <sessionToken>",
                                 )
                             return False
                         user_save = await getUpdateSave.getNewSaveFromApi(
@@ -73,29 +76,30 @@ class send:
         if not sessionToken:
             if send:
                 await cls.send_with_At(
+                    e,
                     "请先绑定sessionToken哦！\n"
                     "如果不知道自己的sessionToken可以尝试扫码绑定嗷！\n"
                     f"获取二维码：{PluginConfig.get('cmdhead')} bind qrcode\n"
                     f"帮助：{PluginConfig.get('cmdhead')} tk help\n"
-                    f"格式：{PluginConfig.get('cmdhead')} bind <sessionToken>"
+                    f"格式：{PluginConfig.get('cmdhead')} bind <sessionToken>",
                 )
             return False
 
-        user_save = (await getUpdateSave.getNewSaveFromLocal(session))["save"]
+        user_save = (await getUpdateSave.getNewSaveFromLocal(e, session))["save"]
 
         if not user_save or (
             ver and (not user_save.Recordver or user_save.Recordver < ver)
         ):
             if send:
                 await cls.send_with_At(
-                    f"请先更新数据哦！\n格式：{PluginConfig.get('cmdhead')} update"
+                    e, f"请先更新数据哦！\n格式：{PluginConfig.get('cmdhead')} update"
                 )
             return False
 
         return user_save
 
     @classmethod
-    async def pick_send(cls, session: Uninfo, msg: list[Text | Image]):
+    async def pick_send(cls, e: Event, session: Uninfo, msg: list[Text | Image]):
         """
         转发到私聊
 
@@ -104,13 +108,11 @@ class send:
         """
         user = await PlatformUtils.get_user(get_bot(session.self_id), session.user.id)
         try:
-            await cls.send_with_At(
-                MessageUtils.alc_forward_msg(
-                    msg,
-                    session.self_id,
-                    user.name if user else session.user.id,
-                )
-            )
-        except Exception as e:
-            logger.error("消息转发失败", "phi-plugin", e=e)
-            await cls.send_with_At("转发失败QAQ！请尝试在私聊触发命令！")
+            await MessageUtils.alc_forward_msg(
+                msg,
+                session.self_id,
+                user.name if user else session.user.id,
+            ).send(e, reply=True)
+        except Exception as err:
+            logger.error("消息转发失败", "phi-plugin", e=err)
+            await cls.send_with_At(e, "转发失败QAQ！请尝试在私聊触发命令！")

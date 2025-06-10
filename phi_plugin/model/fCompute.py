@@ -1,516 +1,503 @@
+import asyncio
+import random
+
+from nonebot import require
+from nonebot_plugin_uninfo import Uninfo
+
 from .constNum import MAX_DIFFICULTY
-# export default class compute {
-#     /**
-#      * 计算等效rks
-#      * @param {number} acc 
-#      * @param {number} difficulty 
-#      * @returns 
-#      */
-#     static rks(acc, difficulty) {
-#         if (acc == 100) {
-#             /**满分原曲定数即为有效rks */
-#             return Number(difficulty)
-#         } else if (acc < 70) {
-#             /**无效acc */
-#             return 0
-#         } else {
-#             /**非满分计算公式 [(((acc - 55) / 45) ^ 2) * 原曲定数] */
-#             return difficulty * (((acc - 55) / 45) * ((acc - 55) / 45))
-#         }
-#     }
+from .getInfo import getInfo
+from .send import send
 
-#     /**
-#      * 计算所需acc
-#      * @param {Number} rks 目标rks
-#      * @param {Number} difficulty 定数
-#      * @param {Number} [count=undefined] 保留位数
-#      * @returns 所需acc
-#      */
-#     static suggest(rks, difficulty, count = undefined) {
-#         let ans = 45 * Math.sqrt(rks / difficulty) + 55
+require("nonebot_plugin_alconna")
+from datetime import datetime
+import re
 
-#         if (ans >= 100)
-#             return "无法推分"
-#         else {
-#             if (count != undefined) {
-#                 return `${ans.toFixed(count)}%`
-#             } else {
-#                 return ans
-#             }
-#         }
-#     }
+from nonebot.adapters import Event
+from nonebot_plugin_alconna import File, UniMessage
 
-#     /**
-#      * 发送文件
-#      * @param {*} e 
-#      * @param {Buffer} file 
-#      * @param {string} filename 
-#      */
-#     static async sendFile(e, file, filename) {
-#         try {
-#             let res
-#             if (e.isGroup) {
-#                 if (e.group.sendFile)
-#                     res = await e.group.sendFile(file, undefined, filename)
-#                 else
-#                     res = await e.group.fs.upload(file, undefined, filename)
-#             } else {
-#                 res = await e.friend.sendFile(file, filename)
-#             }
-
-#             if (res) {
-#                 let fileUrl
-#                 if (e.group?.getFileUrl)
-#                     fileUrl = await e.group.getFileUrl(res.fid)
-#                 else if (e.friend?.getFileUrl)
-#                     fileUrl = await e.friend.getFileUrl(res)
-#             }
-
-#         } catch (err) {
-#             logger.error(`文件上传错误：${logger.red(err.stack)}`)
-#             console.error(err)
-#             await e.reply(`文件上传错误：${err.stack}`)
-#         }
-#     }
-
-#     /**
-#      * 获取角色介绍背景曲绘
-#      * @param {string} save_background 
-#      * @returns 
-#      */
-#     static async getBackground(save_background) {
-#         try {
-#             let getInfo = (await import('./getInfo.js')).default
-#             switch (save_background) {
-#                 case 'Another Me ': {
-#                     save_background = 'Another Me (KALPA)'
-#                     break
-#                 }
-#                 case 'Another Me': {
-#                     save_background = 'Another Me (Rising Sun Traxx)'
-#                     break
-#                 }
-#                 case 'Re_Nascence (Psystyle Ver.) ': {
-#                     save_background = 'Re_Nascence (Psystyle Ver.)'
-#                     break
-#                 }
-#                 case 'Energy Synergy Matrix': {
-#                     save_background = 'ENERGY SYNERGY MATRIX'
-#                     break
-#                 }
-#                 case 'Le temps perdu-': {
-#                     save_background = 'Le temps perdu'
-#                     break
-#                 }
-#                 default: {
-#                     break
-#                 }
-#             }
-#             return getInfo.getill(getInfo.idgetsong(save_background) || save_background)
-#         } catch (err) {
-#             logger.error(`获取背景曲绘错误`, err)
-#             return false
-#         }
-#     }
-
-#     /**
-#      * 为数字添加前导零
-#      * @param {number} num 原数字
-#      * @param {number} cover 总位数
-#      * @returns 前导零数字
-#      */
-#     static ped(num, cover) {
-#         return num.toString().padStart(cover, '0')
-#     }
-
-#     /**
-#      * 标准化分数
-#      * @param {number} score 分数
-#      * @returns 标准化的分数 0'000'000
-#      */
-#     static std_score(score) {
-#         let s1 = Math.floor(score / 1e6)
-#         let s2 = Math.floor(score / 1e3) % 1e3
-#         let s3 = score % 1e3
-#         return `${s1}'${this.ped(s2, 3)}'${this.ped(s3, 3)}`
-#     }
-
-#     /**
-#      * 随机数，包含上下界
-#      * @param {number} min 最小值
-#      * @param {number} max 最大值
-#      * @returns 随机数
-#      */
-#     static randBetween(min, max) {
-#         return Math.floor(Math.random() * (max - min + 1) + min)
-#     }
-
-#     /**
-#      * 随机打乱数组
-#      * @param {Array} arr 原数组
-#      * @returns 随机打乱的数组
-#      */
-#     static randArray(arr) {
-#         let newArr = []
-#         while (arr.length > 0) {
-#             newArr.push(arr.splice(Math.floor(Math.random() * arr.length), 1)[0])
-#         }
-#         return newArr
-#     }
-
-#     /**
-#      * 转换时间格式
-#      * @param {Date|string} date 时间
-#      * @returns 2020/10/8 10:08:08
-#      */
-#     static formatDate(date) {
-#         date = new Date(date)
-#         return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} ${date.toString().match(/([0-9])+:([0-9])+:([0-9])+/)[0]}`
-#     }
-
-#     static formatDateToNow(date) {
-#         return `-${((new Date() - new Date(date)) / (24 * 60 * 60 * 1000)).toFixed(0)}d`;
-#     }
-
-#     /**
-#      * 转换unity富文本
-#      * @param {string} richText 
-#      * @param {boolean} [onlyText=false] 是否只返回文本
-#      * @returns 
-#      */
-#     static convertRichText(richText, onlyText = false) {
-#         if (!richText) {
-#             return richText
-#         }
-#         richText = richText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-#         let reg = [/&lt;color\s*=\s*.*?&gt;(.*?)&lt;\/color&gt;/, /&lt;size\s*=\s*.*?&gt;(.*?)&lt;\/size&gt;/, /&lt;i&gt;(.*?)&lt;\/i&gt;/, /&lt;b&gt;(.*?)&lt;\/b&gt;/]
-#         while (1) {
-#             if (richText.match(reg[0])) {
-#                 let txt = richText.match(reg[0])[1]
-#                 let color = richText.match(reg[0])[0].match(/&lt;color\s*=\s*(.*?)&gt;/)[1].replace(/[\s\"]/g, '')
-#                 richText = richText.replace(reg[0], onlyText ? txt : `<span style="color:${color}">${txt}</span>`)
-#                 continue
-#             }
-
-#             if (richText.match(reg[2])) {
-#                 let txt = richText.match(reg[2])[1]
-#                 richText = richText.replace(reg[2], onlyText ? txt : `<i>${txt}</i>`)
-#                 continue
-#             }
-
-#             if (richText.match(reg[3])) {
-#                 let txt = richText.match(reg[3])[1]
-#                 richText = richText.replace(reg[3], onlyText ? txt : `<b>${txt}</b>`)
-#                 continue
-#             }
-#             // if (richText.match(reg[1])) {
-#             //     let txt = richText.match(reg[1])[1]
-#             //     let size = richText.match(reg[1])[0].match(/size\s*=[^>]*?([^>]*)/)[1]o
-#             //     return this.convertRichText(richText.replace(reg[1], `<span style="font-size:${size}px">${txt}</span>`))
-#             // }
-#             if (richText.match(/\n\r?/)) {
-#                 richText.replace(/\n\r?/g, '<br>')
-#             }
-#             break
-#         }
-#         if (onlyText) {
-#             richText = richText.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-#         }
-#         return richText
-#     }
-
-#     /**是否是管理员 */
-#     static is_admin(e) {
-#         //console.info(e)
-#         if (e?.member?.is_admin) {
-#             return true;
-#         }
-#         if (!e?.member?.permissions) {
-#             return false;
-#         }
-#         switch (e?.member?.permissions[1]) {
-#             /**频道主 */
-#             case 4:
-#             /**超管 */
-#             case 2:
-#             /**分组管理 */
-#             case 7:
-#             /**子频道管理 */
-#             case 5:
-#                 return true;
-#             default:
-#                 return false;
-#         }
-#     }
-
-#     /**
-#      * 捕获消息中的范围
-#      * @param {string} msg 消息字符串
-#      * @param {Array} range 范围数组
-#      */
-#     static match_range(msg, range) {
-#         if (!range) {
-#             range[0] = 0
-#             range[1] = MAX_DIFFICULTY
-#         }
-#         if (msg.match(/[0-9]+(.[0-9]+)?\s*[-～~]\s*[0-9]+(.[0-9]+)?/g)) {
-#             /**0-16.9 */
-#             msg = msg.match(/[0-9]+(.[0-9]+)?\s*[-～~]\s*[0-9]+(.[0-9]+)?/g)[0]
-#             let result = msg.split(/\s*[-～~]\s*/g)
-#             range[0] = Number(result[0])
-#             range[1] = Number(result[1])
-#             if (range[0] > range[1]) {
-#                 let tem = range[1]
-#                 range[1] = range[0]
-#                 range[0] = tem
-#             }
-#             if (range[1] % 1 == 0 && !result.includes(".0")) range[1] += 0.9
-#         } else if (msg.match(/[0-9]+(.[0-9]+)?\s*[-+]/g)) {
-#             /**16.9- 15+ */
-#             msg = msg.match(/[0-9]+(.[0-9]+)?\s*[-+]/g)[0]
-#             let result = msg.replace(/\s*[-+]/g, '')
-#             if (msg.includes('+')) {
-#                 range[0] = result
-#             } else {
-#                 range[1] = result
-#                 if (range[1] % 1 == 0 && !result.includes(".0")) range[1] += 0.9
-#             }
-#         } else if (msg.match(/[0-9]+(.[0-9]+)?/g)) {
-#             /**15 */
-#             msg = msg.match(/[0-9]+(.[0-9]+)?/g)[0]
-#             range[0] = range[1] = Number(msg)
-#             if (!msg.includes('.')) {
-#                 range[1] += 0.9
-#             }
-#         }
-
-#     }
-
-#     /**
-#      * 匹配消息中对成绩的筛选
-#      * @param {string} msg 
-#      * @param {number} max_range 最大范围
-#      * @returns 
-#      */
-#     static match_request(e_msg, max_range) {
-#         let range = [0, max_range || MAX_DIFFICULTY]
-
-#         let msg = e_msg.replace(/^[#/](.*?)(lvsco(re)?)(\s*)/, "")
-
-#         /**EZ HD IN AT */
-#         let isask = [true, true, true, true]
-
-#         msg = msg.toUpperCase()
-
-#         if (msg.includes('EZ') || msg.includes('HD') || msg.includes('IN') || msg.includes('AT')) {
-#             isask = [false, false, false, false]
-#             if (msg.includes('EZ')) { isask[0] = true }
-#             if (msg.includes('HD')) { isask[1] = true }
-#             if (msg.includes('IN')) { isask[2] = true }
-#             if (msg.includes('AT')) { isask[3] = true }
-#         }
-#         msg = msg.replace(/(list|AT|IN|HD|EZ)*/g, "")
-
-#         let scoreAsk = { NEW: true, F: true, C: true, B: true, A: true, S: true, V: true, FC: true, PHI: true }
-
-#         if (msg.includes(' NEW') || msg.includes(' F') || msg.includes(' C') || msg.includes(' B') || msg.includes(' A') || msg.includes(' S') || msg.includes(' V') || msg.includes(' FC') || msg.includes(' PHI')) {
-#             scoreAsk = { NEW: false, F: false, C: false, B: false, A: false, S: false, V: false, FC: false, PHI: false }
-#             let rating = ['NEW', 'F', 'C', 'B', 'A', 'S', 'V', 'FC', 'PHI']
-#             for (let i in rating) {
-#                 if (msg.includes(` ${rating[i]}`)) { scoreAsk[rating[i]] = true }
-#             }
-#         }
-#         if (msg.includes(` AP`)) { scoreAsk.PHI = true }
-#         msg = msg.replace(/(NEW|F|C|B|A|S|V|FC|PHI|AP)*/g, "")
-
-#         this.match_range(e_msg, range)
-#         return { range, isask, scoreAsk }
-#     }
-
-#     /**
-#      * 
-#      * @param {number} real_score 真实成绩
-#      * @param {number} tot_score 总成绩
-#      * @param {boolean} fc 是否fc
-#      * @returns 
-#      */
-#     static rate(real_score, tot_score, fc) {
-
-#         if (!real_score) {
-#             return 'F'
-#         } else if (real_score == tot_score) {
-#             return 'phi'
-#         } else if (fc) {
-#             return 'FC'
-#         } else if (real_score >= tot_score * 0.96) {
-#             return 'V'
-#         } else if (real_score >= tot_score * 0.92) {
-#             return 'S'
-#         } else if (real_score >= tot_score * 0.88) {
-#             return 'A'
-#         } else if (real_score >= tot_score * 0.82) {
-#             return 'B'
-#         } else if (real_score >= tot_score * 0.70) {
-#             return 'C'
-#         } else {
-#             return 'F'
-#         }
-#     }
+from zhenxun.models.level_user import LevelUser
+from zhenxun.services.log import logger
+from zhenxun.utils.rules import ensure_group
 
 
-#     /**
-#      * 转换时间格式
-#      * @param {Date|string} date 时间
-#      * @returns 2020/10/8 10:08:08
-#      */
-#     static date_to_string(date) {
-#         if (!date) return undefined
-#         date = new Date(date)
+class compute:
+    @staticmethod
+    def rks(acc: float, difficulty: float) -> float:
+        """计算等效rks"""
+        if acc == 100:
+            # 满分原曲定数即为有效rks
+            return difficulty
+        elif acc < 70:
+            # 无效rks
+            return 0
+        else:
+            # 非满分计算公式 [(((acc - 55) / 45) ^ 2) * 原曲定数]
+            return difficulty * (((acc - 55) / 45) ** 2)
 
-#         let month = (date.getMonth() + 1) < 10 ? `0${date.getMonth() + 1}` : date.getMonth() + 1
-#         let day = date.getDate() < 10 ? `0${date.getDate()}` : date.getDate()
+    @staticmethod
+    def suggest(rks: float, difficulty: float, count: int | None = None) -> str:
+        """
+        计算所需acc
 
-#         return `${date.getFullYear()}/${month}/${day} ${date.toString().match(/([0-9])+:([0-9])+:([0-9])+/)[0]}`
-#     }
+        :param float rks: 目标rks
+        :param float difficulty: 定数
+        :param int count: 保留位数
+        :return float: 所需acc
+        """
+        ans = 45 * (rks / difficulty) ** 0.5 + 55
 
+        if ans >= 100:
+            return "无法推分"
+        elif count is not None:
+            return f"{ans:.{count}f}%"
+        else:
+            return ans
 
+    @staticmethod
+    async def sendFile(e: Event, file: bytes, filename: str):
+        """发送文件"""
+        try:
+            await UniMessage(File(raw=file, name=filename)).send(e)
+        except Exception as err:
+            logger.error(f"文件上传错误: {err}")
+            await send.send_with_At(e, f"文件上传错误: {err}")
 
-#     /**
-#      * 计算百分比
-#      * @param {Number} value 值
-#      * @param {Array} range 区间数组 (0,..,1)
-#      * @returns 百分数，单位%
-#      */
-#     static range(value, range) {
-#         if (range[0] == range[range.length - 1]) {
-#             return 50
-#         } else {
-#             return (value - range[0]) / (range[range.length - 1] - range[0]) * 100
-#         }
-#     }
+    @staticmethod
+    async def getBackground(save_background: str) -> str | bool:
+        """获取角色介绍背景曲绘"""
+        try:
+            match save_background:
+                case "Another Me ":
+                    save_background = "Another Me (KALPA)"
 
-#     /**
-#      * 模糊搜索，返回相似度大于0.8的结果
-#      * @param {string} str 搜索字符串
-#      * @param {Object<string, string[]>} data 搜索数组
-#      * @returns {Array<{ key:string, score:number, value:string }>} 相似度大于0.8的结果
-#      */
-#     static fuzzySearch(str, data) {
-#         let result = []
-#         for (let key in data) {
-#             let score = this.jaroWinklerDistance(str, key)
-#             if (score > 0.8) {
-#                 data[key].forEach((value) => {
-#                     result.push({ key, score, value })
-#                 })
-#             }
-#         }
-#         return result.sort((a, b) => b.score - a.score)
-#     }
+                case "Another Me":
+                    save_background = "Another Me (Rising Sun Traxx)"
 
-#     /**
-#      * 采用Jaro-Winkler编辑距离算法来计算str间的相似度，复杂度为O(n)=>n为较长的那个字符出的长度
-#      * @param {string} s1 
-#      * @param {string} s2 
-#      * @returns {number} 相似度 0-1
-#      */
-#     static jaroWinklerDistance(s1, s2) {
-#         if (s1 == s2) {
-#             return 1
-#         }
-#         //首先第一次去除空格和其他符号，并转换为小写
-#         const pattern = /[\s~`!@#$%^&*()\-=_+\[\]「」『』{}|;:'",<.>/?！￥…（）—【】、；‘’：“”，《。》？↑↓←→]/g
-#         s1 = s1.replace(pattern, '').toLowerCase()
-#         s2 = s2.replace(pattern, '').toLowerCase()
-#         let m = 0 //匹配的字符数量
+                case "Re_Nascence (Psystyle Ver.) ":
+                    save_background = "Re_Nascence (Psystyle Ver.)"
 
-#         //如果任任一字符串为空则距离为0
-#         if (s1.length === 0 || s2.length === 0) {
-#             return 0
-#         }
+                case "Energy Synergy Matrix":
+                    save_background = "ENERGY SYNERGY MATRIX"
 
-#         //字符串完全匹配，距离为1
-#         if (s1 === s2) {
-#             return 1
-#         }
+                case "Le temps perdu-":
+                    save_background = "Le temps perdu"
+            return await getInfo.getill(
+                getInfo.idgetsong(save_background) or save_background
+            )
+        except Exception as e:
+            logger.error("获取背景曲绘错误", "phi-plugin", e=e)
+            return False
 
-#         let range = (Math.floor(Math.max(s1.length, s2.length) / 2)) - 1, //搜索范围
-#             s1Matches = new Array(s1.length),
-#             s2Matches = new Array(s2.length)
+    @staticmethod
+    def ped(num: int, cover: int) -> str:
+        """
+        为数字添加前导零
 
-#         //查找匹配的字符
-#         for (let i = 0; i < s1.length; i++) {
-#             let low = (i >= range) ? i - range : 0,
-#                 high = (i + range <= (s2.length - 1)) ? (i + range) : (s2.length - 1)
+        :param num: 原数字
+        :param cover: 总位数
+        """
+        return f"{num:0{cover}d}"
 
-#             for (let j = low; j <= high; j++) {
-#                 if (s1Matches[i] !== true && s2Matches[j] !== true && s1[i] === s2[j]) {
-#                     ++m
-#                     s1Matches[i] = s2Matches[j] = true
-#                     break
-#                 }
-#             }
-#         }
+    @staticmethod
+    def std_score(score: int) -> str:
+        """标准化分数"""
+        s1 = score // 1_000_000
+        s2 = (score // 1_000) % 1_000
+        s3 = score % 1_000
+        return f"{s1}'{compute.ped(s2, 3)}'{compute.ped(s3, 3)}"
 
-#         //如果没有匹配的字符，那么捏Jaro距离为0
-#         if (m === 0) {
-#             return 0
-#         }
+    @staticmethod
+    def randBetween(min: int, max: int) -> int:
+        """
+        随机数，包含上下界
 
-#         //计算转置的数量
-#         let k = 0, n_trans = 0
-#         for (let i = 0; i < s1.length; i++) {
-#             if (s1Matches[i] === true) {
-#                 let j
-#                 for (j = k; j < s2.length; j++) {
-#                     if (s2Matches[j] === true) {
-#                         k = j + 1
-#                         break
-#                     }
-#                 }
+        :param min: 最小值
+        :param max: 最大值
+        """
+        return random.randint(min, max)
 
-#                 if (s1[i] !== s2[j]) {
-#                     ++n_trans
-#                 }
-#             }
-#         }
+    @staticmethod
+    def randArray(arr: list) -> list:
+        """
+        随机打乱数组
 
-#         //计算Jaro距离
-#         let weight = (m / s1.length + m / s2.length + (m - (n_trans / 2)) / m) / 3,
-#             l = 0,
-#             p = 0.1
+        :param arr: 数组
+        """
+        arr = arr.copy()
+        new_arr = []
+        while arr:
+            index = random.randint(0, len(arr) - 1)
+            new_arr.append(arr.pop(index))
+        return new_arr
 
-#         //如果Jaro距离大于0.7，计算Jaro-Winkler距离
-#         if (weight > 0.7) {
-#             while (s1[l] === s2[l] && l < 4) {
-#                 ++l
-#             }
+    @staticmethod
+    def formatDate(date: str | datetime) -> str:
+        """
+        转换时间格式
 
-#             weight = weight + l * p * (1 - weight)
-#         }
+        :param date: 时间（字符串或 datetime 对象）
+        :return: 格式化后的字符串，如 '2020/10/8 10:08:08'
+        """
+        if isinstance(date, str):
+            try:
+                # 尝试解析字符串为 datetime 对象
+                dt = datetime.fromisoformat(date)
+            except ValueError:
+                # 如果不支持 ISO 格式，尝试其他常见格式
+                dt = datetime.strptime(date, "%Y/%m/%d %H:%M:%S")
+        else:
+            dt = date
 
-#         return weight
-#     }
+        return dt.strftime("%Y/%m/%d %H:%M:%S")
 
-#     // static score_note(score, note) {
-#     //     for (let maxCombo = 1; maxCombo <= note; maxCombo++) {
-#     //         let comboScore = Math.round(maxCombo / note * 1e5)
-#     //         let maxHit = 
-#     //         if (comboScore + Math.round(maxCombo / note * 0.65 * 9e5) > score) {
-#     //             /**全good仍大 */
-#     //             continue
-#     //         }
-#     //         if () {
+    @staticmethod
+    def format_date_to_now(date: str | datetime) -> str:
+        """
+        计算当前时间与指定时间之间的天数差，并返回格式如 '-3d' 的字符串
 
-#     //         }
-#     //     }
-#     // }
+        :param date: 时间（字符串或 datetime 对象）
+        :return: 格式化后的字符串，如 '-3d'
+        """
+        if isinstance(date, str):
+            try:
+                # 尝试解析字符串为 datetime 对象
+                dt = datetime.fromisoformat(date)
+            except ValueError:
+                # 如果不支持 ISO 格式，尝试其他常见格式
+                dt = datetime.strptime(date, "%Y/%m/%d %H:%M:%S")
+        else:
+            dt = date
 
-#     static getAdapterName(e) {
-#         return e.bot?.adapter?.name || e.bot?.adapter
-#     }
-# }
+        now = datetime.now()
+        delta_days = (now - dt).days
 
-# function dfs_score_note(score, note, maxCombo, perfect, ans) {
+        return f"-{delta_days}d"
 
-# }
+    @staticmethod
+    def convert_rich_text(rich_text: str, only_text: bool = False) -> str:
+        """
+        转换Unity富文本格式字符串为HTML格式或纯文本
+
+        :param rich_text: 原始富文本字符串
+        :param only_text: 是否只返回纯文本
+        :return: 转换后的字符串
+        """
+        if not rich_text:
+            return rich_text
+
+        # 转义 < 和 > 防止 HTML 注入
+        rich_text = rich_text.replace("<", "&lt;").replace(">", "&gt;")
+
+        # 定义正则表达式
+        color_tag = r"&lt;color\s*=\s*(.*?)&gt;(.*?)&lt;\/color&gt;"
+        italic_tag = r"&lt;i&gt;(.*?)&lt;\/i&gt;"
+        bold_tag = r"&lt;b&gt;(.*?)&lt;\/b&gt;"
+
+        # 处理 <color=...> 标签
+        while re.search(color_tag, rich_text):
+            rich_text = re.sub(
+                color_tag,
+                lambda m: (
+                    """<span style="color:"""
+                    f"""{m.group(1).replace(" ", "").replace('"', "")}">"""
+                    f"{m.group(2)}</span>"
+                ),
+                rich_text,
+            )
+
+        # 处理 <i> 标签
+        while re.search(italic_tag, rich_text):
+            rich_text = re.sub(
+                italic_tag,
+                lambda m: m.group(1) if only_text else f"<i>{m.group(1)}</i>",
+                rich_text,
+            )
+
+        # 处理 <b> 标签
+        while re.search(bold_tag, rich_text):
+            rich_text = re.sub(
+                bold_tag,
+                lambda m: m.group(1) if only_text else f"<b>{m.group(1)}</b>",
+                rich_text,
+            )
+
+        # 换行符处理（可选）
+        rich_text = re.sub(r"\n\r?", "<br>", rich_text)
+
+        # 如果只保留纯文本，移除所有标签
+        if only_text:
+            rich_text = re.sub(r"<[^>]+>", "", rich_text)
+            rich_text = rich_text.replace("&lt;", "<").replace("&gt;", ">")
+
+        return rich_text
+
+    @staticmethod
+    def is_admin(session: Uninfo) -> bool:
+        """是否是管理员"""
+        if not ensure_group(session):
+            return False
+        loop = asyncio.get_event_loop()
+        level = loop.run_until_complete(
+            LevelUser.get_user_level(session.user.id, session.scene.id)
+        )
+        return level >= 5
+
+    @staticmethod
+    def match_range(msg: str, r: list | None = None) -> list[float]:
+        """
+        从消息中提取难度范围
+
+        :param msg: 用户输入消息
+        :param r: 初始范围数组 [min, max]
+        :return: 处理后的范围 [min, max]
+        """
+        if r is None:
+            r = [0, MAX_DIFFICULTY]
+
+        if range_match := re.search(r"(\d+\.?\d*)\s*[-～~]\s*(\d+\.?\d*)", msg):
+            min_val = float(range_match[1])
+            max_val = float(range_match[2])
+            if min_val > max_val:
+                min_val, max_val = max_val, min_val
+            if max_val.is_integer() and "." not in range_match[2]:
+                max_val += 0.9
+            r[0], r[1] = min_val, max_val
+            return r
+
+        if bound_match := re.search(r"(\d+\.?\d*)\s*([+-])", msg):
+            num = float(bound_match[1])
+            if bound_match[2] == "+":
+                r[0] = num
+            else:
+                r[1] = num
+                if num.is_integer() and "." not in bound_match[1]:
+                    r[1] += 0.9
+            return r
+
+        if single_match := re.search(r"\d+\.?\d*", msg):
+            val = float(single_match.group())
+            r[0] = r[1] = val
+            if "." not in single_match.group():
+                r[1] += 0.9
+            return r
+
+        return r
+
+    @staticmethod
+    def match_request(msg: str, max_range: float | None = None) -> dict:
+        """
+        匹配消息中对成绩的筛选条件
+
+        :param msg: 用户输入的原始消息
+        :param max_range: 最大难度范围
+        :return: 包含筛选条件的字典 {range, isask, scoreAsk}
+        """
+        from .fCompute import compute  # 避免循环导入问题（如有）
+
+        result = {
+            "range": [0, max_range or MAX_DIFFICULTY],
+            "isask": [True, True, True, True],  # [EZ, HD, IN, AT]
+            "scoreAsk": {
+                "NEW": True,
+                "F": True,
+                "C": True,
+                "B": True,
+                "A": True,
+                "S": True,
+                "V": True,
+                "FC": True,
+                "PHI": True,
+            },
+        }
+
+        # 移除命令前缀（如 /list 或 #lvscore 等）
+        clean_msg = re.sub(r"^[#/].*?(lvscore?)?$\s*", "", msg).upper()
+
+        # 处理难度模式筛选：EZ HD IN AT
+        modes = ["EZ", "HD", "IN", "AT"]
+        if mode_indices := [i for i, mode in enumerate(modes) if mode in clean_msg]:
+            result["isask"] = [False, False, False, False]
+            for i in mode_indices:
+                result["isask"][i] = True
+
+        # 处理成绩等级筛选：NEW F C B A S V FC PHI AP
+        rating_keys = ["NEW", "F", "C", "B", "A", "S", "V", "FC", "PHI"]
+        has_rating = any(f" {r}" in clean_msg for r in [*rating_keys, "AP"])
+
+        if has_rating:
+            for k in result["scoreAsk"]:
+                result["scoreAsk"][k] = False
+            for rating in rating_keys:
+                if f" {rating}" in clean_msg:
+                    result["scoreAsk"][rating] = True
+            if " AP" in clean_msg:
+                result["scoreAsk"]["PHI"] = True
+
+        # 提取难度范围
+        result["range"] = compute.match_range(msg, result["range"])
+
+        return result
+
+    @staticmethod
+    def rate(real_score: float | None, tot_score: float, fc: bool = False) -> str:
+        """
+        根据真实成绩与总成绩计算成绩等级
+
+        :param real_score: 真实成绩
+        :param tot_score: 总成绩
+        :param fc: 是否达成 FC
+        :return: 成绩等级：'F', 'C', 'B', 'A', 'S', 'V', 'FC', 'phi'
+        """
+        if not real_score:
+            return "F"
+        elif real_score == tot_score:
+            return "phi"
+        elif fc:
+            return "FC"
+        elif real_score >= tot_score * 0.96:
+            return "V"
+        elif real_score >= tot_score * 0.92:
+            return "S"
+        elif real_score >= tot_score * 0.88:
+            return "A"
+        elif real_score >= tot_score * 0.82:
+            return "B"
+        elif real_score >= tot_score * 0.70:
+            return "C"
+        else:
+            return "F"
+
+    @staticmethod
+    def date_to_string(date: str | datetime) -> str | None:
+        """
+        转换时间格式
+
+        :param date: 时间（字符串或 datetime 对象）
+        :return: 格式化后的字符串，如 '2020/10/8 10:08:08' 或 None（输入为空时）
+        """
+        if not date:
+            return None
+        # 统一转为 datetime 对象
+        if isinstance(date, str):
+            try:
+                dt = datetime.fromisoformat(date)
+            except ValueError:
+                # 如果不支持 ISO 格式，尝试其他常见格式
+                dt = datetime.strptime(date, "%Y/%m/%d %H:%M:%S")
+        else:
+            dt = date
+
+        # 格式化月份和日期（前导零）
+        month = f"0{dt.month}" if dt.month < 10 else dt.month
+        day = f"0{dt.day}" if dt.day < 10 else dt.day
+
+        # 提取时间部分（小时:分钟:秒）
+        time_str = dt.strftime("%H:%M:%S")
+
+        return f"{dt.year}/{month}/{day} {time_str}"
+
+    @staticmethod
+    def calculate_percentage(value: float, range_list: list) -> str:
+        """
+        计算一个值在给定区间中的百分比位置，并返回对应的百分数
+
+        :param value: 需要计算的值
+        :param range_list: 区间数组，例如 [0, 1]
+        :return: 百分数字符串，如 '50%'
+        """
+        if range_list[0] == range_list[-1]:
+            return "50%"
+        percentage = (value - range_list[0]) / (range_list[-1] - range_list[0]) * 100
+        return f"{percentage:.2f}%"
+
+    @staticmethod
+    def fuzzy_search(search_str: str, data: dict) -> list:
+        """
+        模糊搜索，返回相似度大于0.8的结果
+
+        :param search_str: 搜索字符串
+        :param data: 搜索数据，格式为 {key: [value_list]}
+        :return: 相似度大于0.8的结果列表，每个元素包含 key、score、value
+        """
+        result = []
+        for key, values in data.items():
+            score = compute.jaro_winkler_distance(search_str, key)
+            if score > 0.8:
+                result.extend(
+                    {"key": key, "score": score, "value": value} for value in values
+                )
+        # 按照相似度降序排序
+        return sorted(result, key=lambda x: x["score"], reverse=True)
+
+    @staticmethod
+    def jaro_winkler_distance(s1: str, s2: str) -> float:
+        """
+        使用 Jaro-Winkler 编辑距离算法计算两个字符串的相似度（0~1）
+
+        :param s1: 字符串1
+        :param s2: 字符串2
+        :return: 相似度数值，范围 0~1
+        """
+        if s1 == s2:
+            return 1.0
+
+        # 去除空格和其他符号，并转为小写
+        pattern = re.compile(
+            r"[\s~`!@#$%^&*()\-=_+\[\]「」『』{}|;:'\",<.>/?！￥…（）—【】、；‘’：“”，《。》？↑↓←→]+"
+        )
+        s1 = pattern.sub("", s1).lower()
+        s2 = pattern.sub("", s2).lower()
+
+        if not s1 or not s2:
+            return 0.0
+
+        if s1 == s2:
+            return 1.0
+
+        max_len = max(len(s1), len(s2))
+        search_range = (max_len // 2) - 1
+
+        s1_matches = [False] * len(s1)
+        s2_matches = [False] * len(s2)
+        m = 0  # 匹配字符数量
+
+        # 查找匹配字符
+        for i in range(len(s1)):
+            start = max(0, i - search_range)
+            end = min(i + search_range + 1, len(s2))
+            for j in range(start, end):
+                if not s2_matches[j] and s1[i] == s2[j]:
+                    s1_matches[i] = s2_matches[j] = True
+                    m += 1
+                    break
+
+        if m == 0:
+            return 0.0
+
+        # 计算转置数
+        k = 0
+        n_trans = 0
+        for i in range(len(s1)):
+            if s1_matches[i]:
+                while not s2_matches[k]:
+                    k += 1
+                if s1[i] != s2[k]:
+                    n_trans += 1
+                k += 1
+
+        # 计算 Jaro 距离
+        weight = (m / len(s1) + m / len(s2) + (m - n_trans / 2) / m) / 3
+
+        # 如果大于 0.7，应用 Jaro-Winkler 修正
+        if weight > 0.7:
+            i = 0  # 公共前缀长度
+            while i < min(len(s1), len(s2), 4) and s1[i] == s2[i]:
+                i += 1
+            weight += i * 0.1 * (1 - weight)
+
+        return weight
+
+    @staticmethod
+    def getAdapterName(session: Uninfo):
+        """获取适配器名称"""
+        return session.adapter

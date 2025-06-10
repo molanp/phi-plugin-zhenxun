@@ -2,28 +2,28 @@ from nonebot import require
 
 from ..config import PluginConfig
 from ..lib.PhigrosUser import PhigrosUser
+from .cls.Save import Save
 from .getNotes import getNotes
 from .getSave import getSave
 from .getSaveFromApi import getSaveFromApi
 from .makeRequest import makeRequest
 from .makeRequestFnc import makeRequestFnc
-from .models.Save import Save
 from .send import send
 
 require("nonebot_plugin_uninfo")
-require("nonebot_plugin_alconna")
-from nonebot_plugin_alconna import SupportScope
+from nonebot.adapters import Event
 from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.services.log import logger
+from zhenxun.utils.platform import PlatformUtils
 
 
 class getUpdateSave:
     @classmethod
-    async def getNewSaveFromApi(cls, e: Uninfo, token: str | None = None) -> dict:
-        old = await getSaveFromApi.getSave(e.user.id)
+    async def getNewSaveFromApi(cls, session: Uninfo, token: str | None = None) -> dict:
+        old = await getSaveFromApi.getSave(session.user.id)
         newSaveInfo = await makeRequest.getCloudSaveInfo(
-            **{"token": token, **makeRequestFnc.makePlatform(e)}
+            **{"token": token, **makeRequestFnc.makePlatform(session)}
         )
         if newSaveInfo["modifiedAt"]["iso"] == getattr(
             getattr(getattr(old, "saveInfo", None), "modifiedAt", None),
@@ -32,20 +32,22 @@ class getUpdateSave:
         ):
             return {"save": old, "added_rks_notes": [0, 0]}
         newSave = await makeRequest.getCloudSaves(
-            **{"token": token, **makeRequestFnc.makePlatform(e)}
+            **{"token": token, **makeRequestFnc.makePlatform(session)}
         )
-        await getSaveFromApi.putSave(e.user.id, newSave)
+        await getSaveFromApi.putSave(session.user.id, newSave)
         result = Save(newSave)
         await result.init()
-        await getSaveFromApi.putSave(e.user.id, result)
+        await getSaveFromApi.putSave(session.user.id, result)
         if token:
-            await getSave.add_user_token(e.user.id, token)
-        added_rks_notes = await cls.buildingRecord(old, newSave, e)
+            await getSave.add_user_token(session.user.id, token)
+        added_rks_notes = await cls.buildingRecord(old, newSave, session)
         return {"save": result, "added_rks_notes": added_rks_notes}
 
     @classmethod
-    async def getNewSaveFromLocal(cls, e: Uninfo, token: str | None = None) -> dict:
-        old = await getSave.getSave(e.user.id)
+    async def getNewSaveFromLocal(
+        cls, e: Event, session: Uninfo, token: str | None = None
+    ) -> dict:
+        old = await getSave.getSave(session.user.id)
         token = token or old.session
         User = PhigrosUser(token)
         try:
@@ -54,43 +56,46 @@ class getUpdateSave:
                 return {"save": old, "added_rks_notes": [0, 0]}
             await User.buildRecord()
         except Exception as err:
-            if e.scope != SupportScope.qq_api:
-                await send.send_with_At(f"更新失败！QAQ\n{err}")
+            if not PlatformUtils.is_qbot(session):
+                await send.send_with_At(e, f"更新失败！QAQ\n{err}")
             else:
-                await send.send_with_At("更新失败！QAQ\n请稍后重试")
+                await send.send_with_At(e, "更新失败！QAQ\n请稍后重试")
             logger.error("信息更新失败", "phi-plugin", e=err)
             raise err
         try:
-            await getSave.putSave(e.user.id, User)
+            await getSave.putSave(session.user.id, User)
         except Exception as err:
-            await send.send_with_At(f"保存存档失败!\n{err}")
+            await send.send_with_At(e, f"保存存档失败!\n{err}")
             logger.error("保存存档失败", "phi-plugin", e=err)
             raise err
         now = Save(User.model_dump())  # TODO:在py里似乎需要转字典传入,使用model_dump?
 
         if old and (old.session and old.session != User.session):
             await send.send_with_At(
+                e,
                 "检测到新的sessionToken，将自动更换绑定。"
                 "如果需要删除统计记录请"
-                f"⌈{PluginConfig.get('cmdhead')} unbind⌋ 进行解绑哦！"
+                f"⌈{PluginConfig.get('cmdhead')} unbind⌋ 进行解绑哦！",
             )
-            await getSave.add_user_token(e.user.id, User.session)
-            old = await getSave.getSave(e.user.id)
+            await getSave.add_user_token(session.user.id, User.session)
+            old = await getSave.getSave(session.user.id)
         # await now.init()
-        history = await getSave.getHistory(e.user.id)
+        history = await getSave.getHistory(session.user.id)
         await history.update(now)
-        await getSave.putHistory(e.user.id, history)
-        added_rks_notes = await cls.buildingRecord(old, now, e)
+        await getSave.putHistory(session.user.id, history)
+        added_rks_notes = await cls.buildingRecord(old, now, session)
         return {"save": now, "added_rks_notes": added_rks_notes}
 
     @classmethod
-    async def buildingRecord(cls, old: Save, now: Save, e: Uninfo) -> list[int] | bool:
+    async def buildingRecord(
+        cls, old: Save, now: Save, session: Uninfo
+    ) -> list[int] | bool:
         """
         更新存档
 
         :return list[int, int] | False: [ks变化值，note变化值]，失败返回 false
         """
-        notesData = await getNotes.getNotesData(e.user.id)
+        notesData = await getNotes.getNotesData(session.user.id)
         # 修正
         if notesData.get("update") or notesData.get("task_update"):
             notesData.pop("update", None)
@@ -143,7 +148,7 @@ class getUpdateSave:
                             add_money += reward
                             notesData["plugin_data"]["money"] += reward
 
-        await getNotes.putNotesData(e.user.id, notesData)
+        await getNotes.putNotesData(session.user.id, notesData)
 
         # rks变化
         add_rks = (

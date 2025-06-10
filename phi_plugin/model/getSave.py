@@ -1,10 +1,10 @@
 import shutil
 
 from ..models import SstkData
+from .cls.Save import Save
+from .cls.saveHistory import saveHistory
 from .getFile import readFile
 from .getRksRank import getRksRank
-from .models.Save import Save
-from .models.saveHistory import saveHistory
 from .path import savePath
 
 
