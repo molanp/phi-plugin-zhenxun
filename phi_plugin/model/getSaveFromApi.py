@@ -1,18 +1,19 @@
-# import path from 'path'
-from .path import apiSavePath
+from nonebot import require
+
+from ..models import userApiId
 from .getFile import readFile
-from .class.Save import Save
-from .class.saveHistory import saveHistory
 from .makeRequest import makeRequest
 from .makeRequestFnc import makeRequestFnc
-from ..models import userApiId
-from nonebot import require
+from .models.Save import Save
+from .models.saveHistory import saveHistory
+from .path import apiSavePath
+
 require("nonebot_plugin_uninfo")
 from nonebot_plugin_uninfo import Uninfo
 
+
 class getSaveFromApi:
 
-# export default class getSaveFromApi {
     @classmethod
     async def add_user_apiId(cls, user_id: str, apiId: str):
         """添加 user_id 号对应的 apiId"""
@@ -22,21 +23,25 @@ class getSaveFromApi:
     async def get_user_apiId(cls, user_id: str):
         """#获取 user_id 号对应的 apiId"""
         return await userApiId.get_user_apiId(user_id)
-    
+
     @classmethod
     async def del_user_apiId(cls, user_id: str):
         """移除 user_id 对应的 apiId"""
         return await userApiId.del_user_apiId(user_id)
-    
+
     @classmethod
     async def getSave(cls, user_id: str) -> Save | None:
         """
         获取 user_id 对应的存档文件
-        
+
         :param  user_id: 用户id
         """
         apiId = await cls.get_user_apiId(user_id)
-        result = await readFile.FileReader(apiSavePath/ apiId/ "save.json") if apiId else None
+        result = (
+            await readFile.FileReader(apiSavePath / apiId / "save.json")
+            if apiId
+            else None
+        )
         if not result:
             return None
         tem = Save(result)
@@ -45,7 +50,7 @@ class getSaveFromApi:
         else:
             return None
         return tem
-    
+
     @classmethod
     async def getSaveByApiId(cls, apiId: str) -> Save | None:
         """
@@ -53,7 +58,11 @@ class getSaveFromApi:
 
         :param  apiId: apiId
         """
-        result = await readFile.FileReader(apiSavePath/ apiId/ "save.json") if apiId else None
+        result = (
+            await readFile.FileReader(apiSavePath / apiId / "save.json")
+            if apiId
+            else None
+        )
         if not result:
             return None
         tem = Save(result)
@@ -62,7 +71,7 @@ class getSaveFromApi:
         else:
             return None
         return tem
-    
+
     @classmethod
     async def getSaveFromApi(cls, session: Uninfo) -> bool | Save:
         """
@@ -70,15 +79,17 @@ class getSaveFromApi:
 
         :param  session: session
         """
-        result = Save(await makeRequest.getCloudSaves(makeRequestFnc.makePlatform(session)))
+        result = Save(
+            await makeRequest.getCloudSaves(makeRequestFnc.makePlatform(session)) # type: ignore
+        )
         await result.init()
         return result
-    
+
     @classmethod
     async def putSave(cls, user_id: str, data: dict) -> bool:
         """
         保存 user_id 对应的存档文件
-        
+
         :param  user_id: 用户id
         :param  dict data: 存档数据
         """
@@ -86,13 +97,13 @@ class getSaveFromApi:
         if not apiId:
             raise ValueError("apiId is required")
         await cls.add_user_apiId(user_id, apiId)
-        return await readFile.SetFile(apiSavePath / apiId/ "save.json", data)
+        return await readFile.SetFile(apiSavePath / apiId / "save.json", data)
 
     @classmethod
     async def getHistory(cls, session: Uninfo, request: list) -> saveHistory:
         """
         获取 user_id 对应的历史记录
-    
+
         :param session: 用户会话信息
         :param request: 请求的字段列表
         :return: saveHistory 实例
@@ -106,12 +117,14 @@ class getSaveFromApi:
 
         result = await makeRequest.getHistory(**params)
         return saveHistory(result)
-    
+
     @classmethod
-    async def getSongHistory(cls, session: Uninfo, song_id: str | None = None, difficulty: str | None = None):
+    async def getSongHistory(
+        cls, session: Uninfo, song_id: str | None = None, difficulty: str | None = None
+    ):
         """
         获取指定曲目的历史记录
-        
+
         :param session: 用户会话信息
         :param song_id: 曲目 ID
         :param difficulty: 难度等级
@@ -127,8 +140,8 @@ class getSaveFromApi:
         if difficulty is not None:
             params["difficulty"] = difficulty
 
-        return await makeRequest.getHistoryRecord(params)
-    
+        return await makeRequest.getHistoryRecord(params) # type: ignore
+
     @classmethod
     async def delSave(cls, session: Uninfo) -> bool:
         """删除 user_id 对应的存档文件"""

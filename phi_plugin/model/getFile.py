@@ -73,9 +73,7 @@ async def csv_read(file_path: str | Path) -> list[dict[str, Any]]:
 
 class readFile:
     @classmethod
-    async def FileReader(
-        cls, file_path: str | Path, style: str | None = None
-    ) -> Any:
+    async def FileReader(cls, file_path: str | Path, style: str | None = None) -> Any:
         """
         读取文件
 

@@ -1,4 +1,5 @@
 from nonebot import require
+
 require("nonebot_plugin_alconna")
 from nonebot_plugin_alconna import Image
 
@@ -13,9 +14,9 @@ class picmodle:
             "atlas",
             {
                 **info,
-                "length": info.get("length").replace(":", "'") + "''"
-                if info.length
-                else "-",
+                "length": (
+                    info.get("length").replace(":", "'") + "''" if info.length else "-"
+                ),
             },
         )
 

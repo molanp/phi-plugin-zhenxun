@@ -44,7 +44,7 @@ class _VikaData:
     async def GetUserDanByName(self, nickname: str) -> list[dict] | None:
         """通过 nickname 获取用户的民间段位数据"""
         try:
-            response = await self.PhigrosDan.records.query(  # type: ignore
+            response = await self.PhigrosDan.records.query( # type: ignore
                 {**cfg, "filterByFormula": f"{{fldzkniADAUck}} = '{nickname}'"}
             )
             if response.success:

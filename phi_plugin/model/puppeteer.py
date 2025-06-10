@@ -1,6 +1,8 @@
 from pathlib import Path
+
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from nonebot_plugin_htmlrender import html_to_pic
+
 from ..config import VERSION
 
 # 资源路径（统一为 Path 类型）
@@ -10,9 +12,10 @@ IMG_PATH = Path("./images")
 # 配置 Jinja2（启用异步模式）
 env = Environment(
     loader=FileSystemLoader(str(PLUGIN_RESOURCES)),  # FileSystemLoader 接受字符串路径
-    autoescape=select_autoescape(['html', 'xml']),
-    enable_async=True  # 支持异步渲染
+    autoescape=select_autoescape(["html", "xml"]),
+    enable_async=True,  # 支持异步渲染
 )
+
 
 class newPuppeteer:
     @classmethod
@@ -41,10 +44,13 @@ class newPuppeteer:
             "_layout_path": str(layout_path),
             "defaultLayout": str(default_layout),
             "elemLayout": str(elem_layout),
-            "saveId": (params.get("saveId") or params.get("save_id") or tpl) + f"-{id(cls)}",
+            "saveId": (params.get("saveId") or params.get("save_id") or tpl)
+            + f"-{id(cls)}",
             "sys": {
                 "scale": f'style="transform:scale({params.get("scale", 1)})"',
-                "copyright": f'Created By phi-Plugin<span class="version">{VERSION}</span>'
+                "copyright": (
+                    f"Created By phi-Plugin<span class='version'>{VERSION}</span>"
+                ),
             },
             "Version": VERSION,
             "_plugin": "phi-plugin",

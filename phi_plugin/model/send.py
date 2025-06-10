@@ -1,7 +1,8 @@
-from .class.Save import getSave
-from .getSave import getSave
-
 from nonebot import get_bot, require
+
+from .getSave import getSave
+from .models.Save import getSave
+
 require("nonebot_plugin_alconna")
 require("nonebot_plugin_uninfo")
 from nonebot_plugin_alconna import Image, Text, UniMessage
@@ -10,10 +11,9 @@ from nonebot_plugin_uninfo import Uninfo
 from zhenxun.services.log import logger
 from zhenxun.utils.message import MessageUtils
 from zhenxun.utils.platform import PlatformUtils
-# import getUpdateSave from "./getUpdateSave.js";
-from .getUpdateSave import getUpdateSave
 
 from ..config import PluginConfig
+from .getUpdateSave import getUpdateSave
 
 
 class send:
@@ -30,7 +30,7 @@ class send:
         await UniMessage(msg).send(at_sender=True, reply=quote)
 
     @classmethod
-    async def getsave_result(cls, session: Uninfo, ver, send = True) -> bool | Save:
+    async def getsave_result(cls, session: Uninfo, ver, send=True) -> bool | Save:
         """
         检查存档部分
 
@@ -41,28 +41,32 @@ class send:
         """
         user_save = None
 
-        if (PluginConfig.get('openPhiPluginApi')):
+        if PluginConfig.get("openPhiPluginApi"):
             try:
                 user_save = await getUpdateSave.getNewSaveFromApi(session)
-                return user_save.save
+                return user_save["save"]
             except Exception as err:
-                if str(err) == 'Phigros token is required':
+                if str(err) == "Phigros token is required":
                     try:
                         sessionToken = await getSave.get_user_token(session.user.id)
                         if not sessionToken:
                             if send:
                                 await cls.send_with_At(
-                                "请先绑定sessionToken哦！\n"
-                                "如果不知道自己的sessionToken可以尝试扫码绑定嗷！\n"
-                                f"获取二维码：{PluginConfig.get('cmdhead')} bind qrcode\n"
-                                f"帮助：{PluginConfig.get('cmdhead')} tk help\n"
-                                f"格式：{PluginConfig.get('cmdhead')} bind <sessionToken>"       
+                                    "请先绑定sessionToken哦！\n"
+                                    "如果不知道自己的sessionToken可以尝试扫码绑定嗷！\n"
+                                    f"获取二维码：{PluginConfig.get('cmdhead')}"
+                                    " bind qrcode\n"
+                                    f"帮助：{PluginConfig.get('cmdhead')} tk help\n"
+                                    f"格式：{PluginConfig.get('cmdhead')} bind"
+                                    " <sessionToken>"
                                 )
                             return False
-                        user_save = await getUpdateSave.getNewSaveFromApi(session, sessionToken)
-                        return user_save.save
+                        user_save = await getUpdateSave.getNewSaveFromApi(
+                            session, sessionToken
+                        )
+                        return user_save["save"]
                     except Exception as err:
-                        logger.warn("[phi-plugin] API ERR", e=err)
+                        logger.warning("[phi-plugin] API ERR", e=err)
 
         sessionToken = await getSave.get_user_token(session.user.id)
 
@@ -76,8 +80,8 @@ class send:
                     f"格式：{PluginConfig.get('cmdhead')} bind <sessionToken>"
                 )
             return False
-        
-        user_save = (await getUpdateSave.getNewSaveFromLocal(session)).save
+
+        user_save = (await getUpdateSave.getNewSaveFromLocal(session))["save"]
 
         if not user_save or (
             ver and (not user_save.Recordver or user_save.Recordver < ver)
@@ -110,4 +114,3 @@ class send:
         except Exception as e:
             logger.error("消息转发失败", "phi-plugin", e=e)
             await cls.send_with_At("转发失败QAQ！请尝试在私聊触发命令！")
-

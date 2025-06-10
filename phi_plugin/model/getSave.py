@@ -1,9 +1,10 @@
 import shutil
+
 from ..models import SstkData
-from .class.Save import Save
-from .class.saveHistory import saveHistory
 from .getFile import readFile
 from .getRksRank import getRksRank
+from .models.Save import Save
+from .models.saveHistory import saveHistory
 from .path import savePath
 
 
@@ -71,7 +72,7 @@ class getSave:
         return tem
 
     @classmethod
-    async def putSave(cls, user_id: str, data:dict):
+    async def putSave(cls, user_id: str, data: dict):
         """
         保存 user_id 对应的存档文件
 
@@ -86,7 +87,7 @@ class getSave:
         return await readFile.SetFile(savePath / sstk / "save.json", data)
 
     @classmethod
-    async def getHistory(cls, user_id:str) -> "saveHistory":
+    async def getHistory(cls, user_id: str) -> "saveHistory":
         """
         获取 user_id 对应的历史记录
 
@@ -102,15 +103,14 @@ class getSave:
         return saveHistory(result)
 
     @classmethod
-    async def getHistoryBySessionToken(cls, sstk:str) -> "saveHistory":
+    async def getHistoryBySessionToken(cls, sstk: str) -> "saveHistory":
         if await cls.isBanSessionToken(sstk):
             raise ValueError(f"{sstk} 已被禁用")
         result = await readFile.FileReader(savePath / sstk / "history.json")
         return saveHistory(result)
 
-
     @classmethod
-    async def putHistory(cls, user_id:str, data:dict):
+    async def putHistory(cls, user_id: str, data: dict):
         """
         保存 user_id 对应的历史记录
 
@@ -135,14 +135,14 @@ class getSave:
 
         dan = history.get("dan")
 
-        if dan and type(dan) != list:
-            dan =[dan]
+        if dan and not isinstance(dan, list):
+            dan = [dan]
         if all is True:
             return dan
         return dan[0] if dan else None
 
     @classmethod
-    async def delSave(cls, user_id:str):
+    async def delSave(cls, user_id: str):
         """
         删除 user_id 对应的存档文件
 
@@ -176,12 +176,13 @@ class getSave:
         return True
 
     @classmethod
-    async def banSessionToken(cls, token:str):
+    async def banSessionToken(cls, token: str):
         """
         禁用 sessionToken
         :param str token: sessionToken
         """
         return await SstkData.ban_sstk(token)
+
     @classmethod
     async def allowSessionToken(cls, token: str):
         """
@@ -204,5 +205,3 @@ class getSave:
         获取所有被禁用的 sessionToken
         """
         return await SstkData.get_ban_sstk()
-
-

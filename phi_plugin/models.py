@@ -119,7 +119,7 @@ class SstkData(Model):
         :return: 被封禁的 sessionToken 列表
         """
         data = await cls.filter(is_banned=True).values_list("sessionToken", flat=True)
-        return list(data)  # type: ignore
+        return list(data)  # type: ignore[return-value]
 
 
 class RksRank(Model):
@@ -252,3 +252,20 @@ class userApiId(Model):
             await data.delete()
             return True
         return False
+
+
+class banGroup(Model):
+    id = fields.IntField(pk=True, generated=True, auto_increment=True)
+    """自增id"""
+    group_id = fields.CharField(255, description="群聊id")
+    """群聊id"""
+    func = fields.CharField(255, description="功能名称")
+    """功能名称"""
+
+    class Meta:  # type: ignore
+        table = "phiPlugin_banGroup"
+        table_description = "Phi 群组封禁功能表"
+
+    @classmethod
+    async def getStatus(cls, group_id: str, func: str) -> bool:
+        return await cls.filter(group_id=group_id, func=func).exists()

@@ -1,4 +1,5 @@
 from typing import Any
+
 from .getFile import readFile
 from .getSave import getSave
 from .path import pluginDataPath, savePath
@@ -72,8 +73,7 @@ class getNotes:
     async def putNotesData(cls, user_id: str, data: dict) -> bool:
         """保存用户数据"""
         return await readFile.SetFile(pluginDataPath / f"{user_id}_.json", data)
-    
+
     @classmethod
     async def delNotesData(cls, user_id) -> bool:
         return await readFile.DelFile(pluginDataPath / f"{user_id}_.json")
-    
