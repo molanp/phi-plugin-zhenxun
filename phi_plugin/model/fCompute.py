@@ -20,7 +20,7 @@ from zhenxun.services.log import logger
 from zhenxun.utils.rules import ensure_group
 
 
-class compute:
+class fCompute:
     @staticmethod
     def rks(acc: float, difficulty: float) -> float:
         """计算等效rks"""
@@ -104,7 +104,7 @@ class compute:
         s1 = score // 1_000_000
         s2 = (score // 1_000) % 1_000
         s3 = score % 1_000
-        return f"{s1}'{compute.ped(s2, 3)}'{compute.ped(s3, 3)}"
+        return f"{s1}'{fCompute.ped(s2, 3)}'{fCompute.ped(s3, 3)}"
 
     @staticmethod
     def randBetween(min: int, max: int) -> int:
@@ -292,7 +292,7 @@ class compute:
         :param max_range: 最大难度范围
         :return: 包含筛选条件的字典 {range, isask, scoreAsk}
         """
-        from .fCompute import compute  # 避免循环导入问题（如有）
+        from .fCompute import fCompute  # 避免循环导入问题（如有）
 
         result = {
             "range": [0, max_range or MAX_DIFFICULTY],
@@ -334,7 +334,7 @@ class compute:
                 result["scoreAsk"]["PHI"] = True
 
         # 提取难度范围
-        result["range"] = compute.match_range(msg, result["range"])
+        result["range"] = fCompute.match_range(msg, result["range"])
 
         return result
 
@@ -421,7 +421,7 @@ class compute:
         """
         result = []
         for key, values in data.items():
-            score = compute.jaro_winkler_distance(search_str, key)
+            score = fCompute.jaro_winkler_distance(search_str, key)
             if score > 0.8:
                 result.extend(
                     {"key": key, "score": score, "value": value} for value in values

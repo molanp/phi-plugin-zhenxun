@@ -31,10 +31,12 @@ CONFIG = (
             # https://github.com/Catrong/phi-plugin-ill/blob/main
             # gitee
             # https://gitee.com/Steveeee-e/phi-plugin-ill/raw/main
+            # github mirror zip
+            # https://github.bibk.top/Catrong/phi-plugin-ill/archive/refs/heads/main.zip
         ),
         RegisterConfig(
             key="downIllUrl",
-            value="https://gitee.com/Steveeee-e/phi-plugin-ill/raw/main",
+            value="https://github.bibk.top/Catrong/phi-plugin-ill/archive/refs/heads/main.zip",
             help="下载曲绘地址",
         ),
         RegisterConfig(
@@ -84,7 +86,7 @@ CONFIG = (
             key="WordSuggImg", value=True, help="Suggest曲绘图片"
         ),
         RegisterConfig(
-            key="RadioGroup",
+            key="otherinfo",
             value=0,
             help=(
                 "使用曲库的模式，若启用自定义则重名的以自定义为准。"

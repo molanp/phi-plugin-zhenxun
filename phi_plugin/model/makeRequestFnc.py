@@ -5,13 +5,13 @@ from nonebot import require
 require("nonebot_plugin_uninfo")
 from nonebot_plugin_uninfo import Uninfo
 
-from .fCompute import compute
+from .fCompute import fCompute
 
 
 class makeRequestFnc:
     @staticmethod
     def makePlatform(session: Uninfo) -> dict[str, Any]:
         return {
-            "platform": compute.getAdapterName(session),
+            "platform": fCompute.getAdapterName(session),
             "platform_id": session.user.id,
         }
