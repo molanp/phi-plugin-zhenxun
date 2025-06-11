@@ -1,0 +1,513 @@
+from datetime import datetime
+from typing import Any
+
+from ..constNum import MAX_DIFFICULTY, Level
+from ..fCompute import fCompute
+from ..utils import Date, to_dict
+from .LevelRecordInfo import LevelRecordInfo
+from .Save import Save
+
+
+class saveHistory:
+    scoreHistory: dict[str, dict[str, list[tuple[float, int, datetime, bool]]]]
+    """
+    歌曲成绩记录
+    ```
+    {
+        "songId": { - 曲目id
+            "dif": [ - diff 难度
+                [acc:round(float, 4), score: int, date: datetime, fc: bool],
+                [acc, score, date, fc],
+                ...
+            ]
+        }
+    }
+    """
+    data: list[dict[str, datetime | tuple[int, int, int, int, int]]]
+    """data货币变更记录"""
+    rks: list[dict[str, datetime | float]]
+    """rks变更记录"""
+    challengeModeRank: list[dict[str, datetime | float]]
+    """课题模式成绩"""
+    version: float | None
+    """
+    历史记录版本号
+
+    - v1.0,取消对当次更新内容的存储，取消对task的记录，更正scoreHistory
+    - v1.1,更正scoreHistory
+    - v2,由于曲名错误，删除所有记录，曲名使用id记录
+    - v3,添加课题模式历史记录
+    """
+    dan: list
+    """民间考核"""
+
+    def __init__(self, data: dict[str, Any]):
+        self.scoreHistory = data.get("scoreHistory") or {}
+        self.data = data.get("data") or []
+        self.rks = data.get("rks") or []
+        self.challengeModeRank = data.get("challengeModeRank") or []
+        self.version = data.get("version") or None
+        self.dan = data.get("dan") or []
+
+        # 检查版本
+        if not self.version or self.version < 2:
+            if self.scoreHistory:
+                for i in self.scoreHistory:
+                    if ".0" not in i:
+                        self.scoreHistory = {}
+                    break
+            self.version = 2
+        if self.version < 3:
+            self.challengeModeRank = []
+            self.version = 3
+
+    def add(self, data: "saveHistory"):
+        """
+        合并记录
+
+        :param saveHistory data: 另一个 History 存档
+        """
+        self.data = merge(self.data, data.data)
+        self.rks = merge(self.rks, data.rks)
+        self.challengeModeRank = merge(self.challengeModeRank, data.challengeModeRank)
+        for song in data.scoreHistory:
+            if not self.scoreHistory.get(song):
+                self.scoreHistory[song] = {}
+            for dif in data.scoreHistory.get(song, {}):
+                if self.scoreHistory[song] and self.scoreHistory[song].get(dif):
+                    self.scoreHistory[song][dif] = (
+                        self.scoreHistory[song][dif] + data.scoreHistory[song][dif]
+                    )
+                    self.scoreHistory[song][dif].sort(
+                        key=lambda x: openHistory(x)["date"]
+                    )
+                else:
+                    self.scoreHistory[song][dif] = data.scoreHistory[song][dif]
+                i = 1
+                while i < len(self.scoreHistory[song][dif]):
+                    last = openHistory(self.scoreHistory[song][dif][i - 1])
+                    now = openHistory(self.scoreHistory[song][dif][i])
+                    if (
+                        last["score"] == now["score"]
+                        and last["acc"] == now["acc"]
+                        and last["fc"] == now["fc"]
+                    ):
+                        # logger.info(f"""{last["date"]}, {now["date"]}""")
+                        self.scoreHistory[song][dif].pop(i)
+                    else:
+                        i += 1
+# TODO: 该睡觉啦！
+
+#     /**
+#      * 检查新存档中的变更并记录
+#      * @param {Save} save 新存档
+#      */
+#     update(save) {
+#         /**更新单曲成绩 */
+#         for (let id in save.gameRecord) {
+#             if (!this.scoreHistory[id]) this.scoreHistory[id] = {}
+#             for (let i in save.gameRecord[id]) {
+#                 /**难度映射 */
+#                 let level = Level[i]
+#                 /**提取成绩 */
+#                 let now = save.gameRecord[id][i]
+#                 if (!now) continue
+#                 now.date = save.saveInfo.modifiedAt.iso
+#                 /**本地无记录 */
+#                 if (!this.scoreHistory[id][level] || !this.scoreHistory[id][level].length) {
+#                     this.scoreHistory[id][level] = [createHistory(now.acc, now.score, save.saveInfo.modifiedAt.iso, now.fc)];
+#                     continue
+#                 }
+#                 /**新存档该难度无成绩 */
+#                 if (!save.gameRecord[id][i]) continue
+#                 /**本地记录日期为递增 */
+#                 for (let i = this.scoreHistory[id][level].length - 1; i >= 0; --i) {
+#                     /**第i项记录 */
+#                     let old = openHistory(this.scoreHistory[id][level][i])
+#                     // console.info(old.date.toISOString(), new Date(now.date).toISOString(), old.date.toISOString() == new Date(now.date).toISOString())
+#                     /**日期完全相同则认为已存储 */
+#                     if (old.score == now.score && old.acc == now.acc && old.fc == now.fc) {
+#                         /**标记已处理 */
+#                         now = null
+#                         break
+#                     }
+#                     /**找到第一个日期小于新成绩的日期 */
+#                     if (old.date < new Date(now.date)) {
+#                         /**历史记录acc仅保存4位，检查是否与第一个小于该日期的记录一致 */
+#                         if (old.acc != Number(now.acc).toFixed(4) || old.score != now.score || old.fc != now.fc) {
+#                             /**不一致在第i项插入 */
+#                             this.scoreHistory[id][level].splice(i, 0, createHistory(now.acc, now.score, save.saveInfo.modifiedAt.iso, now.fc))
+#                         }
+#                         /**标记已处理 */
+#                         now = null
+#                         break
+#                     }
+#                 }
+#                 /**未被处理，有该难度记录，说明日期早于本地记录 */
+#                 if (now) {
+#                     // console.info(11)
+#                     this.scoreHistory[id][level].unshift(createHistory(now.acc, now.score, save.saveInfo.modifiedAt.iso, now.fc))
+#                 }
+#                 /**查重 */
+#                 let j = 1
+#                 while (j < this.scoreHistory[id][level].length) {
+#                     let last = openHistory(this.scoreHistory[id][level][j - 1])
+#                     let now = openHistory(this.scoreHistory[id][level][j])
+#                     if (last.score == now.score && last.acc == now.acc && last.fc == now.fc) {
+#                         // console.info(last.date.toISOString(), now.date.toISOString())
+#                         this.scoreHistory[id][level].splice(j, 1)
+#                     } else {
+#                         ++j
+#                     }
+#                 }
+#             }
+#         }
+#         /**更新rks记录 */
+#         for (let i = this.rks.length - 1; i >= 0; i--) {
+#             if (save.saveInfo.modifiedAt.iso > new Date(this.rks[i].date)) {
+#                 if (!this.rks[i + 1] || (this.rks[i].value != save.saveInfo.summary.rankingScore || this.rks[i + 1]?.value != save.saveInfo.summary.rankingScore)) {
+#                     this.rks.splice(i + 1, 0, {
+#                         date: save.saveInfo.modifiedAt.iso,
+#                         value: save.saveInfo.summary.rankingScore
+#                     })
+#                 }
+#                 break
+#             }
+#         }
+#         if (!this.rks.length) {
+#             this.rks.push({
+#                 date: save.saveInfo.modifiedAt.iso,
+#                 value: save.saveInfo.summary.rankingScore
+#             })
+#         }
+#         /**更新data记录 */
+#         for (let i = this.data.length - 1; i >= 0; i--) {
+#             if (save.saveInfo.modifiedAt.iso > new Date(this.data[i].date)) {
+#                 if (!this.data[i + 1] || (checkValue(this.data[i].value, save.gameProgress.money) && checkValue(this.data[i + 1]?.value, save.gameProgress.money))) {
+#                     this.data.splice(i + 1, 0, {
+#                         date: save.saveInfo.modifiedAt.iso,
+#                         value: save.gameProgress.money
+#                     })
+#                 }
+#                 break
+#             }
+#         }
+#         if (!this.data.length) {
+#             this.data.push({
+#                 date: save.saveInfo.modifiedAt.iso,
+#                 value: save.gameProgress.money
+#             })
+#         }
+#         /**更新课题模式记录 */
+#         for (let i = this.challengeModeRank.length - 1; i >= 0; i--) {
+#             if (save.saveInfo.modifiedAt.iso > new Date(this.challengeModeRank[i].date)) {
+#                 let clg = save.saveInfo.summary.challengeModeRank
+#                 if (clg != this.challengeModeRank[i].value && (this.challengeModeRank[i + 1]?.value != clg)) {
+#                     this.challengeModeRank.splice(i + 1, 0, {
+#                         date: save.saveInfo.modifiedAt.iso,
+#                         value: save.saveInfo.summary.challengeModeRank
+#                     })
+#                 }
+#                 break
+#             }
+#         }
+#         if (!this.challengeModeRank.length) {
+#             this.challengeModeRank.push({
+#                 date: save.saveInfo.modifiedAt.iso,
+#                 value: save.saveInfo.summary.challengeModeRank
+#             })
+#         }
+#     }
+
+#     /**
+#      * 获取歌曲最新的历史记录
+#      * @param {string} id 曲目id
+#      * @returns
+#      */
+#     async getSongsLastRecord(id) {
+#         let t = { ...this.scoreHistory[id] }
+#         for (let level in t) {
+#             t[level] = t[level] ? openHistory(t[level].at(-1)) : null
+#             let date = t[level].date
+#             t[level] = new LevelRecordInfo(t[level], id, level)
+#             t[level].date = date
+#         }
+#         return t
+#     }
+
+
+#     /**
+#      * 折线图数据
+#      * @returns
+#      */
+#     getRksAndDataLine() {
+
+#         let rks_history_ = []
+#         let user_rks_data = this.rks
+#         let rks_range = [MAX_DIFFICULTY, 0]
+#         let rks_date = [];
+#         let rks_history = []
+
+#         if (user_rks_data.length) {
+#             rks_date = [new Date(user_rks_data[0].date).getTime(), 0]
+#             for (let i in user_rks_data) {
+#                 user_rks_data[i].date = new Date(user_rks_data[i].date)
+#                 if (i <= 1 || user_rks_data[i].value != rks_history_[rks_history_.length - 2].value) {
+#                     rks_history_.push(user_rks_data[i])
+#                     rks_range[0] = Math.min(rks_range[0], user_rks_data[i].value)
+#                     rks_range[1] = Math.max(rks_range[1], user_rks_data[i].value)
+#                 } else {
+#                     rks_history_[rks_history_.length - 1].date = user_rks_data[i].date
+#                 }
+#                 rks_date[1] = user_rks_data[i].date.getTime()
+#             }
+
+#             for (let i in rks_history_) {
+
+#                 i = Number(i)
+
+#                 if (!rks_history_[i + 1]) break
+#                 let x1 = fCompute.range(rks_history_[i].date, rks_date)
+#                 let y1 = fCompute.range(rks_history_[i].value, rks_range)
+#                 let x2 = fCompute.range(rks_history_[i + 1].date, rks_date)
+#                 let y2 = fCompute.range(rks_history_[i + 1].value, rks_range)
+#                 rks_history.push([x1, y1, x2, y2])
+#             }
+#             if (!rks_history.length) {
+#                 rks_history.push([0, 50, 100, 50])
+#             }
+#         }
+
+
+#         let data_history_ = []
+#         let user_data_data = this.data
+#         let data_range = [1e9, 0]
+#         let data_date = []
+#         let data_history = []
+
+#         if (user_data_data.length) {
+#             data_date = [new Date(user_data_data[0].date).getTime(), 0]
+#             for (let i in user_data_data) {
+#                 let value = user_data_data[i]['value']
+#                 user_data_data[i].value = (((value[4] * 1024 + value[3]) * 1024 + value[2]) * 1024 + value[1]) * 1024 + value[0]
+#                 user_data_data[i].date = new Date(user_data_data[i].date)
+#                 if (i <= 1 || user_data_data[i].value != data_history_[data_history_.length - 2].value) {
+#                     data_history_.push(user_data_data[i])
+#                     data_range[0] = Math.min(data_range[0], user_data_data[i].value)
+#                     data_range[1] = Math.max(data_range[1], user_data_data[i].value)
+#                 } else {
+#                     data_history_[data_history_.length - 1].date = user_data_data[i].date
+#                 }
+#                 data_date[1] = user_data_data[i].date.getTime()
+#             }
+
+#             for (let i in data_history_) {
+
+#                 i = Number(i)
+
+#                 if (!data_history_[i + 1]) break
+#                 let x1 = fCompute.range(data_history_[i].date, data_date)
+#                 let y1 = fCompute.range(data_history_[i].value, data_range)
+#                 let x2 = fCompute.range(data_history_[i + 1].date, data_date)
+#                 let y2 = fCompute.range(data_history_[i + 1].value, data_range)
+#                 data_history.push([x1, y1, x2, y2])
+#             }
+
+
+#             let unit = ["KiB", "MiB", "GiB", "TiB", "Pib"]
+
+#             for (let i in [1, 2, 3, 4]) {
+#                 if (Math.floor(data_range[0] / (Math.pow(1024, i))) < 1024) {
+#                     data_range[0] = `${Math.floor(data_range[0] / (Math.pow(1024, i)))}${unit[i]}`
+#                 }
+#             }
+
+#             for (let i in [1, 2, 3, 4]) {
+#                 if (Math.floor(data_range[1] / (Math.pow(1024, i))) < 1024) {
+#                     data_range[1] = `${Math.floor(data_range[1] / (Math.pow(1024, i)))}${unit[i]}`
+#                 }
+#             }
+#         }
+
+#         return {
+#             rks_history,
+#             rks_range,
+#             rks_date,
+#             data_history,
+#             data_range,
+#             data_date
+#         }
+#     }
+
+#     getRksLine() {
+#         let rks_history_ = []
+#         let user_rks_data = this.rks
+#         let rks_range = [MAX_DIFFICULTY, 0]
+#         let rks_date = [new Date(user_rks_data[0].date).getTime(), 0]
+
+#         for (let i in user_rks_data) {
+#             user_rks_data[i].date = new Date(user_rks_data[i].date)
+#             if (i <= 1 || user_rks_data[i].value != rks_history_[rks_history_.length - 2].value) {
+#                 rks_history_.push(user_rks_data[i])
+#                 rks_range[0] = Math.min(rks_range[0], user_rks_data[i].value)
+#                 rks_range[1] = Math.max(rks_range[1], user_rks_data[i].value)
+#             } else {
+#                 rks_history_[rks_history_.length - 1].date = user_rks_data[i].date
+#             }
+#             rks_date[1] = user_rks_data[i].date.getTime()
+#         }
+
+#         let rks_history = []
+
+#         for (let i in rks_history_) {
+
+#             i = Number(i)
+
+#             if (!rks_history_[i + 1]) break
+#             let x1 = fCompute.range(rks_history_[i].date, rks_date)
+#             let y1 = fCompute.range(rks_history_[i].value, rks_range)
+#             let x2 = fCompute.range(rks_history_[i + 1].date, rks_date)
+#             let y2 = fCompute.range(rks_history_[i + 1].value, rks_range)
+#             rks_history.push([x1, y1, x2, y2])
+#         }
+#         if (!rks_history.length) {
+#             rks_history.push([0, 50, 100, 50])
+#         }
+
+#         return {
+#             rks_history,
+#             rks_range,
+#             rks_date,
+#         }
+#     }
+
+#     getDataLine() {
+#         let data_history_ = []
+#         let user_data_data = this.data
+#         let data_range = [1e9, 0]
+#         let data_date = [new Date(user_data_data[0].date).getTime(), 0]
+
+
+#         for (let i in user_data_data) {
+#             let value = user_data_data[i]['value']
+#             user_data_data[i].value = (((value[4] * 1024 + value[3]) * 1024 + value[2]) * 1024 + value[1]) * 1024 + value[0]
+#             user_data_data[i].date = new Date(user_data_data[i].date)
+#             if (i <= 1 || user_data_data[i].value != data_history_[data_history_.length - 2].value) {
+#                 data_history_.push(user_data_data[i])
+#                 data_range[0] = Math.min(data_range[0], user_data_data[i].value)
+#                 data_range[1] = Math.max(data_range[1], user_data_data[i].value)
+#             } else {
+#                 data_history_[data_history_.length - 1].date = user_data_data[i].date
+#             }
+#             data_date[1] = user_data_data[i].date.getTime()
+#         }
+
+#         let data_history = []
+
+#         for (let i in data_history_) {
+
+#             i = Number(i)
+
+#             if (!data_history_[i + 1]) break
+#             let x1 = fCompute.range(data_history_[i].date, data_date)
+#             let y1 = fCompute.range(data_history_[i].value, data_range)
+#             let x2 = fCompute.range(data_history_[i + 1].date, data_date)
+#             let y2 = fCompute.range(data_history_[i + 1].value, data_range)
+#             data_history.push([x1, y1, x2, y2])
+#         }
+
+
+#         let unit = ["KiB", "MiB", "GiB", "TiB", "Pib"]
+
+#         for (let i in [1, 2, 3, 4]) {
+#             if (Math.floor(data_range[0] / (Math.pow(1024, i))) < 1024) {
+#                 data_range[0] = `${Math.floor(data_range[0] / (Math.pow(1024, i)))}${unit[i]}`
+#             }
+#         }
+
+#         for (let i in [1, 2, 3, 4]) {
+#             if (Math.floor(data_range[1] / (Math.pow(1024, i))) < 1024) {
+#                 data_range[1] = `${Math.floor(data_range[1] / (Math.pow(1024, i)))}${unit[i]}`
+#             }
+#         }
+#         return {
+#             data_history,
+#             data_range,
+#             data_date
+#         }
+#     }
+
+# }
+
+
+# function createHistory(acc, score, date, fc) {
+#     return [acc.toFixed(4), score, date, fc]
+# }
+
+
+def merge(m: list, n: list) -> list:
+    """
+    数组合并按照 date 排序并去重
+
+    :param m: 第一个数组
+    :param n: 第二个数组
+    :return: 合并后的数组
+    """
+    t = m + n
+    # 按照 date 排序
+    t.sort(key=lambda x: x["date"])
+
+    i = 1
+    while i < len(t) - 1:
+        # 因绘制折线图需要，需要保留同一值两端
+        if check_value(t[i]["value"], t[i - 1]["value"]) and check_value(
+            t[i]["value"], t[i + 1]["value"]
+        ):
+            t.pop(i)
+        else:
+            i += 1
+    return t
+
+
+def createHistory(acc: float, score: int, date: datetime, fc: bool) -> list[Any]:
+    """
+    创建历史记录
+
+    :param acc: 准确度
+    :param score: 分数
+    :param date: 日期
+    :param fc: 是否全连
+    :return: 历史记录列表
+    """
+    return [round(acc, 4), score, date, fc]
+
+
+def openHistory(data: list | tuple) -> dict:
+    """
+    展开信息
+
+    :param data:历史成绩
+    """
+    return {
+        "acc": data[0],
+        "score": data[1],
+        "date": Date(data[2]),
+        "fc": data[3],
+    }
+
+
+def check_value(a: Any, b: Any):
+    """
+    比较两个数组
+
+    :param a: 第一个值
+    :param b: 第二个值
+    :return: bool
+    """
+    if not isinstance(a, list):
+        return a == b
+
+    if a is None or b is None:
+        return False
+
+    return all(a[i] == b[i] for i in range(len(a)))
