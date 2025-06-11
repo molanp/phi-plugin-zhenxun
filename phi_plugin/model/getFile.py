@@ -306,10 +306,10 @@ class readFile:
                 if not save:
                     continue
 
-                rks = save.get_rks()
+                rks = save.getRks()
                 if rks is None or rks == float("nan"):
                     logger.warning(
-                        f"奇怪的rks: {save.save_info.summary.ranking_score}",
+                        f"奇怪的rks: {save.saveInfo['summary']['rankingScore']}",
                         "[phi-plugin][数据转移，请勿中断进程]",
                     )
                     continue

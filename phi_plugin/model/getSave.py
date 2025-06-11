@@ -25,7 +25,7 @@ class getSave:
         return await SstkData.delete_sstk(user_id)
 
     @classmethod
-    async def getSave(cls, user_id: str) -> "Save":
+    async def getSave(cls, user_id: str) -> Save | None:
         """
         获取 user_id 对应的存档文件
 
@@ -41,7 +41,7 @@ class getSave:
         result = await readFile.FileReader(savePath / sstk / "save.json")
         if not result:
             return None
-        tem = Save(result)
+        tem = await Save().constructor(result)
         if tem.saveInfo:
             await tem.init()
         else:
@@ -49,22 +49,22 @@ class getSave:
         return tem
 
     @classmethod
-    async def getSaveBySessionToken(cls, sstk: str) -> "Save":
+    async def getSaveBySessionToken(cls, sstk: str | None) -> Save | None:
         """
         获取 sessionToken 对应的存档文件
 
-        :param str sstk: sessionToken
+        :param str | None sstk: sessionToken
         :return: Save
         """
         if sstk is None:
-            return None
+            return
         if await cls.isBanSessionToken(sstk):
             raise ValueError(f"{sstk} 已被禁用")
 
         result = await readFile.FileReader(savePath / sstk / "save.json")
         if not result:
             return None
-        tem = Save(result)
+        tem = await Save().constructor(result)
         if tem.saveInfo:
             await tem.init()
         else:

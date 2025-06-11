@@ -1,7 +1,7 @@
 from nonebot import get_bot, require
 from nonebot.adapters import Event
 
-from .cls.Save import getSave
+from .cls.Save import Save
 from .getSave import getSave
 
 require("nonebot_plugin_alconna")

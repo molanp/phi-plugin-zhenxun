@@ -8,7 +8,7 @@ from ..config import PATH
 
 class picmodle:
     @classmethod
-    async def alias(cls, info):
+    async def alias(cls, info) -> Image:
         """曲目图鉴"""
         return await cls.common(
             "atlas",
@@ -21,27 +21,27 @@ class picmodle:
         )
 
     @classmethod
-    async def b19(cls, data):
+    async def b19(cls, data) -> Image:
         """b19"""
         return await cls.common("b19", data)
 
     @classmethod
-    async def arcgros_b19(cls, data):
+    async def arcgros_b19(cls, data) -> Image:
         """arcgros b19"""
         return await cls.common("arcgrosB19", data)
 
     @classmethod
-    async def update(cls, data):
+    async def update(cls, data) -> Image:
         """更新"""
         return await cls.common("update", data)
 
     @classmethod
-    async def tasks(cls, data):
+    async def tasks(cls, data) -> Image:
         """任务"""
         return await cls.common("tasks", data)
 
     @classmethod
-    async def user_info(cls, info: dict, picversion: int):
+    async def user_info(cls, info: dict, picversion: int) -> Image:
         """
         个人信息
 
@@ -60,17 +60,17 @@ class picmodle:
             )
 
     @classmethod
-    async def lvsco(cls, data: dict):
+    async def lvsco(cls, data: dict) -> Image:
         """lvsco"""
         return await cls.common("lvsco", data)
 
     @classmethod
-    async def list(cls, data: dict):
+    async def list(cls, data: dict) -> Image:
         """列表"""
         return await cls.common("list", data)
 
     @classmethod
-    async def score(cls, data: dict, picversion: int):
+    async def score(cls, data: dict, picversion: int) -> Image:
         """
         单曲成绩
 
@@ -83,32 +83,32 @@ class picmodle:
             return await cls.render("score/scoreOld", {**data})
 
     @classmethod
-    async def ill(cls, data: dict):
+    async def ill(cls, data: dict) -> Image:
         """曲绘"""
         return await cls.common("ill", data)
 
     @classmethod
-    async def guess(cls, data: dict):
+    async def guess(cls, data: dict) -> Image:
         """猜歌"""
         return await cls.common("guess", data)
 
     @classmethod
-    async def rand(cls, data: dict):
+    async def rand(cls, data: dict) -> Image:
         """随机"""
         return await cls.common("rand", data)
 
     @classmethod
-    async def help(cls, data: dict):
+    async def help(cls, data: dict) -> Image:
         """帮助"""
         return await cls.common("help", data)
 
     @classmethod
-    async def chap(cls, data: dict):
+    async def chap(cls, data: dict) -> Image:
         """章节"""
         return await cls.common("chap", data)
 
     @classmethod
-    async def common(cls, kind: str, data: dict):
+    async def common(cls, kind: str, data: dict) -> Image:
         """
         :param {'alias'|'task'|'b19'|'arcgrosB19'|'update'|'tasks'|'lvsco'|'list'|'ill'|'chartInfo'|'guess'|'rand'|'help'|'chap'|'rankingList'|'clg'} kind: 类型
         :param dict data: 数据

@@ -10,6 +10,7 @@ from .getSaveFromApi import getSaveFromApi
 from .makeRequest import makeRequest
 from .makeRequestFnc import makeRequestFnc
 from .send import send
+from .utils import to_dict
 
 require("nonebot_plugin_uninfo")
 from nonebot.adapters import Event
@@ -36,12 +37,12 @@ class getUpdateSave:
             **{"token": token, **makeRequestFnc.makePlatform(session)}
         )
         await getSaveFromApi.putSave(session.user.id, newSave)
-        result = Save(newSave)
+        result = await Save().constructor(newSave)
         await result.init()
-        await getSaveFromApi.putSave(session.user.id, result)
+        await getSaveFromApi.putSave(session.user.id, to_dict(result))
         if token:
             await getSave.add_user_token(session.user.id, token)
-        added_rks_notes = await cls.buildingRecord(old, newSave, session)
+        added_rks_notes = await cls.buildingRecord(old, result, session)
         return {"save": result, "added_rks_notes": added_rks_notes}
 
     @classmethod
@@ -49,11 +50,14 @@ class getUpdateSave:
         cls, e: Event, session: Uninfo, token: str | None = None
     ) -> dict:
         old = await getSave.getSave(session.user.id)
-        token = token or old.session
+        token = token or old.session if old else None
         User = PhigrosUser(token)
         try:
             save_info = await User.getSaveInfo()
-            if old and old.saveInfo.modifiedAt.iso == save_info.modifiedAt.iso:
+            if (
+                old
+                and old.saveInfo["modifiedAt"]["iso"] == save_info["modifiedAt"]["iso"]
+            ):
                 return {"save": old, "added_rks_notes": [0, 0]}
             await User.buildRecord()
         except Exception as err:
@@ -69,7 +73,9 @@ class getUpdateSave:
             await send.send_with_At(e, f"保存存档失败!\n{err}")
             logger.error("保存存档失败", "phi-plugin", e=err)
             raise err
-        now = Save(User.model_dump())  # TODO:在py里似乎需要转字典传入,使用model_dump?
+        now = await Save().constructor(
+            User
+        )  # TODO:在py里似乎需要转字典传入,使用model_dump?
 
         if old and (old.session and old.session != User.session):
             await send.send_with_At(
@@ -89,7 +95,7 @@ class getUpdateSave:
 
     @classmethod
     async def buildingRecord(
-        cls, old: Save, now: Save, session: Uninfo
+        cls, old: Save | None, now: Save, session: Uninfo
     ) -> list[int] | bool:
         """
         更新存档
@@ -136,24 +142,23 @@ class getUpdateSave:
                     request_type = task_info["request"].get("type")
                     request_value = task_info["request"].get("value", 0)
 
-                    if request_type == "acc":
-                        if current_record.get("acc", 0) >= request_value:
-                            task_info["finished"] = True
-                            reward = task_info.get("reward", 0)
-                            add_money += reward
-                            notesData["plugin_data"]["money"] += reward
-                    elif request_type == "score":
-                        if current_record.get("score", 0) >= request_value:
-                            task_info["finished"] = True
-                            reward = task_info.get("reward", 0)
-                            add_money += reward
-                            notesData["plugin_data"]["money"] += reward
-
+                    if (
+                        request_type == "acc" and current_record.acc >= request_value
+                    ) or (
+                        request_type != "acc"
+                        and request_type == "score"
+                        and current_record.score >= request_value
+                    ):
+                        task_info["finished"] = True
+                        reward = task_info.get("reward", 0)
+                        add_money += reward
+                        notesData["plugin_data"]["money"] += reward
         await getNotes.putNotesData(session.user.id, notesData)
 
         # rks变化
         add_rks = (
-            now.saveInfo.summary.rankingScore - old.saveInfo.summary.rankingScore
+            now.saveInfo["summary"]["rankingScore"]
+            - old.saveInfo["summary"]["rankingScore"]
             if old
             else 0
         )

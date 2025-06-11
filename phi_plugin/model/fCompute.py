@@ -1,4 +1,5 @@
 import asyncio
+from pathlib import Path
 import random
 
 from nonebot import require
@@ -22,7 +23,7 @@ from zhenxun.utils.rules import ensure_group
 
 class fCompute:
     @staticmethod
-    def rks(acc: float, difficulty: float) -> float:
+    def rks(acc: float, difficulty: int) -> float:
         """计算等效rks"""
         if acc == 100:
             # 满分原曲定数即为有效rks
@@ -35,12 +36,12 @@ class fCompute:
             return difficulty * (((acc - 55) / 45) ** 2)
 
     @staticmethod
-    def suggest(rks: float, difficulty: float, count: int | None = None) -> str:
+    def suggest(rks: float, difficulty: int, count: int | None = None) -> str:
         """
         计算所需acc
 
         :param float rks: 目标rks
-        :param float difficulty: 定数
+        :param int difficulty: 定数
         :param int count: 保留位数
         :return float: 所需acc
         """
@@ -63,7 +64,7 @@ class fCompute:
             await send.send_with_At(e, f"文件上传错误: {err}")
 
     @staticmethod
-    async def getBackground(save_background: str) -> str | bool:
+    async def getBackground(save_background: str) -> Path | str | bool:
         """获取角色介绍背景曲绘"""
         try:
             match save_background:
@@ -141,10 +142,10 @@ class fCompute:
         if isinstance(date, str):
             try:
                 # 尝试解析字符串为 datetime 对象
-                dt = datetime.fromisoformat(date)
+                dt = datetime.fromisoformat(date.replace("Z", "+00:00"))
             except ValueError:
                 # 如果不支持 ISO 格式，尝试其他常见格式
-                dt = datetime.strptime(date, "%Y/%m/%d %H:%M:%S")
+                dt = datetime.strptime(date.replace("Z", "+00:00"), "%Y/%m/%d %H:%M:%S")
         else:
             dt = date
 
@@ -161,10 +162,10 @@ class fCompute:
         if isinstance(date, str):
             try:
                 # 尝试解析字符串为 datetime 对象
-                dt = datetime.fromisoformat(date)
+                dt = datetime.fromisoformat(date.replace("Z", "+00:00"))
             except ValueError:
                 # 如果不支持 ISO 格式，尝试其他常见格式
-                dt = datetime.strptime(date, "%Y/%m/%d %H:%M:%S")
+                dt = datetime.strptime(date.replace("Z", "+00:00"), "%Y/%m/%d %H:%M:%S")
         else:
             dt = date
 
@@ -380,10 +381,10 @@ class fCompute:
         # 统一转为 datetime 对象
         if isinstance(date, str):
             try:
-                dt = datetime.fromisoformat(date)
+                dt = datetime.fromisoformat(date.replace("Z", "+00:00"))
             except ValueError:
                 # 如果不支持 ISO 格式，尝试其他常见格式
-                dt = datetime.strptime(date, "%Y/%m/%d %H:%M:%S")
+                dt = datetime.strptime(date.replace("Z", "+00:00"), "%Y/%m/%d %H:%M:%S")
         else:
             dt = date
 

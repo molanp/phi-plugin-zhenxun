@@ -1,6 +1,8 @@
+from pathlib import Path
 import re
-from typing import Literal
+from typing import Any, Literal
 
+from .utils import to_dict
 from zhenxun.services.log import logger
 
 from ..config import PluginConfig
@@ -84,14 +86,18 @@ class getInfo:
                 if item.get("illustration_big"):
                     cls.illlist.append(item["song"])
         # SP信息
-        cls.sp_info: dict[str, SongsInfo] = await readFile.FileReader(
+        cls.sp_info: dict[str, SongsInfo]
+        sp_info: dict[str, dict[str, Any]] = await readFile.FileReader(
             infoPath / "spinfo.json"
         )
 
-        for value in cls.sp_info.values():
-            value["sp_vis"] = True
-            if value.get("illustration_big"):
-                cls.illlist.append(value["song"])
+        for song, value in sp_info.items():
+            value = await SongsInfo.init(value)
+            value.sp_vis = True
+            if value.illustration_big:
+                cls.illlist.append(value.song)
+            cls.sp_info[song] = value
+
         # 难度映射
         cls.Level = Level
         # 最高定数
@@ -260,7 +266,7 @@ class getInfo:
             cls.illlist.append(song_name)
             cls.songlist.append(song_name)
             # 完成 ori_info 构建
-            cls.ori_info[song_name] = json_info
+            cls.ori_info[song_name] = await SongsInfo.init(json_info)
         if cls.MAX_DIFFICULTY != MAX_DIFFICULTY:
             logger.error(
                 "MAX_DIFFICULTY 常量未更新，请回报作者！"
@@ -303,17 +309,17 @@ class getInfo:
         cls.info_by_difficulty = {}
 
         for song_data in cls.ori_info.values():
-            chart = song_data.get("chart", {})
+            chart = song_data.chart
             for level, chart_data in chart.items():
-                difficulty = chart_data.get("difficulty")
+                difficulty = chart_data.difficulty
                 if not difficulty:
                     continue  # 跳过无定数的数据
 
                 # 构造要插入的数据项
                 entry = {
-                    "id": song_data["id"],
+                    "id": song_data.id,
                     "rank": level,
-                    **chart_data,
+                    **to_dict(chart_data),
                 }
 
                 # 插入到对应难度的列表中
@@ -325,27 +331,34 @@ class getInfo:
         logger.success("初始化曲目信息完成", "phi-plugin")
 
     @classmethod
-    async def info(cls, song: str | None = None, original: bool = False) -> SongsInfo:
+    async def info(
+        cls, song: str | None = None, original: bool = False
+    ) -> SongsInfo | None:
         """
         获取曲目信息
 
         :param str song: 原曲曲名
         :param bool original: 仅使用原版
         """
+        result: dict[str, dict[str, Any]]
         match 0 if original else PluginConfig.get("otherinfo"):
             case 0:
-                result = {**cls.ori_info, **cls.sp_info}
+                result = {**to_dict(cls.ori_info), **to_dict(cls.sp_info)}
             case 1:
                 result = {
-                    **cls.ori_info,
-                    **cls.sp_info,
+                    **to_dict(cls.ori_info),
+                    **to_dict(cls.sp_info),
                     **(await readFile.FileReader(configPath / "otherinfo.yaml")),
                 }
             case 2:
                 result = await readFile.FileReader(configPath / "otherinfo.yaml")
             case _:
                 raise ValueError("Invalid otherinfo")
-        return SongsInfo(result[song]) if song is not None and song in result else None
+        return (
+            await SongsInfo.init(result[song])
+            if song is not None and song in result
+            else None
+        )
 
     @classmethod
     async def all_info(cls, original: bool = False) -> dict[str, SongsInfo]:
@@ -354,6 +367,7 @@ class getInfo:
 
         :param original: 仅使用原版
         """
+
         match 0 if original else PluginConfig.get("otherinfo"):
             case 0:
                 return {**cls.ori_info, **cls.sp_info}
@@ -429,12 +443,12 @@ class getInfo:
             song_info = allinfo[std]
             dis = fCompute.jaroWinklerDistance(mic, std)
             if dis >= Distance:
-                result.append({"song": song_info["song"], "dis": dis})
+                result.append({"song": song_info.song, "dis": dis})
             # 检查是否存在 id 字段，并进行相似度判断
-            if song_info.get("id"):
-                dis_id = fCompute.jaroWinklerDistance(mic, song_info["id"])
+            if song_info.id:
+                dis_id = fCompute.jaroWinklerDistance(mic, song_info.id)
                 if dis_id >= Distance:
-                    result.append({"song": song_info["song"], "dis": dis_id})
+                    result.append({"song": song_info.song, "dis": dis_id})
 
         # 排序：按 dis 从高到低
         result.sort(key=lambda x: -x["dis"])
@@ -469,17 +483,17 @@ class getInfo:
     @classmethod
     async def getill(
         cls, song: str, kind: Literal["common", "blur", "low"] = "common"
-    ) -> str:
+    ) -> str | Path:
         """
         获取曲绘，返回地址
 
         :param str  song: 原名
         :param str kind: 清晰度
 
-        :return str: 网址或文件地址
+        :return str | Path: 网址或文件地址
         """
         songsinfo = (await cls.all_info()).get(song, {})
-        ans = songsinfo.get("illustration_big")
+        ans = to_dict(songsinfo).get("illustration_big")
 
         url_pattern = re.compile(
             r"^(?:(http|https|ftp)://)"  # 协议部分
@@ -538,29 +552,29 @@ class getInfo:
         if not ans:
             logger.warning(f"{song} 背景不存在", "phi_plugin")
             ans = imgPath / "phigros.png"
-        return str(ans)
+        return ans
 
     @staticmethod
-    def getTableImg(dif) -> str:
+    def getTableImg(dif: str) -> str | Path:
         if (originalIllPath / "table" / f"{dif}.png").exists():
-            return str(originalIllPath / "table" / f"{dif}.png")
+            return originalIllPath / "table" / f"{dif}.png"
         else:
             return PluginConfig.get("onLinePhiIllUrl") + "/table/" + f"{dif}.png"
 
     @staticmethod
-    def getChapIll(name) -> str:
+    def getChapIll(name: str) -> str | Path:
         """
         返回章节封面地址
 
         :param str name: 标准章节名
         """
         if (originalIllPath / "chap" / f"{name}.png").exists():
-            return str(originalIllPath / "chap" / f"{name}.png")
+            return originalIllPath / "chap" / f"{name}.png"
         else:
             return PluginConfig.get("onLinePhiIllUrl") + "/chap/" + f"{name}.png"
 
     @classmethod
-    def idgetavatar(cls, id):
+    def idgetavatar(cls, id: str):
         """
         通过id获得头像文件名称
 
@@ -571,7 +585,7 @@ class getInfo:
         return cls.avatarid[id] if id in cls.avatarid else "Introduction"
 
     @classmethod
-    def idgetsong(cls, id) -> str | None:
+    def idgetsong(cls, id: str) -> str | None:
         """
         根据曲目id获取原名
 
@@ -582,7 +596,7 @@ class getInfo:
         return cls.songsid.get(id)
 
     @classmethod
-    def SongGetId(cls, song) -> str | None:
+    def SongGetId(cls, song: str) -> str | None:
         """
         通过原曲曲目获取曲目id
 
@@ -593,7 +607,7 @@ class getInfo:
         return cls.idssong.get(song)
 
     @classmethod
-    async def getBackground(cls, save_background) -> str | bool:
+    async def getBackground(cls, save_background: str) -> Path | str | bool:
         """
         获取角色介绍背景曲绘
         """

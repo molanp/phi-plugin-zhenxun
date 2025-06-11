@@ -43,7 +43,7 @@ class getSaveFromApi:
         )
         if not result:
             return None
-        tem = Save(result)
+        tem = await Save().constructor(result)
         if tem.saveInfo:
             await tem.init()
         else:
@@ -64,7 +64,7 @@ class getSaveFromApi:
         )
         if not result:
             return None
-        tem = Save(result)
+        tem = await Save().constructor(result)
         if tem.saveInfo:
             await tem.init()
         else:
@@ -78,7 +78,7 @@ class getSaveFromApi:
 
         :param  session: session
         """
-        result = Save(
+        result = Save().init(
             await makeRequest.getCloudSaves(makeRequestFnc.makePlatform(session))  # type: ignore
         )
         await result.init()

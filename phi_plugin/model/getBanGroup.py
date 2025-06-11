@@ -2,20 +2,20 @@ from ..models import banGroup
 
 
 class getBanGroup:
-    @classmethod
-    async def getStatus(cls, group_id: str, func: str) -> bool:
+    @staticmethod
+    async def getStatus(group_id: str, func: str) -> bool:
         return await banGroup.getStatus(group_id, func)
 
-    @classmethod
-    async def get(cls, group: str | None, func: str) -> bool:
+    @staticmethod
+    async def get(group: str | None, func: str) -> bool:
         if not group:
             return False
 
         match func:
             case "help" | "tkhelp":
-                return await cls.getStatus(group, "help")
+                return await getBanGroup.getStatus(group, "help")
             case "bind" | "unbind":
-                return await cls.getStatus(group, "bind")
+                return await getBanGroup.getStatus(group, "bind")
             case (
                 "b19"
                 | "p30"
@@ -29,9 +29,9 @@ class getBanGroup:
                 | "chap"
                 | "suggest"
             ):
-                return await cls.getStatus(group, "b19")
+                return await getBanGroup.getStatus(group, "b19")
             case "bestn" | "data":
-                return await cls.getStatus(group, "wb19")
+                return await getBanGroup.getStatus(group, "wb19")
             case (
                 "song"
                 | "ill"
@@ -46,22 +46,22 @@ class getBanGroup:
                 | "comment"
                 | "recallComment"
             ):
-                return await cls.getStatus(group, "song")
+                return await getBanGroup.getStatus(group, "song")
             case "rankList" | "godList":
-                return await cls.getStatus(group, "ranklist")
+                return await getBanGroup.getStatus(group, "ranklist")
             case "comrks" | "tips" | "newSong":
-                return await cls.getStatus(group, "fnc")
+                return await getBanGroup.getStatus(group, "fnc")
             case "tipgame":
-                return await cls.getStatus(group, "tipgame")
+                return await getBanGroup.getStatus(group, "tipgame")
             case "guessgame":
-                return await cls.getStatus(group, "guessgame")
+                return await getBanGroup.getStatus(group, "guessgame")
             case "ltrgame":
-                return await cls.getStatus(group, "ltrgame")
+                return await getBanGroup.getStatus(group, "ltrgame")
             case "sign" | "send" | "tasks" | "retask" | "jrrp":
-                return await cls.getStatus(group, "sign")
+                return await getBanGroup.getStatus(group, "sign")
             case "theme":
-                return await cls.getStatus(group, "setting")
+                return await getBanGroup.getStatus(group, "setting")
             case "dan" | "danupdate":
-                return await cls.getStatus(group, "dan")
+                return await getBanGroup.getStatus(group, "dan")
             case _:
                 return False

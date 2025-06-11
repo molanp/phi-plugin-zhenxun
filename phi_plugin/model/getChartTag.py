@@ -1,145 +1,135 @@
+from typing import TypedDict
+
 from .getFile import readFile as getFile
 from .path import otherDataPath
 
 dataPath = otherDataPath / "chartTagData.json"
 
+
+class TagObject(TypedDict):
+    agree: list[str]
+    disagree: list[str]
+
+
 class getChartTag:
-    data = None
-    
+    # 评论数据
+    data: (
+        dict[
+            str,  # idString
+            dict[
+                str,  # levelKind
+                TagObject,
+            ],
+        ]
+        | None
+    ) = None
+
     @classmethod
     async def init(cls):
-# export default new class getChartTag {
+        cls.data = await getFile.FileReader(dataPath)
+        if cls.data is None:
+            cls.data = {}
+            await getFile.SetFile(dataPath, cls.data)
+        return cls
 
-#     /**
-#      * @typedef {Object} tagObject 评论对象
-#      * @property {string[]} agree userId
-#      * @property {string[]} disagree userId
-#      */
+    @classmethod
+    async def get(cls, songId: str, rank: str, all: bool = False) -> list[str]:
+        """
+        获取对应曲目的所有tag
 
-#     constructor() {
-#         /**
-#          * 评论数据
-#          * @type {{[id:idString]: {[levelKind:string]: {[x: string]: tagObject}}}}}
-#          */
-#         this.data = getFile.FileReader(dataPath);
-#         if (!this.data) {
-#             this.data = {};
-#             getFile.SetFile(dataPath, this.data)
-#         }
-#     }
+        :param str songId: id
+        :param str rank: 难度
+        :param bool all: 是否返回value为负的标签
+        """
+        if cls.data is None:
+            await cls.init()
+            assert cls.data is not None
+        d = cls.data.get(songId, {}).get(rank)
+        if d is None:
+            return []
+        arr = []
+        keys = d.keys()
 
-#     /**
-#      * 获取对应曲目的所有tag
-#      * @param {idString} songId id
-#      * @param {levelKind} rank 难度
-#      * @param {boolean} all 是否返回value为负的标签
-#      */
-#     get(songId, rank, all = false) {
-#         let d = this.data?.[songId]?.[rank];
-#         if (!d) {
-#             return [];
-#         }
-#         let arr = [];
-#         let keys = Object.keys(d);
-#         for (let i = 0; i < keys.length; ++i) {
-#             let key = keys[i];
-#             let obj = d[key];
-#             if (!all && obj.agree.length - obj.disagree.length <= 0) continue
-#             arr.push({
-#                 name: key,
-#                 value: obj.agree.length - obj.disagree.length,
-#             });
-#         }
-#         console.info(keys)
-#         console.info(arr)
+        for key in keys:
+            obj: TagObject = d[key]
+            score = len(obj["agree"]) - len(obj["disagree"])
 
-#         return arr;
-#     }
+            if not all and score <= 0:
+                continue
 
-#     /**
-#      * 添加tag
-#      * @param {idString} id id
-#      * @param {string} tag tag
-#      * @param {levelKind} rank 难度
-#      * @param {boolean} agree 是否同意
-#      * @param {string} userId userId
-#      */
-#     add(id, tag, rank, agree, userId) {
-#         if (!this.data[id]) {
-#             this.data[id] = {};
-#         }
-#         if (!this.data[id][rank]) {
-#             this.data[id][rank] = {};
-#         }
-#         if (!this.data[id][rank][tag]) {
-#             this.data[id][rank][tag] = {
-#                 agree: [],
-#                 disagree: [],
-#             };
-#         }
+            arr.append({"name": key, "value": score})
+        return arr
 
-#         if (agree) {
-#             /**加入agree */
-#             if (!this.data[id][rank][tag].agree.includes(userId)) {
-#                 this.data[id][rank][tag].agree.push(userId);
-#             }
-#             /**删除disagree */
-#             if (this.data[id][rank][tag].disagree.includes(userId)) {
-#                 this.data[id][rank][tag].disagree.splice(
-#                     this.data[id][rank][tag].disagree.indexOf(userId),
-#                     1
-#                 );
-#             }
-#         } else {
-#             /**加入disagree */
-#             if (!this.data[id][rank][tag].disagree.includes(userId)) {
-#                 this.data[id][rank][tag].disagree.push(userId);
-#             }
-#             /**删除agree */
-#             if (this.data[id][rank][tag].agree.includes(userId)) {
-#                 this.data[id][rank][tag].agree.splice(
-#                     this.data[id][rank][tag].agree.indexOf(userId),
-#                     1
-#                 );
-#             }
-#         }
-#         return getFile.SetFile(dataPath, this.data)
-#     }
+    @classmethod
+    async def add(cls, id: str, tag: str, rank: str, agree: bool, userId: str) -> bool:
+        """
+        添加tag
 
-#     /**
-#      * 取消tag
-#      * @param {idString} id id
-#      * @param {string} tag tag
-#      * @param {levelKind} rank 难度
-#      * @param {string} userId userId
-#      */
-#     cancel(id, tag, rank, userId) {
-#         if (!this.data[id]) {
-#             this.data[id] = {};
-#         }
-#         if (!this.data[id][rank][tag]) {
-#             this.data[id][rank][tag] = {
-#                 agree: [],
-#                 disagree: [],
-#             };
-#         }
-#         /**删除agree */
-#         if (this.data[id][rank][tag].agree.includes(userId)) {
-#             this.data[id][rank][tag].agree.splice(
-#                 this.data[id][rank][tag].agree.indexOf(userId),
-#                 1
-#             );
-#         }
-#         /**删除disagree */
-#         if (this.data[id][rank][tag].disagree.includes(userId)) {
-#             this.data[id][rank][tag].disagree.splice(
-#                 this.data[id][rank][tag].disagree.indexOf(userId),
-#                 1
-#             );
-#         }
-#         if(!this.data[id][rank][tag].agree.length && !this.data[id][rank][tag].disagree.length) {
-#             delete this.data[id][rank][tag]
-#         }
-#         return getFile.SetFile(dataPath, this.data)
-#     }
-# }()
+        :param id: id
+        :param tag: tag
+        :param rank: 难度
+        :param agree: 是否同意
+        :param userId: userId
+        """
+        if cls.data is None:
+            await cls.init()
+            assert cls.data is not None
+        if not cls.data.get(id):
+            cls.data[id] = {}
+        if not cls.data[id].get(rank):
+            cls.data[id][rank] = {}  # type: ignore
+        if not cls.data[id][rank].get(tag):
+            cls.data[id][rank][tag] = {
+                "agree": [],
+                "disagree": [],
+            }
+        tag_obj: TagObject = cls.data[id][rank][tag]
+        if agree:
+            # 加入agree
+            if userId not in tag_obj["agree"]:
+                tag_obj["agree"].append(userId)
+            # 删除disagree
+            if userId in cls.data[id][rank][tag]["disagree"]:
+                tag_obj["disagree"].remove(userId)
+        else:
+            # 加入disagree
+            if userId not in tag_obj["disagree"]:
+                tag_obj["disagree"].append(userId)
+            # 删除agree
+            if userId in cls.data[id][rank][tag]["agree"]:
+                tag_obj["agree"].remove(userId)
+        return await getFile.SetFile(dataPath, cls.data)
+
+    @classmethod
+    async def cancel(cls, id: str, tag: str, rank: str, userId: str):
+        """
+        取消tag
+
+        :param str id: id
+        :param str tag: tag
+        :param str rank: 难度
+        :param str userId: userId
+        """
+        if cls.data is None:
+            await cls.init()
+            assert cls.data is not None
+        if not cls.data.get(id):
+            cls.data[id] = {}
+        if not cls.data[id].get(rank):
+            cls.data[id][rank] = {}  # type: ignore
+        if not cls.data[id][rank].get(tag):
+            cls.data[id][rank][tag] = {
+                "agree": [],
+                "disagree": [],
+            }
+        tag_obj: TagObject = cls.data[id][rank][tag]
+        # 删除agree
+        if userId in tag_obj["agree"]:
+            tag_obj["agree"].remove(userId)
+        # 删除disagree
+        if userId in tag_obj["disagree"]:
+            tag_obj["disagree"].remove(userId)
+        # 取消tag后检查是否为空
+        if not tag_obj["agree"] and not tag_obj["disagree"]:
+            del cls.data[id][rank][tag]
+        return await getFile.SetFile(dataPath, cls.data)

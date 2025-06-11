@@ -1,4 +1,8 @@
+from typing import Literal
+
 from nonebot import require
+
+from .utils import to_dict
 
 require("nonebot_plugin_alconna")
 from nonebot_plugin_alconna import Image
@@ -19,11 +23,11 @@ class pic:
         :param str name: 曲名
         :param dict data: 自定义数据
         """
-        data = data or getInfo.info(name)
-        if data is None:
+        data_ = data or to_dict(await getInfo.info(name))
+        if data_ is None:
             return f"未找到{name}的相关曲目信息!QAQ"
-        data["illustration"] = getInfo.getill(name)
-        return await picmodle.alias(data)
+        data_["illustration"] = getInfo.getill(name)
+        return await picmodle.alias(data_)
 
     @staticmethod
     async def GetSongsIllAtlas(name: str, data: dict | None = None):
@@ -40,13 +44,13 @@ class pic:
                     "illustrator": data.get("illustrator"),
                 }
             )
-        else:
-            return await picmodle.ill(
-                {
-                    "illustration": getInfo.getill(name),
-                    "illustrator": getInfo.info(name).get("illustrator"),
-                }
-            )
+        info = await getInfo.info(name)
+        return await picmodle.ill(
+            {
+                "illustration": await getInfo.getill(name),
+                "illustrator": info.illustrator if info else None,
+            }
+        )
 
     @staticmethod
     async def getChap(data: dict):
@@ -67,12 +71,13 @@ class pic:
         return False
 
     @staticmethod
-    def getIll(name, kind="common"):
+    async def getIll(name, kind: Literal["common", "blur", "low"] = "common") -> Image:
         """
-        获取曲绘，返回地址
+        获取曲绘，返回图片消息段
 
         :param str name: 原名
-        :param {'common'|'blur'|'low'} [kind='common'] 清晰度
-        :return {string} 文件地址
+        :param str kind: 清晰度
+        :return: 图片消息段
         """
-        return Image(path=getInfo.getill(name, kind))
+        res = await getInfo.getill(name, kind)
+        return Image(url=res) if isinstance(res, str) else Image(path=res)

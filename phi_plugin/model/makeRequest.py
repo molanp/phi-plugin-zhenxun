@@ -146,7 +146,7 @@ class GetCloudSongResponse(TypedDict):
     """返回的成绩数据（可能是数组或单个难度）"""
 
 
-class GameUserBasic(TypedDict, total=False):
+class GameUserBasic(TypedDict):
     """游戏用户基础信息"""
 
     background: str
@@ -155,7 +155,7 @@ class GameUserBasic(TypedDict, total=False):
     """自我介绍（仅 me 对象中存在）"""
 
 
-class SummaryInfo(TypedDict, total=False):
+class SummaryInfo(TypedDict):
     """分数概要信息"""
 
     rankingScore: float
@@ -389,7 +389,7 @@ class makeRequest:
     @staticmethod
     async def getHistoryRecord(
         params: HighAuWithSongInfo,
-    ) -> ScoreDetail | list["SongRecordHistory"] | dict[str, dict[str, ScoreDetail]]:
+    ) -> ScoreDetail | list[SongRecordHistory] | dict[str, dict[str, ScoreDetail]]:
         """
         获取用户成绩历史记录。
 
