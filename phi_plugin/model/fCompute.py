@@ -151,7 +151,7 @@ class fCompute:
         return dt.strftime("%Y/%m/%d %H:%M:%S")
 
     @staticmethod
-    def format_date_to_now(date: str | datetime) -> str:
+    def formatDateToNow(date: str | datetime) -> str:
         """
         计算当前时间与指定时间之间的天数差，并返回格式如 '-3d' 的字符串
 
@@ -174,7 +174,7 @@ class fCompute:
         return f"-{delta_days}d"
 
     @staticmethod
-    def convert_rich_text(rich_text: str, only_text: bool = False) -> str:
+    def convertRichText(rich_text: str, only_text: bool = False) -> str:
         """
         转换Unity富文本格式字符串为HTML格式或纯文本
 
@@ -397,7 +397,7 @@ class fCompute:
         return f"{dt.year}/{month}/{day} {time_str}"
 
     @staticmethod
-    def calculate_percentage(value: float, range_list: list) -> str:
+    def range(value: float, range_list: list) -> str:
         """
         计算一个值在给定区间中的百分比位置，并返回对应的百分数
 
@@ -411,7 +411,7 @@ class fCompute:
         return f"{percentage:.2f}%"
 
     @staticmethod
-    def fuzzy_search(search_str: str, data: dict) -> list:
+    def fuzzySearch(search_str: str, data: dict) -> list:
         """
         模糊搜索，返回相似度大于0.8的结果
 
@@ -421,7 +421,7 @@ class fCompute:
         """
         result = []
         for key, values in data.items():
-            score = fCompute.jaro_winkler_distance(search_str, key)
+            score = fCompute.jaroWinklerDistance(search_str, key)
             if score > 0.8:
                 result.extend(
                     {"key": key, "score": score, "value": value} for value in values
@@ -430,7 +430,7 @@ class fCompute:
         return sorted(result, key=lambda x: x["score"], reverse=True)
 
     @staticmethod
-    def jaro_winkler_distance(s1: str, s2: str) -> float:
+    def jaroWinklerDistance(s1: str, s2: str) -> float:
         """
         使用 Jaro-Winkler 编辑距离算法计算两个字符串的相似度（0~1）
 
