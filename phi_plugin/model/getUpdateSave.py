@@ -3,6 +3,7 @@ from nonebot import require
 from ..config import PluginConfig
 from ..lib.PhigrosUser import PhigrosUser
 from .cls.Save import Save
+from .getInfo import getInfo
 from .getNotes import getNotes
 from .getSave import getSave
 from .getSaveFromApi import getSaveFromApi
@@ -114,7 +115,7 @@ class getUpdateSave:
                         continue
 
                     song = task_info.get("song")
-                    if song != song_id:
+                    if song != getInfo.idgetsong(song_id):
                         continue
 
                     level = task_info["request"].get("rank", None)
