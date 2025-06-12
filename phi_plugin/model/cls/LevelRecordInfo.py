@@ -6,17 +6,31 @@ from ..getInfo import getInfo
 
 class LevelRecordInfo:
     fc: bool
-    score: int | None
+    """是否 Full Combo"""
+    score: int
+    """得分"""
     acc: float
+    """准确率"""
     id: str
+    """曲目id"""
     rank: str
+    """Level"""
     Rating: str
+    """评分等级"""
     song: str
+    """曲名"""
     illustration: str | Path
+    """曲绘链接"""
     difficulty: int
+    """难度"""
     rks: float
-    suggest: str = ""
-    num: int = 0
+    """等效RKS"""
+    suggest: str
+    """推分建议"""
+    num: int
+    """是 Best 几"""
+    date: str
+    """更新时间(iso)"""
 
     async def init(self, data: dict, id: str, rank: int) -> "LevelRecordInfo":
         """
@@ -25,7 +39,7 @@ class LevelRecordInfo:
         :param rank: 难度
         """
         self.fc = data["fc"]
-        self.score = data.get("score")
+        self.score = data.get("score", 0)
         self.acc = data["acc"]
         self.id = id
         info = await getInfo.info(getInfo.idgetsong(id), True)
@@ -38,8 +52,8 @@ class LevelRecordInfo:
             return self
         self.song = info.song  # 曲名
         self.illustration = await getInfo.getill(self.song)  # 曲绘链接
-        if info.chart and info.chart[self.rank].difficulty:
-            self.difficulty = info.chart[self.rank].difficulty  # 难度
+        if info.chart and info.chart[self.rank]["difficulty"]:
+            self.difficulty = info.chart[self.rank]["difficulty"]  # 难度
             self.rks = fCompute.rks(self.acc, self.difficulty)  # 等效rks
         else:
             self.difficulty = 0

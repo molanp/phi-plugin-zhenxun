@@ -2,7 +2,6 @@ from pathlib import Path
 import re
 from typing import Any, Literal
 
-from .utils import to_dict
 from zhenxun.services.log import logger
 
 from ..config import PluginConfig
@@ -19,6 +18,7 @@ from .path import (
     originalIllPath,
     ortherIllPath,
 )
+from .utils import to_dict
 
 
 class getInfo:
@@ -311,7 +311,7 @@ class getInfo:
         for song_data in cls.ori_info.values():
             chart = song_data.chart
             for level, chart_data in chart.items():
-                difficulty = chart_data.difficulty
+                difficulty = chart_data["difficulty"]
                 if not difficulty:
                     continue  # 跳过无定数的数据
 

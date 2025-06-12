@@ -1,11 +1,11 @@
-from pydantic import BaseModel
+from typing import TypedDict
 
 
-class Chart(BaseModel):
-    id: str | None
+class Chart(TypedDict):
+    id: str
     """idString"""
-    rank: str = ""
-    """allLevelKind"""
+    rank: str
+    """Level"""
     charter: str
     difficulty: int
     tap: float

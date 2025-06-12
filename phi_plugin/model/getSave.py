@@ -87,7 +87,7 @@ class getSave:
         return await readFile.SetFile(savePath / sstk / "save.json", data)
 
     @classmethod
-    async def getHistory(cls, user_id: str) -> "saveHistory":
+    async def getHistory(cls, user_id: str) -> "saveHistory | None":
         """
         获取 user_id 对应的历史记录
 
@@ -133,7 +133,7 @@ class getSave:
         """
         history = await cls.getHistory(user_id)
 
-        dan = history.get("dan")
+        dan = history.dan if history else None
 
         if dan and not isinstance(dan, list):
             dan = [dan]

@@ -1,10 +1,45 @@
+from datetime import datetime
 import json
 from typing import Any, TypedDict
 
 import httpx
 
 from ..config import PluginConfig
-from .cls.saveHistory import saveHistory
+from .cls.saveHistory import ChallengeModeRecord, DataRecord
+
+
+class saveHistoryObject(TypedDict):
+    scoreHistory: dict[str, dict[str, list[tuple[float, int, datetime, bool]]]]
+    """
+    歌曲成绩记录
+    ```
+    {
+        "songId": { - 曲目id
+            "dif": [ - diff 难度
+                [acc:round(float, 4), score: int, date: datetime, fc: bool],
+                [acc, score, date, fc],
+                ...
+            ]
+        }
+    }
+    """
+    data: list[DataRecord]
+    """data货币变更记录"""
+    rks: list[dict[str, datetime | float]]
+    """rks变更记录"""
+    challengeModeRank: list[ChallengeModeRecord]
+    """课题模式成绩"""
+    version: float | None
+    """
+    历史记录版本号
+
+    - v1.0,取消对当次更新内容的存储，取消对task的记录，更正scoreHistory
+    - v1.1,更正scoreHistory
+    - v2,由于曲名错误，删除所有记录，曲名使用id记录
+    - v3,添加课题模式历史记录
+    """
+    dan: list
+    """民间考核"""
 
 
 class baseAu(TypedDict):
@@ -211,7 +246,7 @@ class MeData(TypedDict):
 
     save: dict[str, Any]
     """存档数据（oriSave 类型）"""
-    history: dict[str, saveHistory]
+    history: dict[str, saveHistoryObject]
     """用户历史记录（saveHistory 类型）"""
 
 
@@ -263,7 +298,7 @@ class BaseAuWithRequest(baseAu):
     request: str
 
 
-class BaseAuWithsaveHistory(BaseAuWithRequest, saveHistory):
+class BaseAuWithsaveHistory(BaseAuWithRequest, saveHistoryObject):
     pass
 
 

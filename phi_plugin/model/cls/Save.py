@@ -1,6 +1,6 @@
 import copy
-from datetime import datetime
 import math
+from typing import TypedDict
 
 from zhenxun.services.log import logger
 
@@ -11,18 +11,182 @@ from ..makeRequest import OriSave
 from .LevelRecordInfo import LevelRecordInfo
 
 
+class statsRecord(TypedDict):
+    title: str
+    Rating: str
+    unlock: int
+    tot: int
+    cleared: int
+    fc: int
+    phi: int
+    real_score: int
+    tot_score: int
+    highest: float
+    lowest: float
+
+
+class SaveInfoSummary(TypedDict):
+    updatedAt: str
+    """插件获取存档时间 2023 Oct.06 11:46:33"""
+    saveVersion: int
+    """存档版本"""
+    challengeModeRank: int
+    """课题分"""
+    rankingScore: float
+    """rks"""
+    gameVersion: int
+    """客户端版本号"""
+    avatar: str
+    """头像"""
+    cleared: int
+    """完成曲目数量"""
+    fullCombo: int
+    """FC曲目数量"""
+    phi: int
+    """AP曲目数量"""
+
+
+class SaveInfoGameFile(TypedDict):
+    __type: str
+    """文件类型"""
+    bucket: str
+    """存档bucket"""
+    createdAt: str
+    """存档创建时间 2023-10-05T07:41:24.503Z"""
+    key: str
+    """gamesaves/{32}/.save"""
+    metaData: dict
+    """metaData"""
+    mime_type: str
+    """mime_type"""
+    name: str
+    """.save"""
+    objectId: str
+    """存档id length:24"""
+    provider: str
+    """provider"""
+    updatedAt: str
+    """存档更新时间 2023-10-05T07:41:24.503Z"""
+    url: str
+    """https:rak3ffdi.tds1.tapfiles.cn/gamesaves/{32}/.save"""
+
+
+class DateField(TypedDict):
+    __type: str
+    """固定为 'Date'"""
+    iso: str
+    """iso格式日期"""
+
+
+class ACLValue(TypedDict):
+    read: bool
+    """是否可读"""
+    write: bool
+    """是否可写"""
+
+
+class SaveInfo(TypedDict):
+    createdAt: str
+    """账户创建时间 2022-09-03T10:21:48.613Z"""
+    gameFile: SaveInfoGameFile
+    """gameFile 子信息"""
+    modifiedAt: DateField
+    """存档上传时间"""
+    objectId: str
+    """用户id {24} 与 gameFile 中的不同"""
+    summary: SaveInfoSummary
+    """summary 子信息"""
+    ACL: ACLValue
+    """ACL权限"""
+    authData: dict
+    """authData"""
+    avatar: str
+    """头像"""
+    emailVerified: bool
+    """邮箱验证状态"""
+    mobilePhoneVerified: bool
+    """手机验证状态"""
+    nickname: str
+    """昵称"""
+    sessionToken: str
+    """sessionToken"""
+    shortId: str
+    """短ID"""
+    username: str
+    """用户名"""
+    updatedAt: str
+    """存档上传时间 2023 Oct.06 11:46:33"""
+    user: dict
+    """用户信息"""
+    PlayerId: str
+    """用户名"""
+
+
+class GameUser(TypedDict):
+    name: str
+    """user"""
+    version: str
+    """版本"""
+    showPlayerId: bool
+    """是否展示Id"""
+    selfIntro: str
+    """简介"""
+    avatar: str
+    """头像"""
+    background: str
+    """背景"""
+
+
+class GameProgress(TypedDict):
+    isFirstRun: bool
+    """是否首次运行"""
+    legacyChapterFinished: bool
+    """过去的章节已完成"""
+    alreadyShowCollectionTip: bool
+    """已展示收藏品Tip"""
+    alreadyShowAutoUnlockINTip: bool
+    """已展示自动解锁IN Tip"""
+    completed: str
+    """剧情完成(显示全部歌曲和课题模式入口)"""
+    songUpdateInfo: int
+    """???"""
+    challengeModeRank: int
+    """课题分"""
+    money: int
+    """data货币"""
+    unlockFlagOfSpasmodic: int
+    """痉挛解锁"""
+    unlockFlagOfIgallta: int
+    """Igallta解锁"""
+    unlockFlagOfRrharil: int
+    """Rrhar'il解锁"""
+    flagOfSongRecordKey: int
+    """IN达到S(+倒霉蛋,船,Shadow,心之所向,inferior,DESTRUCTION 3,2,1,Distorted Fate)"""
+    randomVersionUnlocked: int
+    """Random切片解锁"""
+    chapter8UnlockBegin: bool
+    """第八章入场"""
+    chapter8UnlockSecondPhase: bool
+    """第八章第二阶段"""
+    chapter8Passed: bool
+    """第八章通过"""
+    chapter8SongUnlocked: int
+    """第八章各曲目解锁"""
+
+
 class Save:
     session: str
     apiId: str
-    saveInfo: dict
+    saveInfo: SaveInfo
     saveUrl: str
-    Recordvr: str
-    gameProgress: dict | None
-    gameuser: dict | None
+    Recordvr: int
+    """官方存档版本号"""
+    gameProgress: GameProgress | dict
+    gameuser: GameUser | dict
     gameRecord: dict[str, list["LevelRecordInfo | None"]]
-    sortedRecord: list["LevelRecordInfo"] | None = None
+    sortedRecord: list["LevelRecordInfo"] = []  # noqa: RUF012
     B19List: dict[str, list["LevelRecordInfo"] | float]
-    b19_rks: float | None = None
+    b19_rks: float
 
     async def constructor(self, data: OriSave, ignore: bool = False) -> "Save":
         """
@@ -32,154 +196,91 @@ class Save:
         self.session = data["session"]
         self.apiId = data["apiId"]
         self.saveInfo = {
-            # 账户创建时间 2022-09-03T10:21:48.613Z
             "createdAt": data["saveInfo"]["createdAt"],
             "gameFile": {
-                # 文件类型
                 "__type": data["saveInfo"]["gameFile"]["__type"],
-                # 存档bucket
                 "bucket": data["saveInfo"]["gameFile"]["bucket"],
-                # 存档创建时间 2023-10-05T07:41:24.503Z
                 "createdAt": data["saveInfo"]["gameFile"]["createdAt"],
-                # gamesaves/{32}/.save
                 "key": data["saveInfo"]["gameFile"]["key"],
-                # metaData
                 "metaData": data["saveInfo"]["gameFile"]["metaData"],
-                # mime_type
                 "mime_type": data["saveInfo"]["gameFile"]["mime_type"],
-                # .save
                 "name": data["saveInfo"]["gameFile"]["name"],
-                # 存档id {24}
                 "objectId": data["saveInfo"]["gameFile"]["objectId"],
-                # provider
                 "provider": data["saveInfo"]["gameFile"]["provider"],
-                # 存档更新时间 2023-10-05T07:41:24.503Z
                 "updatedAt": data["saveInfo"]["gameFile"]["updatedAt"],
-                # https:rak3ffdi.tds1.tapfiles.cn/gamesaves/{32}/.save
                 "url": data["saveInfo"]["gameFile"]["url"],
             },
-            # 存档上传时间 {__type："Date", "iso": "2023-10-06T03:46:33.000Z"}
             "modifiedAt": {
                 "__type": "Date",
-                # 存档上传时间 "2023-10-06T03:46:33.000Z"
-                "iso": datetime.fromisoformat(
-                    data["saveInfo"]["modifiedAt"]["iso"].replace("Z", "+00:00")
-                ),
+                "iso": data["saveInfo"]["modifiedAt"]["iso"],
             },
-            # 用户id {24} 与 gameFile 中的不同
             "objectId": data["saveInfo"].objectId,
             "summary": {
-                # 插件获取存档时间 2023 Oct.06 11:46:33
                 "updatedAt": data["saveInfo"]["summary"]["updatedAt"],
-                # 存档版本
                 "saveVersion": data["saveInfo"]["summary"]["saveVersion"],
-                # 课题分
                 "challengeModeRank": data["saveInfo"]["summary"]["challengeModeRank"],
-                # rks
-                "rankingScore": float(data["saveInfo"]["summary"]["rankingScore"]),
-                # 客户端版本号
+                "rankingScore": data["saveInfo"]["summary"]["rankingScore"],
                 "gameVersion": data["saveInfo"]["summary"]["gameVersion"],
-                # 头像
                 "avatar": data["saveInfo"]["summary"]["avatar"],
-                # 完成曲目数量
                 "cleared": data["saveInfo"]["summary"]["cleared"],
-                # FC曲目数量
                 "fullCombo": data["saveInfo"]["summary"]["fullCombo"],
-                # AP曲目数量
                 "phi": data["saveInfo"]["summary"]["phi"],
             },
-            # ACL
             "ACL": data["saveInfo"]["ACL"],
-            # authData
             "authData": data["saveInfo"]["authData"],
-            # 头像
             "avatar": data["saveInfo"]["avatar"],
-            # 邮箱验证
             "emailVerified": data["saveInfo"]["emailVerified"],
-            # 手机验证
             "mobilePhoneVerified": data["saveInfo"]["mobilePhoneVerified"],
-            # 昵称
             "nickname": data["saveInfo"]["nickname"],
-            # sessionToken
             "sessionToken": data["saveInfo"]["sessionToken"],
-            # 短id
             "shortId": data["saveInfo"]["shortId"],
-            # 用户名
             "username": data["saveInfo"]["username"],
-            # 存档上传时间 2023 Oct.06 11:46:33
             "updatedAt": data["saveInfo"]["updatedAt"],
-            # 用户信息
             "user": data["saveInfo"]["user"],
-            # 用户名
             "PlayerId": data["saveInfo"]["PlayerId"],
         }
         self.saveUrl = data["saveUrl"]
-        # 官方存档版本号
         self.Recordvr = data["Recordvr"]
         self.gameProgress = (
             {
-                # 首次运行
                 "isFirstRun": data["gameProgress"]["isFirstRun"],
-                # 过去的章节已完成
                 "legacyChapterFinished": data["gameProgress"]["legacyChapterFinished"],
-                # 已展示收藏品Tip
                 "alreadyShowCollectionTip": data["gameProgress"][
                     "alreadyShowCollectionTip"
                 ],
-                # 已展示自动解锁IN Tip
                 "alreadyShowAutoUnlockINTip": data["gameProgress"][
                     "alreadyShowAutoUnlockINTip"
                 ],
-                # 剧情完成(显示全部歌曲和课题模式入口)
                 "completed": data["gameProgress"]["completed"],
-                # ？？？
                 "songUpdateInfo": data["gameProgress"]["songUpdateInfo"],
-                # 课题分
                 "challengeModeRank": data["gameProgress"]["challengeModeRank"],
-                # data货币
                 "money": data["gameProgress"]["money"],
-                # 痉挛解锁
                 "unlockFlagOfSpasmodic": data["gameProgress"]["unlockFlagOfSpasmodic"],
-                # Igallta解锁
                 "unlockFlagOfIgallta": data["gameProgress"]["unlockFlagOfIgallta"],
-                # Rrhar'il解锁
                 "unlockFlagOfRrharil": data["gameProgress"]["unlockFlagOfRrharil"],
-                # IN达到S
-                # (+倒霉蛋,船,Shadow,心之所向,inferior,DESTRUCTION 3,2,1,Distorted Fate)
                 "flagOfSongRecordKey": data["gameProgress"]["flagOfSongRecordKey"],
-                # Random切片解锁
                 "randomVersionUnlocked": data["gameProgress"]["randomVersionUnlocked"],
-                # 第八章入场
                 "chapter8UnlockBegin": data["gameProgress"]["chapter8UnlockBegin"],
-                # 第八章第二阶段
                 "chapter8UnlockSecondPhase": data["gameProgress"][
                     "chapter8UnlockSecondPhase"
                 ],
-                # 第八章通过
                 "chapter8Passed": data["gameProgress"]["chapter8Passed"],
-                # 第八章各曲目解锁
                 "chapter8SongUnlocked": data["gameProgress"]["chapter8SongUnlocked"],
             }
             if data.get("gameProgress")
-            else None
+            else {}
         )
         self.gameuser = (
             {
-                # user
                 "name": data["gameuser"]["name"],
-                # 版本
                 "version": data["gameuser"]["version"],
-                # 是否展示Id
                 "showPlayerId": data["gameuser"]["showPlayerId"],
-                # 简介
                 "selfIntro": data["gameuser"]["selfIntro"],
-                # 头像
                 "avatar": data["gameuser"]["avatar"],
-                # 背景
                 "background": data["gameuser"]["background"],
             }
             if data.get("gameuser")
-            else None
+            else {}
         )
         if self.checkIg():
             await getRksRank.delUserRks(self.session)
@@ -252,7 +353,7 @@ class Save:
 
         :return: 按照 rks 降序排序的数组
         """
-        if self.sortedRecord is not None:
+        if self.sortedRecord:
             return self.sortedRecord
         sortedRecord: list[LevelRecordInfo] = []
         for song_id, record_list in self.gameRecord.items():
@@ -315,7 +416,7 @@ class Save:
                     continue
 
                 acc = score.acc
-                score_val = score.score or 0
+                score_val = score.score
                 fc = score.fc
                 if acc < 0 or acc > 100 or score_val < 0 or score_val > 1000000:
                     error += f"\n{song_id} {Level[level_idx]} {fc} {acc:.2f} {score_val} 非法的成绩"  # noqa: E501
@@ -557,13 +658,13 @@ class Save:
         """
         return self.session
 
-    async def getStats(self) -> list[dict[str, str | float]]:
+    async def getStats(self) -> list[statsRecord]:
         """获取存档成绩总览"""
         #'EZ', 'HD', 'IN', 'AT'
         tot = [0, 0, 0, 0]
         Record = self.gameRecord
         Level = getInfo.Level
-        stats_ = {
+        stats_: statsRecord = {
             "title": "",
             "Rating": "",
             "unlock": 0,
@@ -576,16 +677,16 @@ class Save:
             "highest": 0,
             "lowest": 18,
         }
-        stats = [dict(stats_) for _ in range(4)]
+        stats = [stats_ for _ in range(4)]
         for song in getInfo.ori_info:
             info = getInfo.ori_info[song]
-            if info.chart.get("At") and info.chart["At"].difficulty:
+            if info.chart.get("At") and info.chart["At"]["difficulty"]:
                 tot[3] += 1
-            if info.chart.get("IN") and info.chart["IN"].difficulty:
+            if info.chart.get("IN") and info.chart["IN"]["difficulty"]:
                 tot[2] += 1
-            if info.chart.get("HD") and info.chart["HD"].difficulty:
+            if info.chart.get("HD") and info.chart["HD"]["difficulty"]:
                 tot[1] += 1
-            if info.chart.get("EZ") and info.chart["EZ"].difficulty:
+            if info.chart.get("EZ") and info.chart["EZ"]["difficulty"]:
                 tot[0] += 1
         stats[0]["tot"] = tot[0]
         stats[0]["title"] = Level[0]
@@ -609,14 +710,14 @@ class Save:
                 stats[lv]["unlock"] += 1
                 rlv = record[lv]
                 assert rlv is not None
-                if (rlv.score or 0) > 700000:
+                if rlv.score > 700000:
                     stats[lv]["cleared"] += 1
-                if rlv.fc or (rlv.score or 0) == 1000000:
+                if rlv.fc or rlv.score == 1000000:
                     stats[lv]["fc"] += 1
-                if (rlv.score or 0) == 1000000:
+                if rlv.score == 1000000:
                     stats[lv]["phi"] += 1
 
-                stats[lv]["real_score"] += rlv.score or 0
+                stats[lv]["real_score"] += rlv.score
                 stats[lv]["tot_score"] += 1000000
 
                 stats[lv]["highest"] = max(rlv.rks, stats[lv]["highest"])
@@ -667,9 +768,7 @@ def checkLimit(record: LevelRecordInfo, limit: dict[str, dict[str, str | list[fl
                 if record.acc < value[0] or record.acc > value[1]:
                     return False
             case "score":
-                if record.score is not None and (
-                    record.score < value[0] or record.score > value[1]
-                ):
+                if record.score < value[0] or record.score > value[1]:
                     return False
             case "rks":
                 if record.rks < value[0] or record.rks > value[1]:

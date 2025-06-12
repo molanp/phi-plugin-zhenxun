@@ -1,11 +1,21 @@
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal, TypedDict
 
 from ..constNum import MAX_DIFFICULTY, Level
 from ..fCompute import fCompute
 from ..utils import Date, to_dict
 from .LevelRecordInfo import LevelRecordInfo
 from .Save import Save
+
+
+class DataRecord(TypedDict):
+    date: datetime
+    value: int
+
+
+class ChallengeModeRecord(TypedDict):
+    date: datetime
+    value: float
 
 
 class saveHistory:
@@ -23,11 +33,11 @@ class saveHistory:
         }
     }
     """
-    data: list[dict[str, datetime | tuple[int, int, int, int, int]]]
+    data: list[DataRecord]
     """data货币变更记录"""
     rks: list[dict[str, datetime | float]]
     """rks变更记录"""
-    challengeModeRank: list[dict[str, datetime | float]]
+    challengeModeRank: list[ChallengeModeRecord]
     """课题模式成绩"""
     version: float | None
     """
@@ -61,7 +71,7 @@ class saveHistory:
             self.challengeModeRank = []
             self.version = 3
 
-    def add(self, data: "saveHistory"):
+    def add(self, data: "saveHistory") -> "saveHistory":
         """
         合并记录
 
@@ -92,132 +102,173 @@ class saveHistory:
                         and last["acc"] == now["acc"]
                         and last["fc"] == now["fc"]
                     ):
-                        # logger.info(f"""{last["date"]}, {now["date"]}""")
                         self.scoreHistory[song][dif].pop(i)
                     else:
                         i += 1
-# TODO: 该睡觉啦！
+        return self
 
-#     /**
-#      * 检查新存档中的变更并记录
-#      * @param {Save} save 新存档
-#      */
-#     update(save) {
-#         /**更新单曲成绩 */
-#         for (let id in save.gameRecord) {
-#             if (!this.scoreHistory[id]) this.scoreHistory[id] = {}
-#             for (let i in save.gameRecord[id]) {
-#                 /**难度映射 */
-#                 let level = Level[i]
-#                 /**提取成绩 */
-#                 let now = save.gameRecord[id][i]
-#                 if (!now) continue
-#                 now.date = save.saveInfo.modifiedAt.iso
-#                 /**本地无记录 */
-#                 if (!this.scoreHistory[id][level] || !this.scoreHistory[id][level].length) {
-#                     this.scoreHistory[id][level] = [createHistory(now.acc, now.score, save.saveInfo.modifiedAt.iso, now.fc)];
-#                     continue
-#                 }
-#                 /**新存档该难度无成绩 */
-#                 if (!save.gameRecord[id][i]) continue
-#                 /**本地记录日期为递增 */
-#                 for (let i = this.scoreHistory[id][level].length - 1; i >= 0; --i) {
-#                     /**第i项记录 */
-#                     let old = openHistory(this.scoreHistory[id][level][i])
-#                     // console.info(old.date.toISOString(), new Date(now.date).toISOString(), old.date.toISOString() == new Date(now.date).toISOString())
-#                     /**日期完全相同则认为已存储 */
-#                     if (old.score == now.score && old.acc == now.acc && old.fc == now.fc) {
-#                         /**标记已处理 */
-#                         now = null
-#                         break
-#                     }
-#                     /**找到第一个日期小于新成绩的日期 */
-#                     if (old.date < new Date(now.date)) {
-#                         /**历史记录acc仅保存4位，检查是否与第一个小于该日期的记录一致 */
-#                         if (old.acc != Number(now.acc).toFixed(4) || old.score != now.score || old.fc != now.fc) {
-#                             /**不一致在第i项插入 */
-#                             this.scoreHistory[id][level].splice(i, 0, createHistory(now.acc, now.score, save.saveInfo.modifiedAt.iso, now.fc))
-#                         }
-#                         /**标记已处理 */
-#                         now = null
-#                         break
-#                     }
-#                 }
-#                 /**未被处理，有该难度记录，说明日期早于本地记录 */
-#                 if (now) {
-#                     // console.info(11)
-#                     this.scoreHistory[id][level].unshift(createHistory(now.acc, now.score, save.saveInfo.modifiedAt.iso, now.fc))
-#                 }
-#                 /**查重 */
-#                 let j = 1
-#                 while (j < this.scoreHistory[id][level].length) {
-#                     let last = openHistory(this.scoreHistory[id][level][j - 1])
-#                     let now = openHistory(this.scoreHistory[id][level][j])
-#                     if (last.score == now.score && last.acc == now.acc && last.fc == now.fc) {
-#                         // console.info(last.date.toISOString(), now.date.toISOString())
-#                         this.scoreHistory[id][level].splice(j, 1)
-#                     } else {
-#                         ++j
-#                     }
-#                 }
-#             }
-#         }
-#         /**更新rks记录 */
-#         for (let i = this.rks.length - 1; i >= 0; i--) {
-#             if (save.saveInfo.modifiedAt.iso > new Date(this.rks[i].date)) {
-#                 if (!this.rks[i + 1] || (this.rks[i].value != save.saveInfo.summary.rankingScore || this.rks[i + 1]?.value != save.saveInfo.summary.rankingScore)) {
-#                     this.rks.splice(i + 1, 0, {
-#                         date: save.saveInfo.modifiedAt.iso,
-#                         value: save.saveInfo.summary.rankingScore
-#                     })
-#                 }
-#                 break
-#             }
-#         }
-#         if (!this.rks.length) {
-#             this.rks.push({
-#                 date: save.saveInfo.modifiedAt.iso,
-#                 value: save.saveInfo.summary.rankingScore
-#             })
-#         }
-#         /**更新data记录 */
-#         for (let i = this.data.length - 1; i >= 0; i--) {
-#             if (save.saveInfo.modifiedAt.iso > new Date(this.data[i].date)) {
-#                 if (!this.data[i + 1] || (checkValue(this.data[i].value, save.gameProgress.money) && checkValue(this.data[i + 1]?.value, save.gameProgress.money))) {
-#                     this.data.splice(i + 1, 0, {
-#                         date: save.saveInfo.modifiedAt.iso,
-#                         value: save.gameProgress.money
-#                     })
-#                 }
-#                 break
-#             }
-#         }
-#         if (!this.data.length) {
-#             this.data.push({
-#                 date: save.saveInfo.modifiedAt.iso,
-#                 value: save.gameProgress.money
-#             })
-#         }
-#         /**更新课题模式记录 */
-#         for (let i = this.challengeModeRank.length - 1; i >= 0; i--) {
-#             if (save.saveInfo.modifiedAt.iso > new Date(this.challengeModeRank[i].date)) {
-#                 let clg = save.saveInfo.summary.challengeModeRank
-#                 if (clg != this.challengeModeRank[i].value && (this.challengeModeRank[i + 1]?.value != clg)) {
-#                     this.challengeModeRank.splice(i + 1, 0, {
-#                         date: save.saveInfo.modifiedAt.iso,
-#                         value: save.saveInfo.summary.challengeModeRank
-#                     })
-#                 }
-#                 break
-#             }
-#         }
-#         if (!this.challengeModeRank.length) {
-#             this.challengeModeRank.push({
-#                 date: save.saveInfo.modifiedAt.iso,
-#                 value: save.saveInfo.summary.challengeModeRank
-#             })
-#         }
-#     }
+    def update(self, save: Save):
+        """
+        检查新存档中的变更并记录
+
+        :param Save save: 新存档
+        """
+        # 更新单曲成绩
+        for id in save.gameRecord:
+            if self.scoreHistory.get(id) is None:
+                self.scoreHistory[id] = {}
+                for i, _ in enumerate(save.gameRecord.get(id, [])):
+                    # 难度映射
+                    level = Level[i]
+                    # 提取成绩
+                    now = (
+                        save.gameRecord[id][i] if i < len(save.gameRecord[id]) else None
+                    )
+                    if not now:
+                        continue
+                    now.date = save.saveInfo["modifiedAt"]["iso"]
+                    # 本地无记录
+                    if not self.scoreHistory[id].get(level):
+                        self.scoreHistory[id][level] = [
+                            createHistory(
+                                now.acc,
+                                now.score,
+                                save.saveInfo["modifiedAt"]["iso"],
+                                now.fc,
+                            )
+                        ]
+                        continue
+                    # 新存档该难度无成绩
+                    if i >= len(save.gameRecord[id]):
+                        continue
+                    # 本地记录日期为递增
+                    for i in range(len(self.scoreHistory[id][level]) - 1, -1, -1):
+                        # 第 i 项记录
+                        old = openHistory(self.scoreHistory[id][level][i])
+                        # 日期完全相同则认为已存储
+                        if (
+                            old["score"] == now.score
+                            and old["acc"] == now.acc
+                            and old["fc"] == now.fc
+                        ):
+                            # 标记已处理
+                            now = None
+                            break
+                        # 找到第一个日期小于新成绩的日期
+                        if old["date"] < Date(now.date) and (
+                            old["acc"] != round(now.acc, 4)
+                            or old["score"] != now.score
+                            or old["fc"] != now.fc
+                        ):
+                            self.scoreHistory[id][level].insert(
+                                i,
+                                createHistory(
+                                    now.acc,
+                                    now.score,
+                                    save.saveInfo["modifiedAt"]["iso"],
+                                    now.fc,
+                                ),
+                            )
+                            # 标记已处理
+                            now = None
+                            break
+                    # 未被处理，有该难度记录，说明日期早于本地记录
+                    if now:
+                        self.scoreHistory[id][level].insert(
+                            0,
+                            createHistory(
+                                now.acc,
+                                now.score,
+                                save.saveInfo["modifiedAt"]["iso"],
+                                now.fc,
+                            ),
+                        )
+                    # 查重
+                    j = 1
+                    while j < len(self.scoreHistory[id][level]):
+                        last = openHistory(self.scoreHistory[id][level][j - 1])
+                        now = openHistory(self.scoreHistory[id][level][j])
+                        if (
+                            last["score"] == now["score"]
+                            and last["acc"] == now["acc"]
+                            and last["fc"] == now["fc"]
+                        ):
+                            self.scoreHistory[id][level].pop(j)
+                        else:
+                            j += 1
+        # 更新rks记录
+        for i in range(len(self.rks) - 1, -1, -1):
+            if Date(save.saveInfo["modifiedAt"]["iso"]) > Date(self.rks[i]["date"]):
+                if (
+                    i + 1 >= len(self.rks)
+                    or self.rks[i]["value"] != save.saveInfo["summary"]["rankingScore"]
+                    or self.rks[i + 1]["value"]
+                    != save.saveInfo["summary"]["rankingScore"]
+                ):
+                    self.rks.insert(
+                        i + 1,
+                        {
+                            "date": Date(save.saveInfo["modifiedAt"]["iso"]),
+                            "value": save.saveInfo["summary"]["rankingScore"],
+                        },
+                    )
+                break
+        if not self.rks:
+            self.rks.append(
+                {
+                    "date": Date(save.saveInfo["modifiedAt"]["iso"]),
+                    "value": save.saveInfo["summary"]["rankingScore"],
+                }
+            )
+        # 更新data记录
+        for i in range(len(self.data) - 1, -1, -1):
+            if Date(save.saveInfo["modifiedAt"]["iso"]) > Date(self.data[i]["date"]):
+                if (
+                    i + 1 >= len(self.data)
+                    or self.data[i]["value"] != save.gameProgress["money"]
+                    or self.data[i + 1]["value"] != save.gameProgress["money"]
+                ):
+                    self.data.insert(
+                        i + 1,
+                        {
+                            "date": Date(save.saveInfo["modifiedAt"]["iso"]),
+                            "value": save.gameProgress["money"],
+                        },
+                    )
+                break
+        if not self.data:
+            self.data.append(
+                {
+                    "date": Date(save.saveInfo["modifiedAt"]["iso"]),
+                    "value": save.gameProgress["money"],
+                }
+            )
+        # 更新课题模式记录
+        for i in range(len(self.challengeModeRank) - 1, -1, -1):
+            if Date(save.saveInfo["modifiedAt"]["iso"]) > Date(
+                self.challengeModeRank[i]["date"]
+            ):
+                clg = save.saveInfo["summary"]["challengeModeRank"]
+                if clg != self.challengeModeRank[i]["value"] and (
+                    i + 1 > len(self.challengeModeRank)
+                    or self.challengeModeRank[i + 1]["value"] != clg
+                ):
+                    self.challengeModeRank.insert(
+                        i + 1,
+                        {
+                            "date": Date(save.saveInfo["modifiedAt"]["iso"]),
+                            "value": save.saveInfo["summary"]["challengeModeRank"],
+                        },
+                    )
+                break
+        if not self.challengeModeRank:
+            self.challengeModeRank.append(
+                {
+                    "date": Date(save.saveInfo["modifiedAt"]["iso"]),
+                    "value": save.saveInfo["summary"]["challengeModeRank"],
+                }
+            )
+
 
 #     /**
 #      * 获取歌曲最新的历史记录
@@ -469,7 +520,9 @@ def merge(m: list, n: list) -> list:
     return t
 
 
-def createHistory(acc: float, score: int, date: datetime, fc: bool) -> list[Any]:
+def createHistory(
+    acc: float, score: int, date: datetime | str, fc: bool
+) -> tuple[float, int, datetime, bool]:
     """
     创建历史记录
 
@@ -479,10 +532,10 @@ def createHistory(acc: float, score: int, date: datetime, fc: bool) -> list[Any]
     :param fc: 是否全连
     :return: 历史记录列表
     """
-    return [round(acc, 4), score, date, fc]
+    return (round(acc, 4), score, Date(date), fc)
 
 
-def openHistory(data: list | tuple) -> dict:
+def openHistory(data: list | tuple) -> dict[Literal["acc", "score", "date", "fc"], Any]:
     """
     展开信息
 

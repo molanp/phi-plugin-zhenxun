@@ -88,19 +88,20 @@ class getUpdateSave:
             old = await getSave.getSave(session.user.id)
         # await now.init()
         history = await getSave.getHistory(session.user.id)
-        await history.update(now)
-        await getSave.putHistory(session.user.id, history)
+        assert history is not None
+        history.update(now)
+        await getSave.putHistory(session.user.id, to_dict(history))
         added_rks_notes = await cls.buildingRecord(old, now, session)
         return {"save": now, "added_rks_notes": added_rks_notes}
 
     @classmethod
     async def buildingRecord(
         cls, old: Save | None, now: Save, session: Uninfo
-    ) -> list[int] | bool:
+    ) -> list[float] | bool:
         """
         更新存档
 
-        :return list[int, int] | False: [ks变化值，note变化值]，失败返回 false
+        :return list[float, int] | False: [ks变化值，note变化值]，失败返回 false
         """
         notesData = await getNotes.getNotesData(session.user.id)
         # 修正

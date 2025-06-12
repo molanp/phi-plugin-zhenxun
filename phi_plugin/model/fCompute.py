@@ -346,7 +346,7 @@ class fCompute:
 
         :param real_score: 真实成绩
         :param tot_score: 总成绩
-        :param fc: 是否达成 FC
+        :param fc: 是否 Full Combo
         :return: 成绩等级：'F', 'C', 'B', 'A', 'S', 'V', 'FC', 'phi'
         """
         if not real_score:

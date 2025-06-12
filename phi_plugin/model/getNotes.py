@@ -3,6 +3,7 @@ from typing import Any
 from .getFile import readFile
 from .getSave import getSave
 from .path import pluginDataPath, savePath
+from .utils import to_dict
 
 
 class getNotes:
@@ -17,7 +18,7 @@ class getNotes:
         if session is not None:
             return {
                 **(await cls.getNotesData(user_id)),
-                **(await getSave.getHistory(user_id)),
+                **(to_dict(await getSave.getHistory(user_id))),
             }
         return None
 

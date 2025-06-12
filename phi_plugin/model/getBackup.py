@@ -17,6 +17,7 @@ from .fCompute import fCompute
 from .path import backupPath, pluginDataPath, savePath
 from .progress_bar import ProgressBar
 from .send import send
+from .utils import to_dict
 
 MaxNum = 1e4
 
@@ -206,7 +207,7 @@ class getBackup:
                     merged = saveHistory(old_content)
                     merged.add(saveHistory(history_dict))
                     (session_folder / "history.json").write_text(
-                        json.dumps(merged.to_dict(), ensure_ascii=False),
+                        json.dumps(to_dict(merged), ensure_ascii=False),
                         encoding="utf-8",
                     )
                 else:

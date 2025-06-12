@@ -31,26 +31,35 @@ def to_dict(c: object) -> dict:
     return dict(convert(c))
 
 
-def Date(date_input: str | float | None) -> datetime | None:
+def Date(date_input: str | float | datetime | None) -> datetime:
     """
-    将多种格式的时间输入转换为 Python datetime 对象。
+    将多种格式的时间输入转换为 Python datetime 对象，并始终使用 UTC 时区。
 
-    参数:
-        date_input (str or int or float): 时间表示
-
-    返回:
-        datetime: 解析后的时间对象，失败返回 None
+    :param str | float | int | datetime | None date_input: 时间表示
+    :return: 解析后的时间对象，失败返回时间戳 0 对应的 UTC 时间
     """
     if date_input is None:
-        return None
+        return datetime.utcfromtimestamp(0).replace(tzinfo=timezone.utc)
+
+    if isinstance(date_input, datetime):
+        # 如果已有时区信息，则转成 UTC
+        if date_input.tzinfo is not None:
+            return date_input.astimezone(timezone.utc)
+        # 无时区信息则视为 UTC
+        return date_input.replace(tzinfo=timezone.utc)
 
     try:
         if isinstance(date_input, str):
             # 优先尝试 ISO 格式
             with contextlib.suppress(ValueError):
                 dt = datetime.fromisoformat(date_input)
-                return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt
-            # 尝试匹配常见格式
+                return (
+                    dt.replace(tzinfo=timezone.utc)
+                    if dt.tzinfo is None
+                    else dt.astimezone(timezone.utc)
+                )
+
+            # 常见格式列表
             formats = (
                 "%Y-%m-%d %H:%M:%S",
                 "%Y-%m-%d",
@@ -64,18 +73,24 @@ def Date(date_input: str | float | None) -> datetime | None:
                 try:
                     dt = datetime.strptime(date_input, fmt)
                     if fmt.endswith("%Z"):  # 如果包含时区（如 GMT）
+                        # 假设是 GMT/UTC 时间
                         return dt.replace(tzinfo=timezone.utc)
+                    # 没有时区信息，直接作为 UTC 处理
                     return dt.replace(tzinfo=timezone.utc)
                 except ValueError:
                     continue
 
-            raise ValueError("Unsupported date format")
-
-        # 处理时间戳
-        timestamp = float(date_input)
-        if timestamp > 1e12:  # 毫秒转秒
-            timestamp /= 1000
-        return datetime.utcfromtimestamp(timestamp).replace(tzinfo=timezone.utc)
+        elif isinstance(date_input, float | int):
+            timestamp = float(date_input)
+            if timestamp < 0:
+                return datetime.utcfromtimestamp(0).replace(tzinfo=timezone.utc)
+            if timestamp > 1e12:  # 毫秒转秒
+                timestamp /= 1000
+            return datetime.utcfromtimestamp(timestamp).replace(tzinfo=timezone.utc)
 
     except Exception:
-        return None
+        # 所有异常都兜底返回时间戳 0 的 UTC 时间
+        return datetime.utcfromtimestamp(0).replace(tzinfo=timezone.utc)
+
+    # 如果所有解析失败
+    return datetime.utcfromtimestamp(0).replace(tzinfo=timezone.utc)
