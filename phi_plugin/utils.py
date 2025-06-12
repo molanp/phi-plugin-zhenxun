@@ -2,6 +2,12 @@ import contextlib
 from datetime import datetime, timezone
 from typing import Any
 
+from nonebot import get_bot, require
+from nonebot.adapters import Event
+
+require("nonebot_plugin_uninfo")
+from nonebot_plugin_uninfo import Uninfo, get_session
+
 
 def to_dict(c: object) -> dict:
     def convert(value: Any) -> Any:
@@ -94,3 +100,19 @@ def Date(date_input: str | float | datetime | None) -> datetime:
 
     # 如果所有解析失败
     return datetime.utcfromtimestamp(0).replace(tzinfo=timezone.utc)
+
+
+async def Event2session(event: Event) -> Uninfo:
+    """
+    通过Event获取session
+
+    :param event: 一个包含self_id的Event
+    """
+    self_id = getattr(event, "self_id", None)
+    if not self_id:
+        raise ValueError("Event对象缺少self_id属性")
+    bot = get_bot(self_id)
+    session = await get_session(bot, event)
+    if session is None:
+        raise ValueError("不支持的适配器!")
+    return session

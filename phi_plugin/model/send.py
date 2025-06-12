@@ -85,7 +85,7 @@ class send:
                 )
             return False
 
-        user_save = (await getUpdateSave.getNewSaveFromLocal(e, session))["save"]
+        user_save = (await getUpdateSave.getNewSaveFromLocal(e, sessionToken))["save"]
 
         if not user_save or (
             ver and (not user_save.Recordver or user_save.Recordver < ver)

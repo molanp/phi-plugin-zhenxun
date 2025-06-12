@@ -1,9 +1,9 @@
 from typing import Any
 
+from ..utils import to_dict
 from .getFile import readFile
 from .getSave import getSave
 from .path import pluginDataPath, savePath
-from .utils import to_dict
 
 
 class getNotes:

@@ -12,12 +12,12 @@ import ujson as json
 from zhenxun.services.log import logger
 
 from ..models import SstkData
+from ..utils import to_dict
 from .cls.saveHistory import saveHistory
 from .fCompute import fCompute
 from .path import backupPath, pluginDataPath, savePath
 from .progress_bar import ProgressBar
 from .send import send
-from .utils import to_dict
 
 MaxNum = 1e4
 

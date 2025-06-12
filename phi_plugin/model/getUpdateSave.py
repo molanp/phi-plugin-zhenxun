@@ -2,6 +2,7 @@ from nonebot import require
 
 from ..config import PluginConfig
 from ..lib.PhigrosUser import PhigrosUser
+from ..utils import Event2session, to_dict
 from .cls.Save import Save
 from .getInfo import getInfo
 from .getNotes import getNotes
@@ -10,7 +11,6 @@ from .getSaveFromApi import getSaveFromApi
 from .makeRequest import makeRequest
 from .makeRequestFnc import makeRequestFnc
 from .send import send
-from .utils import to_dict
 
 require("nonebot_plugin_uninfo")
 from nonebot.adapters import Event
@@ -46,9 +46,8 @@ class getUpdateSave:
         return {"save": result, "added_rks_notes": added_rks_notes}
 
     @classmethod
-    async def getNewSaveFromLocal(
-        cls, e: Event, session: Uninfo, token: str | None = None
-    ) -> dict:
+    async def getNewSaveFromLocal(cls, e: Event, token: str | None = None) -> dict:
+        session = await Event2session(e)
         old = await getSave.getSave(session.user.id)
         token = token or old.session if old else None
         User = PhigrosUser(token)

@@ -42,36 +42,6 @@ class saveHistoryObject(TypedDict):
     """民间考核"""
 
 
-class baseAu(TypedDict):
-    """基础鉴权"""
-
-    platform: str
-    """平台名称"""
-    platform_id: str
-    """用户平台内id"""
-    token: str | None
-    """PhigrosToken"""
-    api_user_id: str | None
-    """用户api内id"""
-    api_token: str | None
-    """用户 apiToken"""
-
-
-class highAu(TypedDict):
-    """高级鉴权"""
-
-    platform: str
-    """平台名称"""
-    platform_id: str
-    """用户平台内id"""
-    token: str | None
-    """PhigrosToken"""
-    api_user_id: str | None
-    """用户api内id"""
-    api_token: str
-    """用户 apiToken"""
-
-
 class BindSuccessData(TypedDict):
     internal_id: int
     """用户内部ID"""
@@ -139,26 +109,6 @@ class UserResponse(TypedDict):
     """平台数据（引用 definition 169006958）"""
 
 
-class TokenManageParams(TypedDict):
-    """Token管理参数"""
-
-    operation: str
-    """操作类型 'delete' 或 'rmau'"""
-    platform: str
-    """平台名称"""
-    platform_id: str
-    """平台内用户ID"""
-
-
-class SongInfoRequest(TypedDict):
-    """歌曲信息请求"""
-
-    song_id: str
-    """歌曲ID"""
-    difficulty: str
-    """难度等级（levelKind）"""
-
-
 class DifficultyRecord(TypedDict):
     """难度记录"""
 
@@ -219,17 +169,6 @@ class SaveInfo(TypedDict):
     """修改时间"""
 
 
-class ChallengeListItem(TypedDict):
-    """挑战模式条目"""
-
-    ChallengeMode: int
-    """挑战模式编号"""
-    ChallengeModeRank: int
-    """挑战模式排名"""
-    date: str
-    """日期"""
-
-
 class UserItem(TypedDict):
     """用户条目"""
 
@@ -281,40 +220,32 @@ class SongRecordHistory(TypedDict):
     """成绩记录"""
 
 
-class highAuWithTokenManage(highAu):
-    """token管理"""
+class BaseResponse(TypedDict):
+    """基础请求响应"""
 
-    data: TokenManageParams
+    message: str
+    """响应信息"""
 
 
-class HighAuWithSongInfo(highAu, SongInfoRequest):
-    pass
+class saveHistoryModel(TypedDict):
+    data: list[saveHistoryObject]
 
 
 OriSave = dict[str, Any]
 
 
-class BaseAuWithRequest(baseAu):
-    request: str
-
-
-class BaseAuWithsaveHistory(BaseAuWithRequest, saveHistoryObject):
-    pass
-
-
 class makeRequest:
     @staticmethod
-    async def bind(params: baseAu) -> dict:
+    async def bind(params: dict) -> BaseResponse:
         """
         绑定平台账号与用户Token
 
         :param params:  基础参数
-        :return: {"message": str}
         """
-        return await makeFetch(burl("/bind"), params)
+        return BaseResponse(**await makeFetch(burl("/bind"), params))
 
     @staticmethod
-    async def unbind(params: dict) -> dict:
+    async def unbind(params: dict) -> BaseResponse:
         """
         解绑平台账号
 
@@ -322,22 +253,20 @@ class makeRequest:
 
             - platform (str): 平台名称
             - platform_id (str): 用户在平台内的唯一标识
-        :return: {"message": str}
         """
-        return await makeFetch(burl("/unbind"), params)
+        return BaseResponse(**await makeFetch(burl("/unbind"), params))
 
     @staticmethod
-    async def clear(params: highAu) -> dict:
+    async def clear(params: dict) -> BaseResponse:
         """
         清空用户数据
 
         :param params: 登录信息
-        :return: {"message": str}
         """
-        return await makeFetch(burl("/clear"), params)
+        return BaseResponse(**await makeFetch(burl("/clear"), params))
 
     @staticmethod
-    async def setApiToken(params: highAu) -> dict:
+    async def setApiToken(params: dict) -> BaseResponse:
         """
         设置或更新用户的 API Token
 
@@ -348,12 +277,11 @@ class makeRequest:
             - token_new: 新的API Token
             - platform: 平台名称
             - platform_id: 用户平台内id
-        :return: {"message": str}
         """
-        return await makeFetch(burl("/setApiToken"), params)
+        return BaseResponse(**await makeFetch(burl("/setApiToken"), params))
 
     @staticmethod
-    async def tokenList(params: highAu) -> UserResponse:
+    async def tokenList(params: dict) -> UserResponse:
         """
         获取用户 API Token 列表
 
@@ -363,36 +291,35 @@ class makeRequest:
         return UserResponse(**(await makeFetch(burl("/tokenList"), params))["data"])
 
     @staticmethod
-    async def tokenManage(params: highAuWithTokenManage) -> dict:
+    async def tokenManage(params: dict) -> BaseResponse:
         """
         管理用户 API Token
 
-        :param highAuWithTokenManage params:
-        :return: {"message": string}
+        :param params:
         """
-        return await makeFetch(burl("/token/manage"), params)
+        return BaseResponse(**await makeFetch(burl("/token/manage"), params))
 
     @staticmethod
-    async def getCloudSong(params: HighAuWithSongInfo) -> GetCloudSongResponse:
+    async def getCloudSong(params: dict) -> GetCloudSongResponse:
         """获取用户云存档单曲数据"""
         return GetCloudSongResponse(
             **(await makeFetch(burl("/get/cloud/song"), params))["data"]
         )
 
     @staticmethod
-    async def getCloudSaves(params: baseAu) -> OriSave:
+    async def getCloudSaves(params: dict) -> OriSave:
         """获取用户云存档数据"""
         return (await makeFetch(burl("/get/cloud/saves"), params))["data"]
 
     @staticmethod
-    async def getCloudSaveInfo(params: baseAu) -> SaveInfo:
+    async def getCloudSaveInfo(params: dict) -> SaveInfo:
         """获取用户云存档saveInfo数据"""
         return SaveInfo(
             **(await makeFetch(burl("/get/cloud/saveInfo"), params))["data"]
         )
 
     @staticmethod
-    async def getRanklistUser(params: baseAu) -> RanklistResponseData:
+    async def getRanklistUser(params: dict) -> RanklistResponseData:
         """根据用户获取排行榜相关信息"""
         return RanklistResponseData(
             **(await makeFetch(burl("/get/ranklist/user"), params))["data"]
@@ -412,18 +339,17 @@ class makeRequest:
         )
 
     @staticmethod
-    async def getHistory(params: BaseAuWithRequest) -> dict[str, list[Any]]:
+    async def getHistory(params: dict) -> saveHistoryModel:
         """
         获取用户data历史记录
 
         :param params: {baseAu & {request: keyof saveHistoryObject}
-        :return:  {data: list[saveHistoryObject]}
         """
         return (await makeFetch(burl("/get/history/histor"), params))["data"]
 
     @staticmethod
     async def getHistoryRecord(
-        params: HighAuWithSongInfo,
+        params: dict,
     ) -> ScoreDetail | list[SongRecordHistory] | dict[str, dict[str, ScoreDetail]]:
         """
         获取用户成绩历史记录。
@@ -444,16 +370,12 @@ class makeRequest:
         return (await makeFetch(burl("/get/history/record"), params))["data"]
 
     @staticmethod
-    async def setHistory(params: BaseAuWithsaveHistory) -> dict:
-        """
-        上传用户的历史记录
-
-        :returns: {"message": str}
-        """
-        return (await makeFetch(burl("/set/history"), params))["data"]
+    async def setHistory(params: dict) -> BaseResponse:
+        """上传用户的历史记录"""
+        return BaseResponse(**await makeFetch(burl("/set/history"), params))
 
     @staticmethod
-    async def setUsersToken(params: dict) -> dict:
+    async def setUsersToken(params: dict) -> BaseResponse:
         """
         上传用户 token 数据。
 
@@ -466,12 +388,16 @@ class makeRequest:
                         ...
                     }
                 }
-        :return: {"message": "success"}
         """
-        return await makeFetch(burl("/set/usersToken"), params)
+        return BaseResponse(**await makeFetch(burl("/set/usersToken"), params))
+
+    @staticmethod
+    async def getUserBan(params: dict) -> bool:
+        "查询用户是否被禁用"
+        return (await makeFetch(burl("/get/banUser"), params))["data"]
 
 
-async def makeFetch(url: str, params: dict | Any) -> dict:
+async def makeFetch(url: str, params: dict) -> dict:
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
@@ -489,7 +415,6 @@ async def makeFetch(url: str, params: dict | Any) -> dict:
             ) from e
         except httpx.RequestError as e:
             raise httpx.RequestError(f"请求失败: {e}") from e
-
         try:
             return response.json()
         except json.JSONDecodeError as e:

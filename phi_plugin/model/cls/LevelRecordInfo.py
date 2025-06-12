@@ -1,7 +1,19 @@
+from datetime import datetime
 from pathlib import Path
+from typing import TypedDict
 
+from ...utils import Date
 from ..fCompute import fCompute
 from ..getInfo import getInfo
+
+
+class LevelData(TypedDict):
+    fc: bool
+    """是否 Full Combo"""
+    score: int
+    """得分"""
+    acc: float
+    """准确率"""
 
 
 class LevelRecordInfo:
@@ -29,10 +41,12 @@ class LevelRecordInfo:
     """推分建议"""
     num: int
     """是 Best 几"""
-    date: str
+    date: str | datetime
     """更新时间(iso)"""
 
-    async def init(self, data: dict, id: str, rank: int) -> "LevelRecordInfo":
+    async def init(
+        self, data: LevelData, id: str, rank: int | str
+    ) -> "LevelRecordInfo":
         """
         :param data: 原始数据
         :param id: 曲目id
@@ -43,7 +57,9 @@ class LevelRecordInfo:
         self.acc = data["acc"]
         self.id = id
         info = await getInfo.info(getInfo.idgetsong(id), True)
-        self.rank = getInfo.Level[rank]  # AT IN HD EZ LEGACY
+        self.rank = (
+            getInfo.Level[rank] if isinstance(rank, int) else rank
+        )  # AT IN HD EZ LEGACY
         self.Rating = Rating(self.score, self.fc)  # V S A
         if info is None:
             self.song = id
@@ -59,6 +75,14 @@ class LevelRecordInfo:
             self.difficulty = 0
             self.rks = 0
         return self
+
+    def to_tuple(self) -> tuple[float, int, datetime, bool]:
+        return (
+            self.acc,
+            self.score,
+            Date(self.date),
+            self.fc,
+        )
 
 
 def Rating(score: int | None, fc: bool):

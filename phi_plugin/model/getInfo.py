@@ -5,6 +5,7 @@ from typing import Any, Literal
 from zhenxun.services.log import logger
 
 from ..config import PluginConfig
+from ..utils import to_dict
 from .cls.SongsInfo import SongsInfo
 from .constNum import MAX_DIFFICULTY, Level
 from .fCompute import fCompute
@@ -18,7 +19,6 @@ from .path import (
     originalIllPath,
     ortherIllPath,
 )
-from .utils import to_dict
 
 
 class getInfo:

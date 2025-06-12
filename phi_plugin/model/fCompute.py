@@ -499,6 +499,6 @@ class fCompute:
         return weight
 
     @staticmethod
-    def getAdapterName(session: Uninfo):
+    def getAdapterName(session: Uninfo) -> str:
         """获取适配器名称"""
-        return session.adapter
+        return str(session.adapter)

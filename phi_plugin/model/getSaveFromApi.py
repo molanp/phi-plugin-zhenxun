@@ -1,6 +1,7 @@
 from nonebot import require
 
 from ..models import userApiId
+from ..utils import to_dict
 from .cls.Save import Save
 from .cls.saveHistory import saveHistory
 from .getFile import readFile
@@ -78,8 +79,8 @@ class getSaveFromApi:
 
         :param  session: session
         """
-        result = Save().init(
-            await makeRequest.getCloudSaves(makeRequestFnc.makePlatform(session))  # type: ignore
+        result = await Save().constructor(
+            await makeRequest.getCloudSaves(makeRequestFnc.makePlatform(session))
         )
         await result.init()
         return result
@@ -113,9 +114,8 @@ class getSaveFromApi:
 
         params = makeRequestFnc.makePlatform(session)
         params["request"] = request
-
-        result = await makeRequest.getHistory(**params)
-        return saveHistory(result)
+        result = await makeRequest.getHistory(params)
+        return saveHistory(to_dict(result))
 
     @classmethod
     async def getSongHistory(
@@ -151,5 +151,5 @@ class getSaveFromApi:
         await readFile.DelFile(fPath / "save.json")
         await readFile.DelDir(fPath / apiId)
         await cls.del_user_apiId(session.user.id)
-        await makeRequest.unbind(**makeRequestFnc.makePlatform(session))
+        await makeRequest.unbind({**makeRequestFnc.makePlatform(session)})
         return True

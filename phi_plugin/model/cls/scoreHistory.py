@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import Literal
 
+from ...utils import Date
 from ..fCompute import fCompute
 from ..getInfo import getInfo
-from ..utils import Date
 
 
 class scoreHistory:

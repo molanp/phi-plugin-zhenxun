@@ -2,7 +2,7 @@ from typing import Literal
 
 from nonebot import require
 
-from .utils import to_dict
+from ..utils import to_dict
 
 require("nonebot_plugin_alconna")
 from nonebot_plugin_alconna import Image
