@@ -1,8 +1,8 @@
 from datetime import datetime
-import json
 from typing import Any, TypedDict
 
-import httpx
+from zhenxun.services.log import logger
+from zhenxun.utils.http_utils import AsyncHttpx
 
 from ..config import PluginConfig
 from .cls.saveHistory import ChallengeModeRecord, DataRecord
@@ -398,28 +398,14 @@ class makeRequest:
 
 
 async def makeFetch(url: str, params: dict) -> dict:
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.post(
-                url, json=params, headers={"Content-Type": "application/json"}
-            )
-            response.raise_for_status()
-        except httpx.HTTPStatusError as e:
-            try:
-                json_data = e.response.json()
-                error_message = json_data.get("error", json_data)
-            except json.JSONDecodeError:
-                error_message = e.response.text
-            raise httpx.NetworkError(
-                f"HTTP 错误 {e.response.status_code}: {error_message}"
-            ) from e
-        except httpx.RequestError as e:
-            raise httpx.RequestError(f"请求失败: {e}") from e
-        try:
-            return response.json()
-        except json.JSONDecodeError as e:
-            text = response.text
-            raise ValueError(f"JSON 解析失败: {text}") from e
+    try:
+        response = await AsyncHttpx.post(
+            url, json=params, headers={"Content-Type": "application/json"}
+        )
+        return response.json()
+    except Exception as e:
+        logger.error(f"API请求失败, URL {url}", "phi-plugin", e=e)
+        raise ValueError("API请求失败") from e
 
 
 def burl(path: str) -> str:

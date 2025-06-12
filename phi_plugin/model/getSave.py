@@ -160,7 +160,7 @@ class getSave:
         return True
 
     @classmethod
-    async def delSaveBySessionToken(cls, sstk: str):
+    async def delSaveBySessionToken(cls, sstk: str | None):
         """
         删除 sessionToken 对应的存档文件
 
