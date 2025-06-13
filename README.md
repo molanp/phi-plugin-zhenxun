@@ -3,11 +3,11 @@
 
 <details>
 <summary>当前同步版本号</summary>
-2025-06-13T03:14:23.000Z
+2025-06-13T13:46:58.000Z
 
-[c9edb27e95905d8935aa980bb3a559fe6b12d54a](https://github.com/Catrong/phi-plugin/commit/c9edb27e95905d8935aa980bb3a559fe6b12d54a)
+[c5296aa167baadfd09c00785ad92f564dfc40c08](https://github.com/Catrong/phi-plugin/commit/c5296aa167baadfd09c00785ad92f564dfc40c08)
 
-[已落后的变更](https://github.com/Catrong/phi-plugin/compare/c9edb27e95905d8935aa980bb3a559fe6b12d54a...main)
+[已落后的变更](https://github.com/Catrong/phi-plugin/compare/c5296aa167baadfd09c00785ad92f564dfc40c08...main)
 </details>
 
 # 插件正在火热开发中...
