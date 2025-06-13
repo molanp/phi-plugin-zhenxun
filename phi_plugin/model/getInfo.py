@@ -1,12 +1,14 @@
+import asyncio
 from pathlib import Path
 import re
-from typing import Any, Literal
+from typing import Any, Literal, TypedDict
 
+from zhenxun.plugins.phi_plugin.model.cls.Chart import Chart
 from zhenxun.services.log import logger
 
 from ..config import PluginConfig
 from ..utils import to_dict
-from .cls.SongsInfo import SongsInfo
+from .cls.SongsInfo import SongsInfo, SongsInfoObject
 from .constNum import MAX_DIFFICULTY, Level
 from .fCompute import fCompute
 from .getFile import readFile
@@ -21,131 +23,157 @@ from .path import (
 )
 
 
-class getInfo:
-    initIng = False
+class levelDetail(TypedDict):
+    m: int
+    """MaxTime"""
+    d: list[tuple[int, int, int, int, int]]
+    """note分布[tap,drag,hold,flick]"""
+    t: tuple[int, int, int, int]
+    """note统计[tap,drag,hold,flick]"""
 
-    @classmethod
-    async def init(cls):
-        if cls.initIng:
-            return
+
+class LevelRecord(TypedDict):
+    EZ: levelDetail
+    HD: levelDetail
+    IN: levelDetail
+    AT: levelDetail
+    LEGACY: levelDetail
+
+
+class csvDetail(TypedDict):
+    id: str
+    """曲目id"""
+    song: str
+    """曲目名称"""
+    composer: str
+    """作曲"""
+    illustrator: str
+    """插画师"""
+    EZ: str
+    """EZ难度谱师"""
+    HD: str
+    """HD难度谱师"""
+    IN: str
+    """IN难度谱师"""
+    AT: str | None
+    """AT难度谱师"""
+
+
+class _getInfo:
+    initIng = False
+    DLC_Info: dict[str, dict[str, list[str]]] = {}  # noqa: RUF012
+    """扩增曲目信息"""
+    avatarid: dict[str, str] = {}  # noqa: RUF012
+    """头像id"""
+    Tips: list[str]
+    """Tips"""
+    ori_info: dict[str, SongsInfoObject]
+    """原版信息"""
+    songsid: dict[str, str] = {}  # noqa: RUF012
+    """通过id获取曲名"""
+    idssong: dict[str, str] = {}  # noqa: RUF012
+    """原曲名称获取id"""
+    illlist: list[str] = []  # noqa: RUF012
+    """含有曲绘的曲目列表，原曲名称"""
+    sp_info: dict[str, SongsInfoObject] = {}  # noqa: RUF012
+    """SP信息"""
+    Level = Level
+    """难度映射"""
+    MAX_DIFFICULTY = 0
+    """最高定数"""
+    songlist = []  # noqa: RUF012
+    """所有曲目曲名列表"""
+    updatedSong = []  # noqa: RUF012
+    updatedChart: dict[str, dict[Literal["EZ", "HD", "IN", "AT", "LEGACY"], Chart]] = {}  # noqa: RUF012
+    nicklist: dict[str, list[str]] = {}  # noqa: RUF012
+    """默认别名,以曲名为key"""
+    songnick: dict[str, list[str]] = {}  # noqa: RUF012
+    """以别名为key"""
+    chapList: dict[str, list[str]]
+    """章节列表，以章节名为key"""
+    chapNick: dict[str, list[str]] = {}  # noqa: RUF012
+    """章节别名， 以别名为key"""
+    word: dict[str, list[str]]
+    """jrrp"""
+    info_by_difficulty = {}  # noqa: RUF012
+    """按dif分的info"""
+
+    async def init(self):
+        if self.initIng:
+            return self
         if not (originalIllPath / "插眼").exists():
             logger.error(
                 "未下载曲绘文件，建议使用 /phi downill 命令进行下载", "phi-plugin"
             )
-        cls.initIng = True
+        self.initIng = True
         # 之前改过一次名称，修正别名
-        nick = await readFile.FileReader(configPath / "nickconfig.yaml", "TXT")
-        if nick:
-            wait_to_replace = {
-                "Winter↑cube↓": "Winter ↑cube↓",
-                "Cipher: /2&//<|0": "Cipher : /2&//<|0",
-                "NYA!!!(Phigros ver.)": "NYA!!! (Phigros ver.)",
-                "JunXion Between Life And Death(VIP Mix)": (
-                    "JunXion Between Life And Death(VIP Mix)"
-                ),
-                "Dash from SOUL NOTES": "Dash",
-                "Drop It from SOUL NOTES": "Drop It",
-                "Diamond Eyes from SOUL NOTES": "Diamond Eyes",
-            }
-            flag = False
-            for old, new in wait_to_replace.items():
-                if old in nick:
-                    flag = True
-                    nick = nick.replace(old, new)
-            if flag:
-                await readFile.SetFile(configPath / "nickconfig.yaml", nick, "TXT")
-                logger.success("自动修正别名", "phi-plugin")
+        # 咱移植不需要修正
+        # nick = await readFile.FileReader(configPath / "nickconfig.yaml", "TXT")
+        # if nick:
+        #     wait_to_replace = {
+        #         "Winter↑cube↓": "Winter ↑cube↓",
+        #         "Cipher: /2&//<|0": "Cipher : /2&//<|0",
+        #         "NYA!!!(Phigros ver.)": "NYA!!! (Phigros ver.)",
+        #         "JunXion Between Life And Death(VIP Mix)": (
+        #             "JunXion Between Life And Death(VIP Mix)"
+        #         ),
+        #         "Dash from SOUL NOTES": "Dash",
+        #         "Drop It from SOUL NOTES": "Drop It",
+        #         "Diamond Eyes from SOUL NOTES": "Diamond Eyes",
+        #     }
+        #     flag = False
+        #     for old, new in wait_to_replace.items():
+        #         if old in nick:
+        #             flag = True
+        #             nick = nick.replace(old, new)
+        #     if flag:
+        #         await readFile.SetFile(configPath / "nickconfig.yaml", nick, "TXT")
+        #         logger.success("自动修正别名", "phi-plugin")
 
-        # 扩增曲目信息
-        cls.DLC_Info: dict[str, dict[str, list[str]]] = {}
         for file in DlcInfoPath.iterdir():
             if file.suffix == ".json":
-                cls.DLC_Info[file.stem] = await readFile.FileReader(file)
+                self.DLC_Info[file.stem] = await readFile.FileReader(file)
 
-        # 头像id
         csv_avatar = await readFile.FileReader(infoPath / "avatar.csv")
-        cls.avatarid: dict[str, str] = {}
 
         for item in csv_avatar:
-            cls.avatarid[item["id"]] = item["id"]
+            self.avatarid[item["id"]] = item["id"]
 
-        # Tips
-        cls.Tips: list[str] = await readFile.FileReader(infoPath / "tips.yaml")
-        # 原版信息
-        cls.ori_info: dict[str, SongsInfo] = {}
-        # 通过id获取曲名
-        cls.songsid: dict[str, str] = {}
-        # 原曲名称获取id
-        cls.idssong: dict[str, str] = {}
-        # 含有曲绘的曲目列表，原曲名称
-        cls.illlist: list[str] = []
-        # 自定义信息
+        self.Tips = await readFile.FileReader(infoPath / "tips.yaml")
         user_song = await readFile.FileReader(configPath / "nickconfig.yaml", "TXT")
         if PluginConfig.get("otherinfo"):
             for item in user_song.values():
                 if item.get("illustration_big"):
-                    cls.illlist.append(item["song"])
-        # SP信息
-        cls.sp_info: dict[str, SongsInfo]
-        sp_info: dict[str, dict[str, Any]] = await readFile.FileReader(
-            infoPath / "spinfo.json"
-        )
+                    self.illlist.append(item["song"])
+        sp_info = await readFile.FileReader(infoPath / "spinfo.json")
 
         for song, value in sp_info.items():
             value = await SongsInfo.init(value)
             value.sp_vis = True
             if value.illustration_big:
-                cls.illlist.append(value.song)
-            cls.sp_info[song] = value
+                self.illlist.append(value.song)
+            self.sp_info[song] = value
 
-        # 难度映射
-        cls.Level = Level
-        # 最高定数
-        cls.MAX_DIFFICULTY = 0
-        # 所有曲目曲名列表
-        cls.songlist = []
         #  note统计
-        """
-        数据结构
-        {
-            idString: {
-                levelStr: {
-                    'm': int,
-                    'd': List[Tuple[int, int, int, int, int]],
-                    't': Tuple[int, int, int, int]
-                },
-                ...
-            },
-            ...
-        }
-        """
-        noteInfo: dict[
-            str,
-            dict[
-                str,
-                dict[
-                    str,
-                    int | list[tuple[int, int, int, int]] | tuple[int, int, int, int],
-                ],
-            ],
-        ] = await readFile.FileReader(infoPath / "notesInfo.json")
-        CsvInfo: list[dict] = await readFile.FileReader(infoPath / "info.csv")
+        noteInfo: dict[str, LevelRecord] = await readFile.FileReader(
+            infoPath / "notesInfo.json"
+        )
+        CsvInfo: list[csvDetail] = await readFile.FileReader(infoPath / "info.csv")
         Csvdif: list[dict] = await readFile.FileReader(infoPath / "difficulty.csv")
         Jsoninfo: dict = await readFile.FileReader(infoPath / "infolist.json")
         oldDif: list[dict] = await readFile.FileReader(oldInfoPath / "difficulty.csv")
-        oldNotes: dict = await readFile.FileReader(oldInfoPath / "notesInfo.json")
+        oldNotes: dict[str, LevelRecord] = await readFile.FileReader(
+            oldInfoPath / "notesInfo.json"
+        )
 
-        OldDifList: dict[str, dict] = {item["id"]: item for item in oldDif}
-
-        cls.updatedSong = []
-        cls.updatedChart = {}
+        OldDifList: dict[str, dict[str, float]] = {item["id"]: item for item in oldDif}
 
         for i in range(len(CsvInfo)):
             song_data = CsvInfo[i]
 
             # 检查是否为新增曲目
             if not OldDifList.get(song_data["id"]):
-                cls.updatedSong.append(song_data["song"])
+                self.updatedSong.append(song_data["song"])
 
             # 特殊曲目名称修正
             match song_data["id"]:
@@ -155,13 +183,13 @@ class getInfo:
                     song_data["song"] = "Another Me (Rising Sun Traxx)"
 
             # 构建 songsid 和 idssong 映射
-            cls.songsid[f"{song_data['id']}.0"] = song_data["song"]
-            cls.idssong[song_data["song"]] = f"{song_data['id']}.0"
+            self.songsid[f"{song_data['id']}.0"] = song_data["song"]
+            self.idssong[song_data["song"]] = f"{song_data['id']}.0"
 
             # 构建 ori_info
             song_name = song_data["song"]
-            json_info = Jsoninfo.get(song_data["id"])
-            if not json_info:
+            json_info: dict | None = Jsoninfo.get(song_data["id"])
+            if json_info is None:
                 logger.info(f"曲目详情未更新：{song_name}", "phi-plugin")
                 json_info = {
                     "song": song_name,
@@ -177,10 +205,10 @@ class getInfo:
             json_info["id"] = f"{song_data['id']}.0"
             json_info["composer"] = song_data.get("composer", "")
             json_info["illustrator"] = song_data.get("illustrator", "")
-            chart = json_info.setdefault("chart", {})
+            chart: dict[str, Chart] = json_info.setdefault("chart", {})
 
             # 遍历每个难度等级
-            for level in cls.Level:
+            for level in self.Level:
                 if not song_data.get(level):  # 当前难度不存在
                     continue
 
@@ -191,10 +219,9 @@ class getInfo:
                     if isinstance(Csvdif[i], dict) and Csvdif[i].get(level)
                     else 0
                 )
-                new_notes = noteInfo[id_key][level]
-                assert isinstance(new_notes["t"], tuple)
+                new_notes: levelDetail = noteInfo[id_key][level]
                 old_level_data = OldDifList.get(id_key, {}).get(level)
-                old_note_data = oldNotes.get(id_key, {}).get(level)
+                old_note_data: levelDetail | None = oldNotes.get(id_key, {}).get(level)
 
                 # 判断是否发生变化
                 is_new_chart = False
@@ -234,84 +261,74 @@ class getInfo:
 
                 # 如果是新图表或有变动，记录到 updatedChart
                 if is_new_chart:
-                    if song_name not in cls.updatedChart:
-                        cls.updatedChart[song_name] = {}
-                    cls.updatedChart[song_name][level] = {
-                        "difficulty": update_difficulty,
-                        "tap": update_tap,
-                        "drag": update_drag,
-                        "hold": update_hold,
-                        "flick": update_flick,
-                        "combo": update_combo,
-                        "isNew": not old_level_data,  # 如果没有旧难度就是全新
-                    }
+                    if song_name not in self.updatedChart:
+                        self.updatedChart[song_name] = {}
+                    self.updatedChart[song_name][level] = Chart(
+                        **{
+                            "difficulty": update_difficulty,
+                            "tap": update_tap,
+                            "drag": update_drag,
+                            "hold": update_hold,
+                            "flick": update_flick,
+                            "combo": update_combo,
+                            "isNew": not old_level_data,  # 如果没有旧难度就是全新
+                        }
+                    )
 
                 # 更新 chart 数据
-                chart[level] = {
-                    "charter": song_data[level],
-                    "difficulty": new_dif,
-                    "tap": new_notes["t"][0],
-                    "drag": new_notes["t"][1],
-                    "hold": new_notes["t"][2],
-                    "flick": new_notes["t"][3],
-                    "combo": sum(new_notes["t"][:4]),
-                    "maxTime": new_notes["m"],
-                    "distribution": new_notes["d"],
-                }
+                chart[level] = Chart(
+                    **{
+                        "charter": song_data.get(level, ""),
+                        "difficulty": new_dif,
+                        "tap": new_notes["t"][0],
+                        "drag": new_notes["t"][1],
+                        "hold": new_notes["t"][2],
+                        "flick": new_notes["t"][3],
+                        "combo": sum(new_notes["t"][:4]),
+                        "maxTime": new_notes["m"],
+                        "distribution": new_notes["d"],
+                    }
+                )
 
                 # 更新最高定数
-                cls.MAX_DIFFICULTY = max(cls.MAX_DIFFICULTY, new_dif)
+                self.MAX_DIFFICULTY = max(self.MAX_DIFFICULTY, new_dif)
 
             # 添加曲目到列表
-            cls.illlist.append(song_name)
-            cls.songlist.append(song_name)
+            self.illlist.append(song_name)
+            self.songlist.append(song_name)
             # 完成 ori_info 构建
-            cls.ori_info[song_name] = await SongsInfo.init(json_info)
-        if cls.MAX_DIFFICULTY != MAX_DIFFICULTY:
+            self.ori_info[song_name] = await SongsInfo.init(json_info)
+        if self.MAX_DIFFICULTY != MAX_DIFFICULTY:
             logger.error(
                 "MAX_DIFFICULTY 常量未更新，请回报作者！"
                 f"MAX_DIFFICULTY: {MAX_DIFFICULTY}, "
-                f"cls.MAX_DIFFICULTY: {cls.MAX_DIFFICULTY}",
+                f"cls.MAX_DIFFICULTY: {self.MAX_DIFFICULTY}",
                 "phi-plugin",
             )
         nicklistTemp: dict[str, list[str]] = await readFile.FileReader(
             infoPath / "nicklist.yaml"
         )
-        # 默认别名,以曲名为key
-        cls.nicklist: dict[str, list[str]] = {}
-        # 以别名为key
-        cls.songnick: dict[str, list[str]] = {}
         for id in nicklistTemp:
-            song = cls.idgetsong(f"{id}.0") or id
-            cls.nicklist[song] = nicklistTemp[id]
+            song = self.idgetsong(f"{id}.0") or id
+            self.nicklist[song] = nicklistTemp[id]
             for item in nicklistTemp[id]:
-                if item in cls.songnick:
-                    cls.songnick[item].append(song)
+                if item in self.songnick:
+                    self.songnick[item].append(song)
                 else:
-                    cls.songnick[item] = [song]
-        # 章节列表，以章节名为key
-        cls.chapList: dict[str, list[str]] = await readFile.FileReader(
-            infoPath, "chaplist.yaml"
-        )
-        # 章节别名， 以别名为key
-        cls.chapNick: dict[str, list[str]] = {}
-        for chapter, aliases in cls.chapList.items():
+                    self.songnick[item] = [song]
+        self.chapList = await readFile.FileReader(infoPath / "chaplist.yaml")
+        for chapter, aliases in self.chapList.items():
             for alias in aliases:
-                if alias in cls.chapNick:
-                    cls.chapNick[alias].append(chapter)
+                if alias in self.chapNick:
+                    self.chapNick[alias].append(chapter)
                 else:
-                    cls.chapNick[alias] = [chapter]
-        # jrrp
-        cls.word: dict[str, list[str]] = await readFile.FileReader(
-            infoPath, "jrrp.json"
-        )
-        # 按dif分的info
-        cls.info_by_difficulty = {}
+                    self.chapNick[alias] = [chapter]
+        self.word = await readFile.FileReader(infoPath / "jrrp.json")
 
-        for song_data in cls.ori_info.values():
+        for song_data in self.ori_info.values():
             chart = song_data.chart
             for level, chart_data in chart.items():
-                difficulty = chart_data["difficulty"]
+                difficulty = chart_data.difficulty
                 if not difficulty:
                     continue  # 跳过无定数的数据
 
@@ -323,17 +340,15 @@ class getInfo:
                 }
 
                 # 插入到对应难度的列表中
-                if difficulty in cls.info_by_difficulty:
-                    cls.info_by_difficulty[difficulty].append(entry)
+                if difficulty in self.info_by_difficulty:
+                    self.info_by_difficulty[difficulty].append(entry)
                 else:
-                    cls.info_by_difficulty[difficulty] = [entry]
-        cls.initIng = False
+                    self.info_by_difficulty[difficulty] = [entry]
+        self.initIng = False
         logger.success("初始化曲目信息完成", "phi-plugin")
+        return self
 
-    @classmethod
-    async def info(
-        cls, song: str | None = None, original: bool = False
-    ) -> SongsInfo | None:
+    async def info(self, song: str, original: bool = False) -> SongsInfoObject | None:
         """
         获取曲目信息
 
@@ -343,25 +358,20 @@ class getInfo:
         result: dict[str, dict[str, Any]]
         match 0 if original else PluginConfig.get("otherinfo"):
             case 0:
-                result = {**to_dict(cls.ori_info), **to_dict(cls.sp_info)}
+                result = {**to_dict(self.ori_info), **to_dict(self.sp_info)}
             case 1:
                 result = {
-                    **to_dict(cls.ori_info),
-                    **to_dict(cls.sp_info),
+                    **to_dict(self.ori_info),
+                    **to_dict(self.sp_info),
                     **(await readFile.FileReader(configPath / "otherinfo.yaml")),
                 }
             case 2:
                 result = await readFile.FileReader(configPath / "otherinfo.yaml")
             case _:
                 raise ValueError("Invalid otherinfo")
-        return (
-            await SongsInfo.init(result[song])
-            if song is not None and song in result
-            else None
-        )
+        return await SongsInfo.init(result[song]) if song in result else None
 
-    @classmethod
-    async def all_info(cls, original: bool = False) -> dict[str, SongsInfo]:
+    async def all_info(self, original: bool = False) -> dict[str, SongsInfoObject]:
         """
         获取全部曲目信息
 
@@ -370,11 +380,11 @@ class getInfo:
 
         match 0 if original else PluginConfig.get("otherinfo"):
             case 0:
-                return {**cls.ori_info, **cls.sp_info}
+                return {**self.ori_info, **self.sp_info}
             case 1:
                 return {
-                    **cls.ori_info,
-                    **cls.sp_info,
+                    **self.ori_info,
+                    **self.sp_info,
                     **(await readFile.FileReader(configPath / "otherinfo.yaml")),
                 }
             case 2:
@@ -382,8 +392,7 @@ class getInfo:
             case _:
                 raise ValueError("Invalid otherinfo")
 
-    @classmethod
-    async def songsnick(cls, mic) -> list[str] | bool:
+    async def songsnick(self, mic) -> list[str] | Literal[False]:
         """
         匹配歌曲名称，根据参数返回原曲名称列表
 
@@ -394,12 +403,12 @@ class getInfo:
         all_songs = []
 
         # 如果 mic 是一个有效的歌曲名称，直接添加
-        if cls.info(mic):
+        if self.info(mic):
             all_songs.append(mic)
 
         # 添加 songnick 中的别名对应的原曲名称
-        if mic in cls.songnick:
-            all_songs.extend(cls.songnick[mic])
+        if mic in self.songnick:
+            all_songs.extend(self.songnick[mic])
 
         # 添加 nickconfig 中的别名对应的歌曲名称
         if nickconfig:
@@ -408,8 +417,7 @@ class getInfo:
         # 去重并判断是否非空
         return list(set(all_songs)) if all_songs else False
 
-    @classmethod
-    async def fuzzysongsnick(cls, mic: str, Distance: float = 0.85) -> list[str]:
+    async def fuzzysongsnick(self, mic: str, Distance: float = 0.85) -> list[str]:
         """
         根据参数模糊匹配返回原曲名称列表，按照匹配程度降序排列
 
@@ -422,7 +430,7 @@ class getInfo:
 
         # 获取用户配置和所有曲目信息
         usernick = await readFile.FileReader(configPath / "nickconfig.yaml")
-        allinfo = await cls.all_info()
+        allinfo = await self.all_info()
 
         # 遍历用户自定义别名（usernick[std] 是一组别名对应的歌曲）
         if usernick:
@@ -434,10 +442,10 @@ class getInfo:
                         for song in list(usernick[std].values())
                     )
         # 遍历 songnick（别名到歌曲的映射）
-        for std in cls.songnick:
+        for std in self.songnick:
             dis = fCompute.jaroWinklerDistance(mic, std)
             if dis >= Distance:
-                result.extend({"song": song, "dis": dis} for song in cls.songnick[std])
+                result.extend({"song": song, "dis": dis} for song in self.songnick[std])
         # 遍历所有曲目信息（检查歌曲名和 id）
         for std in allinfo:
             song_info = allinfo[std]
@@ -480,9 +488,8 @@ class getInfo:
             nickconfig[mic] = [nick]
         await readFile.SetFile(configPath / "nickconfig.yaml", nickconfig)
 
-    @classmethod
     async def getill(
-        cls, song: str, kind: Literal["common", "blur", "low"] = "common"
+        self, song: str, kind: Literal["common", "blur", "low"] = "common"
     ) -> str | Path:
         """
         获取曲绘，返回地址
@@ -492,7 +499,7 @@ class getInfo:
 
         :return str | Path: 网址或文件地址
         """
-        songsinfo = (await cls.all_info()).get(song, {})
+        songsinfo = (await self.all_info()).get(song, {})
         ans = to_dict(songsinfo).get("illustration_big")
 
         url_pattern = re.compile(
@@ -506,9 +513,9 @@ class getInfo:
 
         if ans and not url_pattern.match(ans):
             ans = ortherIllPath / ans
-        elif cls.ori_info.get(song) or cls.sp_info.get(song):
-            if cls.ori_info.get(song):
-                SongId = cls.SongGetId(song)
+        elif self.ori_info.get(song) or self.sp_info.get(song):
+            if self.ori_info.get(song):
+                SongId = self.SongGetId(song)
                 assert SongId is not None
                 if (originalIllPath / re.sub(r"\.0$", ".png", SongId)).exists():
                     ans = originalIllPath / re.sub(r"\.0$", ".png", SongId)
@@ -573,8 +580,7 @@ class getInfo:
         else:
             return PluginConfig.get("onLinePhiIllUrl") + "/chap/" + f"{name}.png"
 
-    @classmethod
-    def idgetavatar(cls, id: str):
+    def idgetavatar(self, id: str):
         """
         通过id获得头像文件名称
 
@@ -582,10 +588,9 @@ class getInfo:
 
         :return: file name
         """
-        return cls.avatarid[id] if id in cls.avatarid else "Introduction"
+        return self.avatarid[id] if id in self.avatarid else "Introduction"
 
-    @classmethod
-    def idgetsong(cls, id: str) -> str | None:
+    def idgetsong(self, id: str) -> str | None:
         """
         根据曲目id获取原名
 
@@ -593,10 +598,9 @@ class getInfo:
 
         :return: 原名
         """
-        return cls.songsid.get(id)
+        return self.songsid.get(id)
 
-    @classmethod
-    def SongGetId(cls, song: str) -> str | None:
+    def SongGetId(self, song: str) -> str | None:
         """
         通过原曲曲目获取曲目id
 
@@ -604,10 +608,9 @@ class getInfo:
 
         :return: 曲目id
         """
-        return cls.idssong.get(song)
+        return self.idssong.get(song)
 
-    @classmethod
-    async def getBackground(cls, save_background: str) -> Path | str | bool:
+    async def getBackground(self, save_background: str) -> Path | str | bool:
         """
         获取角色介绍背景曲绘
         """
@@ -623,9 +626,10 @@ class getInfo:
                     save_background = "ENERGY SYNERGY MATRIX"
                 case "Le temps perdu-":
                     save_background = "Le temps perdu"
-            return await cls.getill(
-                getInfo.idgetsong(save_background) or save_background
-            )
+            return await self.getill(self.idgetsong(save_background) or save_background)
         except Exception as e:
             logger.error("获取背景曲绘错误", "phi-plugin", e=e)
             return False
+
+
+getInfo = asyncio.run(_getInfo().init())

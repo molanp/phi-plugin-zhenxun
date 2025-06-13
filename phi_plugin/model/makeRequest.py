@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, TypedDict
+from typing import Any, Literal, TypedDict
 
 from zhenxun.services.log import logger
 from zhenxun.utils.http_utils import AsyncHttpx
@@ -9,20 +9,14 @@ from .cls.saveHistory import ChallengeModeRecord, DataRecord
 
 
 class saveHistoryObject(TypedDict):
-    scoreHistory: dict[str, dict[str, list[tuple[float, int, datetime, bool]]]]
-    """
-    歌曲成绩记录
-    ```
-    {
-        "songId": { - 曲目id
-            "dif": [ - diff 难度
-                [acc:round(float, 4), score: int, date: datetime, fc: bool],
-                [acc, score, date, fc],
-                ...
-            ]
-        }
-    }
-    """
+    scoreHistory: dict[
+        str,
+        dict[
+            Literal["EZ", "HD", "IN", "AT", "LEGACY"],
+            list[tuple[float, int, datetime, bool]],
+        ],
+    ]
+    """歌曲成绩记录"""
     data: list[DataRecord]
     """data货币变更记录"""
     rks: list[dict[str, datetime | float]]

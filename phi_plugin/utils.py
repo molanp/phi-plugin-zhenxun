@@ -9,7 +9,10 @@ require("nonebot_plugin_uninfo")
 from nonebot_plugin_uninfo import Uninfo, get_session
 
 
-def to_dict(c: object) -> dict:
+def to_dict(c: Any) -> dict:
+    if c is None:
+        return {}
+
     def convert(value: Any) -> Any:
         if hasattr(value, "model_dump"):
             return value.model_dump()

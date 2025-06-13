@@ -1,6 +1,13 @@
-# 难度映射
-Level = ["EZ", "HD", "IN", "AT", "LEGACY"]
+from typing import Literal
 
+Level: list[Literal["EZ", "HD", "IN", "AT", "LEGACY"]] = [
+    "EZ",
+    "HD",
+    "IN",
+    "AT",
+    "LEGACY",
+]
+"""难度映射"""
 LevelNum = {
     "EZ": 0,
     "HD": 1,
@@ -9,5 +16,5 @@ LevelNum = {
     "LEGACY": 4,
 }
 
-# 最大难度
 MAX_DIFFICULTY = 17.6
+"""最大难度"""

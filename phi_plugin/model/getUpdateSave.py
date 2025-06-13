@@ -1,3 +1,5 @@
+from typing import Literal
+
 from nonebot import require
 
 from ..config import PluginConfig
@@ -96,17 +98,17 @@ class getUpdateSave:
     @classmethod
     async def buildingRecord(
         cls, old: Save | None, now: Save, session: Uninfo
-    ) -> list[float] | bool:
+    ) -> list[float] | Literal[False]:
         """
         更新存档
 
-        :return list[float, int] | False: [ks变化值，note变化值]，失败返回 false
+        :return: [ks变化值，note变化值]，失败返回 false
         """
         notesData = await getNotes.getNotesData(session.user.id)
-        # 修正
-        if notesData.get("update") or notesData.get("task_update"):
-            notesData.pop("update", None)
-            notesData.pop("task_update", None)
+        # 修正(我没有旧用户，不需要了)
+        # if notesData.get("update") or notesData.get("task_update"):
+        #     notesData.pop("update", None)
+        #     notesData.pop("task_update", None)
         # note数量变化
         add_money = 0
         task = notesData.get("plugin_data", {}).get("task")

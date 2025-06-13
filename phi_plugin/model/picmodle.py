@@ -1,3 +1,5 @@
+from typing import Literal
+
 from nonebot import require
 
 require("nonebot_plugin_alconna")
@@ -70,7 +72,7 @@ class picmodle:
         return await cls.common("list", data)
 
     @classmethod
-    async def score(cls, data: dict, picversion: int) -> Image:
+    async def score(cls, data: dict, picversion: Literal[1, 2] = 2) -> Image:
         """
         单曲成绩
 

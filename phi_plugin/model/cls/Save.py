@@ -680,13 +680,13 @@ class Save:
         stats = [stats_ for _ in range(4)]
         for song in getInfo.ori_info:
             info = getInfo.ori_info[song]
-            if info.chart.get("At") and info.chart["At"]["difficulty"]:
+            if info.chart.get("At") and info.chart["At"].difficulty:
                 tot[3] += 1
-            if info.chart.get("IN") and info.chart["IN"]["difficulty"]:
+            if info.chart.get("IN") and info.chart["IN"].difficulty:
                 tot[2] += 1
-            if info.chart.get("HD") and info.chart["HD"]["difficulty"]:
+            if info.chart.get("HD") and info.chart["HD"].difficulty:
                 tot[1] += 1
-            if info.chart.get("EZ") and info.chart["EZ"]["difficulty"]:
+            if info.chart.get("EZ") and info.chart["EZ"].difficulty:
                 tot[0] += 1
         stats[0]["tot"] = tot[0]
         stats[0]["title"] = Level[0]

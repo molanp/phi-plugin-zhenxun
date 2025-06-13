@@ -87,7 +87,7 @@ class getSave:
         return await readFile.SetFile(savePath / sstk / "save.json", data)
 
     @classmethod
-    async def getHistory(cls, user_id: str) -> "saveHistory | None":
+    async def getHistory(cls, user_id: str) -> "saveHistory":
         """
         获取 user_id 对应的历史记录
 
@@ -95,11 +95,11 @@ class getSave:
         :return: saveHistory
         """
         sstk = await SstkData.get_sstk(user_id)
-        if sstk is None:
-            return None
         if await cls.isBanSessionToken(sstk):
             raise ValueError(f"{sstk} 已被禁用")
-        result = await readFile.FileReader(savePath / sstk / "history.json")
+        result = (
+            await readFile.FileReader(savePath / sstk / "history.json") if sstk else {}
+        )
         return saveHistory(result)
 
     @classmethod

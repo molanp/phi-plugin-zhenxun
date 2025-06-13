@@ -11,7 +11,7 @@ IMG_PATH = Path("./images")
 
 # 配置 Jinja2（启用异步模式）
 env = Environment(
-    loader=FileSystemLoader(str(PLUGIN_RESOURCES)),  # FileSystemLoader 接受字符串路径
+    loader=FileSystemLoader(PLUGIN_RESOURCES),  # FileSystemLoader 接受字符串路径
     autoescape=select_autoescape(["html", "xml"]),
     enable_async=True,  # 支持异步渲染
 )
@@ -23,7 +23,7 @@ class newPuppeteer:
         """渲染 HTML 并转换为图片（异步支持）"""
         if isinstance(path, str):
             path = Path(path)
-        app, tpl = path.parts  # 使用 Path.parts 拆分路径组件
+        app, tpl = path.parts
 
         # 获取模板文件
         template_path = PLUGIN_RESOURCES / "html" / app / f"{tpl}.html"

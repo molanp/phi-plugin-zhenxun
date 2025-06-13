@@ -56,7 +56,8 @@ class LevelRecordInfo:
         self.score = data.get("score", 0)
         self.acc = data["acc"]
         self.id = id
-        info = await getInfo.info(getInfo.idgetsong(id), True)
+        song = getInfo.idgetsong(id)
+        info = await getInfo.info(song, True) if song else None
         self.rank = (
             getInfo.Level[rank] if isinstance(rank, int) else rank
         )  # AT IN HD EZ LEGACY
@@ -68,8 +69,8 @@ class LevelRecordInfo:
             return self
         self.song = info.song  # 曲名
         self.illustration = await getInfo.getill(self.song)  # 曲绘链接
-        if info.chart and info.chart[self.rank]["difficulty"]:
-            self.difficulty = info.chart[self.rank]["difficulty"]  # 难度
+        if info.chart and info.chart[self.rank].difficulty:
+            self.difficulty = info.chart[self.rank].difficulty  # 难度
             self.rks = fCompute.rks(self.acc, self.difficulty)  # 等效rks
         else:
             self.difficulty = 0

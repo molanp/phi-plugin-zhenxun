@@ -1,4 +1,5 @@
-from typing import Literal
+from pathlib import Path
+from typing import Literal, TypedDict
 
 from nonebot import require
 
@@ -14,34 +15,40 @@ from .path import imgPath
 from .picmodle import picmodle
 
 
+class SongsIllAtlasData(TypedDict):
+    illustration: str | Path
+    """曲绘地址"""
+    illustrator: str | None
+    """画师"""
+
 class pic:
     @staticmethod
     async def GetSongsInfoAtlas(name: str, data: dict | None = None):
         """
         获取歌曲图鉴，曲名为原名
 
-        :param str name: 曲名
-        :param dict data: 自定义数据
+        :param name: 曲名
+        :param data: 自定义数据
         """
-        data_ = data or to_dict(await getInfo.info(name))
-        if data_ is None:
+        data = data or to_dict(await getInfo.info(name))
+        if not data:
             return f"未找到{name}的相关曲目信息!QAQ"
-        data_["illustration"] = getInfo.getill(name)
-        return await picmodle.alias(data_)
+        data["illustration"] = getInfo.getill(name)
+        return await picmodle.alias(data)
 
     @staticmethod
-    async def GetSongsIllAtlas(name: str, data: dict | None = None):
+    async def GetSongsIllAtlas(name: str, data: SongsIllAtlasData | None = None):
         """
         获取曲绘图鉴
 
-        :param str name: 原曲名称
-        :param dict data: 自定义数据
+        :param name: 原曲名称
+        :param data: 自定义数据
         """
         if data is not None:
             return await picmodle.ill(
                 {
-                    "illustration": data.get("illustration"),
-                    "illustrator": data.get("illustrator"),
+                    "illustration": data["illustration"],
+                    "illustrator": data["illustrator"],
                 }
             )
         info = await getInfo.info(name)
@@ -61,8 +68,8 @@ class pic:
         """
         获取本地图片，文件格式默认png
 
-        :param str img: 文件名
-        :param str style: 文件格式，默认为png
+        :param img: 文件名
+        :param style: 文件格式，默认为png
         """
         url = imgPath / f"{img}.{style}"
         if url.exists():
@@ -75,8 +82,8 @@ class pic:
         """
         获取曲绘，返回图片消息段
 
-        :param str name: 原名
-        :param str kind: 清晰度
+        :param name: 原名
+        :param kind: 清晰度
         :return: 图片消息段
         """
         res = await getInfo.getill(name, kind)

@@ -32,16 +32,16 @@ class scoreHistory:
             old[0] = int(old[0])
             old[1] = int(old[1])
         info = await getInfo.info(song, True)
-        if info and info.chart.get(level) and info.chart[level]["difficulty"]:
+        if info and info.chart.get(level) and info.chart[level].difficulty:
             # 有难度信息
             return {
                 "song": song,
                 "rank": level,
                 "illustration": await getInfo.getill(song),
                 "Rating": Rating(now[1], now[3]),
-                "rks_new": fCompute.rks(now[0], info.chart[level]["difficulty"]),
+                "rks_new": fCompute.rks(now[0], info.chart[level].difficulty),
                 "rks_old": (
-                    fCompute.rks(old[0], info.chart[level]["difficulty"])
+                    fCompute.rks(old[0], info.chart[level].difficulty)
                     if old is not None
                     else None
                 ),

@@ -1,6 +1,6 @@
 from datetime import datetime
 import math
-from typing import Any, Literal, TypedDict
+from typing import Any, TypedDict
 
 from ...utils import Date
 from ..constNum import MAX_DIFFICULTY, Level
@@ -35,14 +35,36 @@ class rksRecord(TypedDict):
     value: float
 
 
+class rksLine(TypedDict):
+    rks_history: list[list[float]]
+    rks_range: list[float]
+    rks_date: list[int]
+
+
+class dataLine(TypedDict):
+    data_history: list[list[float]]
+    data_range: list[float | str]
+    data_date: list[int]
+
+
+class rksLineWithdataLine(rksLine, dataLine):
+    pass
+
+
 class saveHistory:
-    scoreHistory: dict[str, dict[str, list[tuple[float, int, datetime, bool]]]]
+    scoreHistory: dict[
+        str,
+        dict[
+            str,
+            list[tuple[float, int, datetime, bool]],
+        ],
+    ]
     """
     歌曲成绩记录
     ```
     {
         "songId": { - 曲目id
-            "dif": [ - diff 难度
+            "dif": [ - diff 难度 ["EZ", "HD", "IN", "AT", "LEGACY"]
                 [acc:round(float, 4), score: int, date: datetime, fc: bool],
                 [acc, score, date, fc],
                 ...
@@ -312,210 +334,111 @@ class saveHistory:
                 t[level] = []
         return t
 
-    def getRksAndDataLine(
-        self,
-    ) -> dict[
-        Literal[
-            "rks_history",
-            "rks_range",
-            "rks_date",
-            "data_history",
-            "data_range",
-            "data_date",
-        ],
-        list,
-    ]:
+    def getRksAndDataLine(self) -> rksLineWithdataLine:
         """折线图数据"""
         rks = self.getRksLine()
         data = self.getDataLine()
         return {**rks, **data}
-        # 不明白作者为什么要重复写轮子，调用封装好的两个函数不就可以了吗？
-        # rks_range = [MAX_DIFFICULTY, 0]
-        # rks_date = []
-        # rks_history = []
 
-        # if user_rks_data := self.rks:
-        #     rks_date = [int(Date(user_rks_data[0]["date"]).timestamp() * 1000), 0]
-        #     rks_history_: list[rksRecord] = []
-        #     for i, _ in enumerate(user_rks_data):
-        #         user_rks_data[i]["date"] = Date(user_rks_data[i]["date"])
-        #         if (
-        #             i <= 1
-        #             or len(rks_history_) < 2
-        #             or user_rks_data[i]["value"]
-        #             != rks_history_[len(rks_history_) - 2]["value"]
-        #         ):
-        #             rks_history_.append(user_rks_data[i])
-        #             rks_range[0] = min(rks_range[0], user_rks_data[i]["value"])
-        #             rks_range[1] = max(rks_range[1], user_rks_data[i]["value"])
-        #         else:
-        #             rks_history_[-1]["date"] = user_rks_data[i]["date"]
-        #         rks_date[1] = int(Date(user_rks_data[i]["date"]).timestamp() * 1000)
-        #     for i, _ in enumerate(rks_history_):
-        #         if i + 1 >= len(rks_history_):
-        #             break
-        #         x1 = fCompute.range(
-        #             rks_history_[i]["date"].timestamp() * 1000, rks_date
-        #         )
-        #         y1 = fCompute.range(rks_history_[i]["value"], rks_range)
-        #         x2 = fCompute.range(
-        #             rks_history_[i + 1]["date"].timestamp() * 1000, rks_date
-        #         )
-        #         y2 = fCompute.range(rks_history_[i + 1]["value"], rks_range)
-        #         rks_history.append([x1, y1, x2, y2])
-        #     if not rks_history:
-        #         rks_history.append([0, 50, 100, 50])
-        # data_range = [1e9, 0]
-        # data_date = []
-        # data_history = []
-        # if user_data_data := self.data:
-        #     data_date = [
-        #         int(Date(user_data_data[0]["date"]).timestamp() * 1000),
-        #         0,
-        #     ]
-        #     data_history_: list[DataRecord] = []
-        #     for i, _ in enumerate(user_data_data):
-        #         value = user_data_data[i]["value"]
-        #         assert isinstance(value, tuple)
-        #         user_data_data[i]["value"] = (
-        #             ((value[4] * 1024 + value[3]) * 1024 + value[2]) * 1024 + value[1]
-        #         ) * 1024 + value[0]
-        #         user_data_data[i]["date"] = Date(user_data_data[i]["date"])
-        #         if (
-        #             i <= 1
-        #             or len(data_history_) < 2
-        #             or user_data_data[i]["value"]
-        #             != data_history_[len(data_history_) - 2]["value"]
-        #         ):
-        #             data_history_.append(user_data_data[i])
-        #             data_range[0] = min(data_range[0], user_data_data[i]["value"])
-        #             data_range[1] = max(data_range[1], user_data_data[i]["value"])
-        #         else:
-        #             data_history_[len(user_data_data) - 1]["date"] = user_data_data[i][
-        #                 "date"
-        #             ]
-        #         data_date[1] = int(Date(user_data_data[i]["date"]).timestamp() * 1000)
-        #     for i, _ in enumerate(data_history_):
-        #         if i + 1 >= len(data_history_):
-        #             break
-        #         x1 = fCompute.range(
-        #             data_history_[i]["date"].timestamp() * 1000, data_date
-        #         )
-        #         y1 = fCompute.range(data_history_[i]["value"], data_range)
-        #         x2 = fCompute.range(
-        #             data_history_[i + 1]["date"].timestamp() * 1000, data_date
-        #         )
-        #         y2 = fCompute.range(data_history_[i + 1]["value"], data_range)
-        #         data_history.append([x1, y1, x2, y2])
-        #     unit = ["KiB", "MiB", "GiB", "TiB", "Pib"]
-        #     for i in range(1, 5):
-        #         assert isinstance(data_range[0], int)
-        #         if math.floor(data_range[0] / (math.pow(1024, i))) < 1024:
-        #             data_range[0] = (
-        #                 f"{math.floor(data_range[0] / (math.pow(1024, i)))}{unit[i]}"
-        #             )
-        #     for i in range(1, 5):
-        #         assert isinstance(data_range[1], int)
-        #         if math.floor(data_range[1] / (math.pow(1024, i))) < 1024:
-        #             data_range[1] = (
-        #                 f"{math.floor(data_range[1] / (math.pow(1024, i)))}{unit[i]}"
-        #             )
-        # return {
-        #     "rks_history": rks_history,
-        #     "rks_range": rks_range,
-        #     "rks_date": rks_date,
-        #     "data_history": data_history,
-        #     "data_range": data_range,
-        #     "data_date": data_date,
-        # }
-
-    def getRksLine(self) -> dict[Literal["rks_history", "rks_range", "rks_date"], list]:
-        rks_history_ = []
-        user_rks_data = self.rks
-        rks_range = [MAX_DIFFICULTY, 0]
-        rks_date = [int(Date(user_rks_data[0]["date"]).timestamp() * 1000), 0]
-        for i, _ in enumerate(user_rks_data):
-            user_rks_data[i]["date"] = Date(user_rks_data[i]["date"])
-            if (
-                i <= 1
-                or user_rks_data[i]["value"]
-                != rks_history_[len(rks_history_) - 2]["value"]
-            ):
-                rks_history_.append(user_rks_data[i])
-                rks_range[0] = min(rks_range[0], user_rks_data[i]["value"])
-                rks_range[1] = max(rks_range[1], user_rks_data[i]["value"])
-            else:
-                rks_history_[-1]["date"] = user_rks_data[i]["date"]
-            rks_date[1] = int(Date(user_rks_data[i]["date"]).timestamp() * 1000)
-        rks_history = []
-        for i, _ in enumerate(rks_history_):
-            if i + 1 >= len(rks_history_):
-                break
-            x1 = fCompute.range(rks_history_[i]["date"], rks_date)
-            y1 = fCompute.range(rks_history_[i]["value"], rks_range)
-            x2 = fCompute.range(rks_history_[i + 1]["date"], rks_date)
-            y2 = fCompute.range(rks_history_[i + 1]["value"], rks_range)
-            rks_history.append([x1, y1, x2, y2])
-        if not rks_history:
-            rks_history.append([0, 50, 100, 50])
+    def getRksLine(self) -> rksLine:
+        rks_range: list[float] = [MAX_DIFFICULTY, 0]
+        rks_date: list[int] = []
+        rks_history: list[list[float]] = []
+        if user_rks_data := self.rks:
+            rks_date = [int(Date(user_rks_data[0]["date"]).timestamp() * 1000), 0]
+            rks_history_ = []
+            for i, _ in enumerate(user_rks_data):
+                user_rks_data[i]["date"] = Date(user_rks_data[i]["date"])
+                if (
+                    i <= 1
+                    or user_rks_data[i]["value"]
+                    != rks_history_[len(rks_history_) - 2]["value"]
+                ):
+                    rks_history_.append(user_rks_data[i])
+                    rks_range[0] = min(rks_range[0], user_rks_data[i]["value"])
+                    rks_range[1] = max(rks_range[1], user_rks_data[i]["value"])
+                else:
+                    rks_history_[-1]["date"] = user_rks_data[i]["date"]
+                rks_date[1] = int(Date(user_rks_data[i]["date"]).timestamp() * 1000)
+            for i, _ in enumerate(rks_history_):
+                if i + 1 >= len(rks_history_):
+                    break
+                x1 = fCompute.range(rks_history_[i]["date"], rks_date)
+                y1 = fCompute.range(rks_history_[i]["value"], rks_range)
+                x2 = fCompute.range(rks_history_[i + 1]["date"], rks_date)
+                y2 = fCompute.range(rks_history_[i + 1]["value"], rks_range)
+                rks_history.append([x1, y1, x2, y2])
+            if not rks_history:
+                rks_history.append([0, 50, 100, 50])
         return {
             "rks_history": rks_history,
             "rks_range": rks_range,
             "rks_date": rks_date,
         }
 
-    def getDataLine(
-        self,
-    ) -> dict[Literal["data_history", "data_range", "data_date"], list]:
-        data_history_ = []
-        user_data_data = self.data
-        data_range = [1e9, 0]
-        data_date = [int(Date(user_data_data[0]["date"]).timestamp() * 1000), 0]
-        for i, _ in enumerate(user_data_data):
-            value = user_data_data[i]["value"]
-            assert isinstance(value, tuple)
-            user_data_data[i]["value"] = (
-                ((value[4] * 1024 + value[3]) * 1024 + value[2]) * 1024 + value[1]
-            ) * 1024 + value[0]
-            user_data_data[i]["date"] = Date(user_data_data[i]["date"])
-            if (
-                i <= 1
-                or len(data_history_) < 2
-                or user_data_data[i]["value"]
-                != data_history_[len(data_history_) - 2]["value"]
-            ):
-                data_history_.append(user_data_data[i])
-                data_range[0] = min(data_range[0], user_data_data[i]["value"])
-                data_range[1] = max(data_range[1], user_data_data[i]["value"])
-            else:
-                data_history_[len(user_data_data) - 1]["date"] = user_data_data[i][
-                    "date"
-                ]
-            data_date[1] = int(Date(user_data_data[i]["date"]).timestamp() * 1000)
-        data_history = []
-        for i, _ in enumerate(data_history_):
-            if i + 1 >= len(data_history_):
-                break
-            x1 = fCompute.range(data_history_[i]["date"].timestamp() * 1000, data_date)
-            y1 = fCompute.range(data_history_[i]["value"], data_range)
-            x2 = fCompute.range(
-                data_history_[i + 1]["date"].timestamp() * 1000, data_date
-            )
-            y2 = fCompute.range(data_history_[i + 1]["value"], data_range)
-            data_history.append([x1, y1, x2, y2])
-        unit = ["KiB", "MiB", "GiB", "TiB", "Pib"]
-        for i in range(1, 5):
-            assert isinstance(data_range[0], int)
-            if math.floor(data_range[0] / (math.pow(1024, i))) < 1024:
-                data_range[0] = (
-                    f"{math.floor(data_range[0] / (math.pow(1024, i)))}{unit[i]}"
+    def getDataLine(self) -> dataLine:  # sourcery skip: extract-method
+        """
+        :return:
+        ```
+            {
+                "data_history": data_history,
+                "data_range": data_range,
+                // [min, max], 如果数字大于1024，则转为KiB，MiB，GiB，TiB，Pib
+                "data_date": data_date,
+            }
+        """
+        data_range: list[float | str] = [1e9, 0]
+        data_date: list[int] = []
+        data_history: list[list[float]] = []
+        if user_data_data := self.data:
+            data_date = [int(Date(user_data_data[0]["date"]).timestamp() * 1000), 0]
+            data_history_ = []
+            for i, _ in enumerate(user_data_data):
+                value = user_data_data[i]["value"]
+                assert isinstance(value, tuple)
+                user_data_data[i]["value"] = (
+                    ((value[4] * 1024 + value[3]) * 1024 + value[2]) * 1024 + value[1]
+                ) * 1024 + value[0]
+                user_data_data[i]["date"] = Date(user_data_data[i]["date"])
+                if (
+                    i <= 1
+                    or len(data_history_) < 2
+                    or user_data_data[i]["value"]
+                    != data_history_[len(data_history_) - 2]["value"]
+                ):
+                    data_history_.append(user_data_data[i])
+                    data_range[0] = min(data_range[0], user_data_data[i]["value"])
+                    data_range[1] = max(data_range[1], user_data_data[i]["value"])
+                else:
+                    data_history_[len(user_data_data) - 1]["date"] = user_data_data[i][
+                        "date"
+                    ]
+                data_date[1] = int(Date(user_data_data[i]["date"]).timestamp() * 1000)
+            for i, _ in enumerate(data_history_):
+                if i + 1 >= len(data_history_):
+                    break
+                x1 = fCompute.range(
+                    data_history_[i]["date"].timestamp() * 1000, data_date
                 )
-        for i in range(1, 5):
-            assert isinstance(data_range[1], int)
-            if math.floor(data_range[1] / (math.pow(1024, i))) < 1024:
-                data_range[1] = (
-                    f"{math.floor(data_range[1] / (math.pow(1024, i)))}{unit[i]}"
+                y1 = fCompute.range(data_history_[i]["value"], data_range)
+                x2 = fCompute.range(
+                    data_history_[i + 1]["date"].timestamp() * 1000, data_date
                 )
+                y2 = fCompute.range(data_history_[i + 1]["value"], data_range)
+                data_history.append([x1, y1, x2, y2])
+            unit = ["KiB", "MiB", "GiB", "TiB", "Pib"]
+            for i in range(1, 5):
+                assert isinstance(data_range[0], int)
+                if math.floor(data_range[0] / (math.pow(1024, i))) < 1024:
+                    data_range[0] = (
+                        f"{math.floor(data_range[0] / (math.pow(1024, i)))}{unit[i]}"
+                    )
+            for i in range(1, 5):
+                assert isinstance(data_range[1], int)
+                if math.floor(data_range[1] / (math.pow(1024, i))) < 1024:
+                    data_range[1] = (
+                        f"{math.floor(data_range[1] / (math.pow(1024, i)))}{unit[i]}"
+                    )
         return {
             "data_history": data_history,
             "data_range": data_range,

@@ -1,17 +1,18 @@
-from typing import TypedDict
+from pydantic import BaseModel
 
 
-class Chart(TypedDict):
-    id: str
+class Chart(BaseModel):
+    id: str = ""
     """idString"""
-    rank: str
+    rank: str = ""
     """Level"""
-    charter: str
+    charter: str = ""
     difficulty: int
-    tap: float
-    drag: float
-    hold: float
-    flick: float
-    combo: float
-    maxTime: float
-    distribution: list[float]
+    tap: int
+    drag: int
+    hold: int
+    flick: int
+    combo: int
+    maxTime: int = 0
+    distribution: list[float] = []
+    is_new: bool = False

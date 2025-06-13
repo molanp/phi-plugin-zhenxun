@@ -5,7 +5,7 @@ from ..getInfo import getInfo
 from .Chart import Chart
 
 
-class SongsInfo:
+class SongsInfoObject:
     id: str = ""
     """id"""
     song: str = ""
@@ -35,27 +35,28 @@ class SongsInfo:
     illustration_big: str | Path = ""
     """?大曲绘"""
 
-    @classmethod
-    async def init(cls, data: dict[str, Any] | None) -> "SongsInfo":
+    async def init(self, data: dict[str, Any] | None) -> "SongsInfoObject":
         """
         :paramm dict[str, Any] | None data: 原始数据
         """
-        instance = cls()
         if not data:
-            return instance
+            return self
 
-        instance.id = data["id"]
-        instance.song = data["song"]
-        instance.illustration = await getInfo.getill(instance.song)
-        instance.can_t_be_letter = data.get("can_t_be_letter") or False
-        instance.can_t_be_guessill = data.get("can_t_be_guessill") or False
-        instance.chapter = data.get("chapter", "")
-        instance.bpm = data.get("bpm", "")
-        instance.composer = data.get("composer", "")
-        instance.length = data.get("length", "")
-        instance.illustrator = data.get("illustrator", "")
-        instance.spinfo = data.get("spinfo", "")
-        instance.chart = data.get("chart", {})
-        instance.sp_vis = data.get("sp_vis", False)
-        instance.illustration_big = data.get("illustration_big", "")
-        return instance
+        self.id = data["id"]
+        self.song = data["song"]
+        self.illustration = await getInfo.getill(self.song)
+        self.can_t_be_letter = data.get("can_t_be_letter") or False
+        self.can_t_be_guessill = data.get("can_t_be_guessill") or False
+        self.chapter = data.get("chapter", "")
+        self.bpm = data.get("bpm", "")
+        self.composer = data.get("composer", "")
+        self.length = data.get("length", "")
+        self.illustrator = data.get("illustrator", "")
+        self.spinfo = data.get("spinfo", "")
+        self.chart = data.get("chart", {})
+        self.sp_vis = data.get("sp_vis", False)
+        self.illustration_big = data.get("illustration_big", "")
+        return self
+
+
+SongsInfo = SongsInfoObject()

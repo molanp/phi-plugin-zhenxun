@@ -1,524 +1,469 @@
+import math
+from pathlib import Path
+from typing import Any, Literal
+
+from nonebot.adapters import Event
+
+from zhenxun.services.log import logger
+from zhenxun.utils.platform import PlatformUtils
+
 from ..config import PluginConfig
-from ..lib.PhigrosUser import PhigrosUser
-from .cls.LevelRecordInfo import LevelRecordInfo
+from ..utils import Date, Event2session, to_dict
+from .cls.LevelRecordInfo import LevelData
 from .cls.Save import Save
-from .cls.SongsInfo import SongsInfo
+from .cls.SongsInfo import SongsInfoObject
 from .constNum import Level
-from .getFile import readFile
+from .getFile import _SUPPORTED_FORMATS, readFile
 from .getInfo import getInfo
 from .getNotes import getNotes
-from .getPic import pic
-from .getPic import pic as getPic
+from .getPic import SongsIllAtlasData, pic
 from .getSave import getSave
-from .path import dataPath, pluginDataPath
+from .path import pluginDataPath
 from .picmodle import picmodle
 from .send import send
 
-# TODO: 该睡觉了
-# class getdata {
-
-
-#     constructor() {
-
-#         this.Level = getInfo.Level //难度映射
-
-#         /**头像id */
-#         this.avatarid = getInfo.avatarid
-#         /**Tips */
-#         this.tips = getInfo.tips
-
-#         /**原版信息 */
-#         this.ori_info = getInfo.ori_info
-#         /**通过id获取曲名 */
-#         this.songsid = getInfo.songsid
-#         /**原曲名称获取id */
-#         this.idssong = getInfo.idssong
-
-
-#         /**含有曲绘的曲目列表，原曲名称 */
-#         this.illlist = getInfo.illlist
-
-#         /**所有曲目曲名列表 */
-#         this.songlist = getInfo.songlist
-#     }
-
-#     async init() {
-
-#         try {
-#             if (await fs.existsSync(path.join(dataPath, 'user_token.json'))) {
-#                 /**之前写错了，一不小心把.json的文件也当成文件夹创建了，这里要去清除空文件夹 */
-#                 readFile.rmEmptyDir(dataPath)
-#                 /**移动json文件 */
-#                 readFile.movJsonFile(dataPath)
-#             }
-#         } catch (error) {
-#             logger.error(error)
-#         }
-
-
-#     }
-
-
-#     /**
-#     * 根据参数模糊匹配返回原曲名称
-#     * @param {string} mic 别名
-#     * @param {number} [Distance=0.85] 阈值
-#     * @returns 原曲名称数组，按照匹配程度降序
-#     */
-#     fuzzysongsnick(mic, Distance = 0.85) {
-#         return getInfo.fuzzysongsnick(mic, Distance)
-#     }
-
-#     /**
-#      * @param {string} [song=undefined] 原曲曲名
-#      * @param {boolean} [original=false] 是否仅使用原版曲库
-#      * @returns {SongsInfo|{each:SongsInfo}}
-#      */
-#     info(song = undefined, original = false) {
-#         if (song)
-#             return getInfo.info(song, original)
-#         else
-#             return getInfo.all_info(original)
-
-#     }
-
-#     /**获取 chos 文件 
-#      * @param {string}  fileName 文件名称 含后缀 yaml json
-#      * @param {string}  fatherPath 路径
-#      * @param {'JSON'|'YAML'|'CSV'|'TXT'} [style=undefined] 指定格式
-#     */
-#     async getData(fileName, fatherPath, style = undefined) {
-#         return await readFile.FileReader(path.join(fatherPath, fileName), style)
-#     }
-
-#     /**修改 chos 文件为 data 
-#      * @param {string} fileName 文件名称 含后缀 yaml json
-#      * @param {any} data 覆写内容
-#      * @param {string} fatherPath 父路径
-#      * @param {'JSON'|'YAML'|'TXT'} [style=undefined] 文件类型
-#     */
-#     async setData(fileName, data, fatherPath, style = undefined) {
-#         return await readFile.SetFile(path.join(fatherPath, fileName), data, style)
-#     }
-
-#     /**删除 chos.yaml 文件
-#      * @param {string} fileName 文件名称 含后缀 yaml json
-#      * @param {string} fatherPath 路径
-#     */
-#     async delData(fileName, fatherPath) {
-#         if (!await readFile.DelFile(path.join(fatherPath, fileName))) {
-#             logger.info(`[phi插件] ${chos} 已删除`)
-#             return false
-#         } else {
-#             return true
-#         }
-#     }
-
-
-#     /**
-#      * 获取QQ号对应的存档文件
-#      * @param {String} id user_id
-#      * @returns save
-#      */
-#     async getsave(id) {
-#         return await getSave.getSave(id)
-#     }
-
-#     /**
-#      * 保存QQ号对应的存档文件
-#      * @param {String} id user_id
-#      * @param {Object} data 
-#      */
-#     async putsave(id, data) {
-#         return await getSave.putSave(id, data)
-#     }
-
-#     /**
-#      * 删除QQ号对应的存档文件
-#      * @param {String} id user_id
-#      */
-#     async delsave(id) {
-#         return await getSave.delSave(id)
-#     }
-
-#     /**
-#      * 删除QQ号对应的娱乐数据
-#      * @param {String} id user_id
-#      */
-#     async delpluginData(id) {
-#         return this.delData(`${id}_.json`, pluginDataPath)
-#     }
-
-
-
-#     /**
-#      * 获取QQ号对应的娱乐数据
-#      * @param {String} user_id 
-#      * @returns save
-#      */
-#     async getpluginData(id) {
-#         return await getNotes.getPluginData(id)
-#     }
-
-#     /**
-#      * 保存QQ号对应的娱乐数据
-#      * @param {String} id user_id
-#      * @param {Object} data 
-#      */
-#     async putpluginData(id, data) {
-#         return await getNotes.putPluginData(id, data)
-#     }
-
-#     /**
-#      * 获取并初始化 id 插件相关数据
-#      * @param {String} id 
-#      * @param {boolean} [islock=false] 是否锁定
-#      * @returns 整个data对象
-#      */
-#     async getNotesData(id, islock = false) {
-#         return await getNotes.getNotesData(id, islock)
-#     }
-
-#     /**获取本地图片
-#      * @param {string} img 文件名
-#      * @param {string} style 文件格式，默认为png
-#      */
-#     getimg(img, style = 'png') {
-#         return getPic.getimg(img, style)
-#     }
-
-#     /**
-#      * 获取玩家 Dan 数据
-#      * @param {string} id QQ号
-#      * @returns dan[0]
-#      */
-#     async getDan(id) {
-#         return await getSave.getDan(id)
-#     }
-
-#     /**
-#      * 匹配歌曲名称，根据参数返回原曲名称
-#      * @param {string} mic 别名
-#      * @returns 原曲名称
-#      */
-#     songsnick(mic) {
-#         return getInfo.songsnick(mic)
-#     }
-
-#     /**设置别名 原名, 别名 */
-#     async setnick(mic, nick) {
-#         return await getInfo.setnick(mic, nick)
-#     }
-
-#     /**
-#      * 获取歌曲图鉴，曲名为原名
-#      * @param {any} e 消息
-#      * @param {string} name 曲名
-#      * @param {any} data 自定义数据
-#      * @returns 
-#      */
-#     async GetSongsInfoAtlas(e, name, data = undefined) {
-#         return await pic.GetSongsInfoAtlas(e, name, data)
-#     }
-
-#     /**
-#      * 通过曲目获取曲目图鉴
-#      * @param {*} e 消息e
-#      * @param {string} name 原曲名称
-#      * @param { {illustration:string, illustrator:string} } data 自定义数据
-#      * @returns 
-#      */
-#     async GetSongsIllAtlas(e, name, data = undefined) {
-#         return await pic.GetSongsIllAtlas(e, name, data)
-
-#     }
-
-#     /**
-#      * 更新存档
-#      * @param {*} e 
-#      * @param {PhigrosUser} User 
-#      * @returns {Promise<[number,number]>} [rks变化值，note变化值]，失败返回 false
-#      */
-#     async buildingRecord(e, User) {
-#         let old = await this.getsave(e.user_id)
-
-#         try {
-#             let save_info = await User.getSaveInfo()
-#             if (old && old.saveInfo.modifiedAt.iso.getTime() == new Date(save_info.modifiedAt.iso).getTime()) {
-#                 return [0, 0]
-#             }
-#             const err = await User.buildRecord()
-#             if (err.length) {
-#                 send.send_with_At(e, "以下曲目无信息，可能导致b19显示错误\n" + err.join('\n'))
-#             }
-#         } catch (err) {
-#             if(e.bot?.adapter?.name !== 'QQBot') {
-#                 send.send_with_At(e, "更新失败！QAQ\n" + err)
-#             } else {
-#                 send.send_with_At(e, "更新失败！QAQ\n请稍后重试")
-#             }
-#             logger.error(err)
-#             return false
-#         }
-
-#         try {
-#             await this.putsave(e.user_id, User)
-#         } catch (err) {
-#             send.send_with_At(e, `保存存档失败！` + err)
-#             logger.error(err)
-#             return false
-#         }
-#         let now = new Save(User)
-
-#         if (old) {
-#             if (old.session) {
-#                 if (old.session == User.session) {
-#                     // send.send_with_At(e, `你已经绑定了该sessionToken哦！将自动执行update...\n如果需要删除统计记录请 ⌈/${Config.getUserCfg('config', 'cmdhead')} unbind⌋ 进行解绑哦！`)
-#                 } else {
-#                     send.send_with_At(e, `检测到新的sessionToken，将自动更换绑定。如果需要删除统计记录请 ⌈/${Config.getUserCfg('config', 'cmdhead')} unbind⌋ 进行解绑哦！`)
-
-#                     await getSave.add_user_token(e.user_id, User.session)
-#                     old = await this.getsave(e.user_id)
-
-#                 }
-#             }
-#         }
-#         // await now.init()
-#         /**更新 */
-#         let history = await getSave.getHistory(e.user_id)
-#         history.update(now)
-#         getSave.putHistory(e.user_id, history)
-
-
-#         let pluginData = await getNotes.getNotesData(e.user_id)
-#         /**修正 */
-#         if (pluginData.update || pluginData.task_update) {
-#             delete pluginData.update
-#             delete pluginData.task_update
-#         }
-
-#         /**note数量变化 */
-#         let add_money = 0
-
-#         let task = pluginData?.plugin_data?.task
-#         if (task) {
-#             for (let id in now.gameRecord) {
-#                 for (let i in task) {
-#                     if (!task[i]) continue
-#                     if (!task[i].finished && getInfo.songsid[id] == task[i].song) {
-#                         let level = Level.indexOf(task[i].request.rank)
-#                         if (!now.gameRecord[id][level]) continue
-#                         switch (task[i].request.type) {
-#                             case 'acc': {
-#                                 if (now.gameRecord[id][level].acc >= task[i].request.value) {
-#                                     pluginData.plugin_data.task[i].finished = true
-#                                     pluginData.plugin_data.money += task[i].reward
-#                                     add_money += task[i].reward
-#                                 }
-#                                 break
-#                             }
-#                             case 'score': {
-#                                 if (now.gameRecord[id][level].score >= task[i].request.value) {
-#                                     pluginData.plugin_data.task[i].finished = true
-#                                     pluginData.plugin_data.money += task[i].reward
-#                                     add_money += task[i].reward
-#                                 }
-#                                 break
-#                             }
-#                         }
-#                     }
-#                 }
-#             }
-#         }
-#         await this.putpluginData(e.user_id, pluginData)
-
-#         /**rks变化 */
-#         let add_rks = old ? now.saveInfo.summary.rankingScore - old.saveInfo.summary.rankingScore : 0
-#         return [add_rks, add_money]
-#     }
-
-#     /**获取best19图片 */
-#     async getb19(e, data) {
-#         return await picmodle.b19(e, data)
-#     }
-
-#     /**获取update图片 */
-#     async getupdate(e, data) {
-#         return await picmodle.update(e, data)
-#     }
-
-#     /**获取任务列表图片 */
-#     async gettasks(e, data) {
-#         return await picmodle.tasks(e, data)
-#     }
-
-#     /**获取个人信息图片 */
-#     async getuser_info(e, data, kind) {
-#         return await picmodle.user_info(e, data, kind)
-#     }
-
-#     /**获取定级区间成绩 */
-#     async getlvsco(e, data) {
-#         return await picmodle.lvsco(e, data)
-#     }
-
-#     /**获取单曲成绩 */
-#     async getsingle(e, data) {
-#         return await picmodle.score(e, data)
-#     }
-
-#     /**获取曲绘图鉴 */
-#     async getillpicmodle(e, data) {
-#         return await picmodle.ill(e, data)
-#     }
-
-#     /**获取猜曲绘图片 */
-#     async getguess(e, data) {
-#         return await picmodle.guess(e, data)
-#     }
-
-#     /**获取随机曲目图片 */
-#     async getrand(e, data) {
-#         return await picmodle.rand(e, data)
-#     }
-
-#     /**获取曲绘，返回地址，原名
-#      * @param {string} name 原名
-#      * @param {'common'|'blur'|'low'} [kind='common'] 
-#      * @return 网址或文件地址
-#     */
-#     getill(name, kind = 'common') {
-#         return getInfo.getill(name, kind)
-#     }
-
-#     /**
-#      * 通过id获得头像文件名称
-#      * @param {string} id 头像id
-#      * @returns {string} file name
-#      */
-#     idgetavatar(id) {
-#         return getInfo.idgetavatar(id)
-#     }
-
-#     /**
-#      * 根据曲目id获取原名
-#      * @param {String} id 曲目id
-#      * @returns 原名
-#      */
-#     idgetsong(id) {
-#         return getInfo.idgetsong(id)
-#     }
-
-#     /**
-#      * 通过原曲曲目获取曲目id
-#      * @param {String} song 原曲曲名
-#      * @returns 曲目id
-#      */
-#     SongGetId(song) {
-#         return getInfo.SongGetId(song)
-#     }
-
-#     /**
-#      * 计算等效rks
-#      * @param {number} acc 
-#      * @param {number} difficulty 
-#      * @returns 
-#      */
-#     getrks(acc, difficulty) {
-#         if (acc == 100) {
-#             /**满分原曲定数即为有效rks */
-#             return Number(difficulty)
-#         } else if (acc < 70) {
-#             /**无效acc */
-#             return 0
-#         } else {
-#             /**非满分计算公式 [(((acc - 55) / 45) ^ 2) * 原曲定数] */
-#             return difficulty * (((acc - 55) / 45) * ((acc - 55) / 45))
-#         }
-#     }
-
-#     /**
-#      * 计算所需acc
-#      * @param {Number} rks 目标rks
-#      * @param {Number} difficulty 定数
-#      * @param {Number} [count=undefined] 保留位数
-#      * @returns 所需acc
-#      */
-#     comsuggest(rks, difficulty, count = undefined) {
-#         let ans = 45 * Math.sqrt(rks / difficulty) + 55
-
-#         if (ans >= 100)
-#             return "无法推分"
-#         else {
-#             if (count != undefined) {
-#                 return `${ans.toFixed(count)}%`
-#             } else {
-#                 return ans
-#             }
-#         }
-#     }
-
-# }
-
-# let get = new getdata()
-# await get.init()
-# export default get
-
-
-# /**
-#  * 处理新成绩
-#  * @param {Object} pluginData
-#  * @param {EZ|HD|IN|AT|LEGACY} level 
-#  * @param {String} id 曲目id
-#  * @param {LevelRecord} nowRecord 当前成绩
-#  * @param {LevelRecord} oldRecord 旧成绩
-#  * @param {Date} new_date 新存档时间
-#  * @param {Date} old_date 旧存档时间
-#  */
-# function add_new_score(pluginData, level, nowRecord) {
-
-
-#     // if (!pluginData.scoreHistory) {
-#     //     pluginData.scoreHistory = {}
-#     // }
-#     // let song = get.idgetsong(songsid)
-#     // if (!pluginData.scoreHistory[songsid]) {
-#     //     pluginData.scoreHistory[songsid] = {}
-#     //     if (oldRecord) {
-#     //         pluginData.scoreHistory[songsid][level] = [scoreHistory.create(oldRecord.acc, oldRecord.score, old_date, oldRecord.fc)]
-#     //     }
-#     // }
-#     // if (!pluginData.scoreHistory[songsid][level]) {
-#     //     pluginData.scoreHistory[songsid][level] = []
-#     // }
-#     // pluginData.scoreHistory[songsid][level].push(scoreHistory.create(nowRecord.acc, nowRecord.score, new_date, nowRecord.fc))
-
-#     let task = pluginData?.plugin_data?.task
-#     let add_money = 0
-#     if (task) {
-#         for (let i in task) {
-#             if (!task[i]) continue
-#             if (!task[i].finished && song == task[i].song && level == task[i].request.rank) {
-#                 switch (task[i].request.type) {
-#                     case 'acc': {
-#                         if (nowRecord.acc >= task[i].request.value) {
-#                             pluginData.plugin_data.task[i].finished = true
-#                             pluginData.plugin_data.money += task[i].reward
-#                             add_money += task[i].reward
-#                         }
-#                         break
-#                     }
-#                     case 'score': {
-#                         if (nowRecord.score >= task[i].request.value) {
-#                             pluginData.plugin_data.task[i].finished = true
-#                             pluginData.plugin_data.money += task[i].reward
-#                             add_money += task[i].reward
-#                         }
-#                         break
-#                     }
-#                 }
-#             }
-#         }
-#     }
-#     return add_money
-# }
+
+class _getdata:
+    def __init__(self):
+        self.Level = getInfo.Level
+        """难度映射"""
+        self.avatarid = getInfo.avatarid
+        """头像id"""
+        self.tips = getInfo.Tips
+        """Tips"""
+        self.ori_info = getInfo.ori_info
+        """原版信息"""
+        self.songsid = getInfo.songsid
+        """通过id获取曲名"""
+        self.idssong = getInfo.idssong
+        """原曲名称获取id"""
+        self.illlist = getInfo.illlist
+        """含有曲绘的曲目列表，原曲名称"""
+        self.songlist = getInfo.songlist
+        """所有曲目曲名列表"""
+
+    def fuzzysongsnick(self, mic: str, Distance: float = 0.85):
+        """
+        根据参数模糊匹配返回原曲名称
+
+        :param mic: 别名
+        :param Distance: 匹配阈值，猜词0.95
+        :return: 原曲名称
+        """
+        return getInfo.fuzzysongsnick(mic, Distance)
+
+    async def info(
+        self, song: str | None = None, original: bool = False
+    ) -> SongsInfoObject | dict[str, SongsInfoObject] | None:
+        """
+        :param song: 原曲曲名
+        :param original: 是否仅使用原版曲库
+        """
+        if song:
+            return await getInfo.info(song, original)
+        return await getInfo.all_info(original)
+
+    async def getData(
+        self,
+        fileName: str,
+        fatherPath: str | Path,
+        style: _SUPPORTED_FORMATS | None = None,
+    ):
+        """
+        获取 chos 文件
+
+        :param fileName: 文件名称 含后缀
+        :param fatherPath: 路径
+        :param style: 指定格式
+        """
+        return await readFile.FileReader(Path(fatherPath) / fileName, style)
+
+    async def setData(
+        self,
+        fileName: str,
+        data: Any,
+        fatherPath: str | Path,
+        style: _SUPPORTED_FORMATS | None = None,
+    ):
+        """
+        修改 chos 文件为 data
+
+        :param fileName: 文件名称 含后缀
+        :param data: 覆写内容
+        :param fatherPath: 父路径
+        :param style: 文件类型
+        """
+        return await readFile.SetFile(Path(fatherPath) / fileName, data, style)
+
+    async def delData(self, fileName: str, fatherPath: str | Path):
+        """
+        删除 chos.yaml 文件
+
+        :param fileName: 文件名称 含后缀
+        :param fatherPath: 路径
+        """
+        return await readFile.DelFile(Path(fatherPath) / fileName)
+
+    async def getsave(self, id: str):
+        """
+        获取user_id对应的存档文件
+
+        :param id: user_id
+        """
+        return await getSave.getSave(id)
+
+    async def putsave(self, id: str, data: dict):
+        """
+        保存user_id对应的存档文件
+
+        :param id: user_id
+        """
+        return await getSave.putSave(id, data)
+
+    async def delsave(self, id: str):
+        """
+        删除user_id对应的存档文件
+
+        :param id: user_id
+        """
+        return await getSave.delSave(id)
+
+    async def delpluginData(self, id: str):
+        """
+        删除user_id对应的娱乐数据
+
+        :param id: user_id
+        """
+        return self.delData(f"{id}.json", pluginDataPath)
+
+    async def getpluginData(self, id: str):
+        """
+        获取user_id对应的娱乐数据
+
+        :param id: user_id
+        """
+        return await getNotes.getPluginData(id)
+
+    async def putpluginData(self, id: str, data: dict):
+        """
+        保存user_id对应的娱乐数据
+
+        :param id: user_id
+        :param data: 娱乐数据
+        """
+        return await getNotes.putPluginData(id, data)
+
+    async def getNotesData(self, id: str, islock: bool = False):
+        """
+        获取并初始化 id 插件相关数据
+
+        :param id: user_id
+        :param islock:  是否锁定
+        :return: 整个data对象
+        """
+        return await getNotes.getNotesData(id, islock)
+
+    def getimg(self, img: str, style: str = "png"):
+        """
+        获取本地图片
+
+        :param img: 文件名
+        :param style: 文件格式，默认为png
+        """
+        return pic.getimg(img, style)
+
+    async def getDan(self, id: str):
+        """
+        获取玩家 Dan 数据
+
+        :param id: user_id
+        """
+        return await getSave.getDan(id)
+
+    def songsnick(self, mic: str):
+        """
+        匹配歌曲名称，根据参数返回原曲名称
+
+        :param mic: 别名
+        :return: 原曲名称
+        """
+        return getInfo.songsnick(mic)
+
+    async def setnick(self, mic: str, nick: str):
+        """
+        设置别名
+
+        :param mic: 原名
+        :param nick: 别名
+        """
+        return await getInfo.setnick(mic, nick)
+
+    async def GetSongsInfoAtlas(self, name: str, data: Any):
+        """
+        获取歌曲图鉴，曲名为原名
+
+        :param name: 曲名
+        :param data: 自定义数据
+        """
+        return await pic.GetSongsInfoAtlas(name, data)
+
+    async def GetSongsIllAtlas(self, name: str, data: SongsIllAtlasData | None = None):
+        """
+        通过曲目获取曲目图鉴
+
+        :param name: 原曲名称
+        :param data: 自定义数据
+        """
+        return await pic.GetSongsIllAtlas(name, data)
+
+    async def buildingRecord(
+        self, e: Event, User: PhigrosUser
+    ) -> tuple[float, int] | Literal[False]:
+        """
+        更新存档
+
+        :param User: User
+        :return: [rks变化值，note变化值]，失败返回 false
+        """
+        session = await Event2session(e)
+        old = await self.getsave(session.user.id)
+        try:
+            save_info = await User.getSaveInfo()
+            if old and Date(old.saveInfo["modifiedAt"]["iso"]) == Date(
+                save_info["modifiedAt"]["iso"]
+            ):
+                return (0, 0)
+            err = await User.buildRecord()
+            if err:
+                await send.send_with_At(
+                    e, "以下曲目无信息，可能导致b19显示错误\n" + err.join("\n")
+                )
+        except Exception as err:
+            if not PlatformUtils.is_qbot(session):
+                await send.send_with_At(e, f"更新失败！QAQ\n{err}")
+            else:
+                await send.send_with_At(e, "更新失败！QAQ\n请稍后重试")
+            logger.error("更新失败！QAQ", "phi-plugin", e=err)
+            return False
+        try:
+            await self.putsave(session.user.id, to_dict(User))
+        except Exception as err:
+            await send.send_with_At(e, f"保存存档失败!\n{err}")
+            logger.error("保存存档失败", "phi-plugin", e=err)
+            return False
+        now = await Save().constructor(to_dict(User))
+        if old and (old.session and old.session != User.session):
+            await send.send_with_At(
+                e,
+                "检测到新的sessionToken，将自动更换绑定。如果需要删除统计"
+                f"记录请 ⌈{PluginConfig.get('cmdhead')}"
+                "unbind⌋ 进行解绑哦！",
+            )
+        # await now.init()
+        # 更新
+        history = await getSave.getHistory(session.user.id)
+        history.update(now)
+        await getSave.putHistory(session.user.id, to_dict(history))
+        pluginData = await getNotes.getNotesData(session.user.id)
+        # 修正
+        # 移植不需要考虑
+        # if pluginData.get("update") or pluginData.get("task_update"):
+        #     pluginData.pop("update", None)
+        #     pluginData.pop("task_update", None)
+        # note数量变化
+        add_money = 0
+        task = pluginData.get("plugin_data", {}).get("task")
+        if task:
+            for id in now.gameRecord:
+                for i, _ in enumerate(task):
+                    if not task[i]:
+                        continue
+                    if (
+                        not task[i]["finished"]
+                        and getInfo.songsid.get(id) == task[i]["song"]
+                    ):
+                        level = Level[task[i]["request"]["rank"]]
+                        if not now.gameRecord[id][level]:
+                            continue
+                        match task[i]["request"]["type"]:
+                            case "acc":
+                                if (
+                                    now.gameRecord[id][level].acc
+                                    >= task[i]["request"]["value"]
+                                ):
+                                    pluginData["plugin_data"]["task"][i]["finished"] = (
+                                        True
+                                    )
+                                    pluginData["plugin_data"]["money"] += task[i][
+                                        "reward"
+                                    ]
+                                    add_money += task[i]["reward"]
+                            case "score":
+                                if (
+                                    now.gameRecord[id][level].score
+                                    >= task[i]["request"]["value"]
+                                ):
+                                    pluginData["plugin_data"]["task"][i]["finished"] = (
+                                        True
+                                    )
+                                    pluginData["plugin_data"]["money"] += task[i][
+                                        "reward"
+                                    ]
+                                    add_money += task[i]["reward"]
+        await self.putpluginData(session.user.id, pluginData)
+        # rks变化
+        add_rks = (
+            now.saveInfo["summary"]["rankingScore"]
+            - old.saveInfo["summary"]["rankingScore"]
+            if old
+            else 0
+        )
+        return (add_rks, add_money)
+
+    async def getb19(self, data: dict):
+        """获取best19图片"""
+        return await picmodle.b19(data)
+
+    async def getupdate(self, data: dict):
+        """获取update图片"""
+        return await picmodle.update(data)
+
+    async def gettasks(self, data: dict):
+        """获取任务列表图片"""
+        return await picmodle.tasks(data)
+
+    async def getuser_info(self, data: dict, kind: int):
+        """获取个人信息图片"""
+        return await picmodle.user_info(data, kind)
+
+    async def getlvsco(self, data: dict):
+        """获取定级区间成绩"""
+        return await picmodle.lvsco(data)
+
+    async def getsingle(self, data: dict):
+        """获取单曲成绩"""
+        return await picmodle.score(data)
+
+    async def getillpicmodle(self, data: dict):
+        """获取曲绘图鉴"""
+        return await picmodle.ill(data)
+
+    async def getguess(self, data: dict):
+        """获取猜曲绘图片"""
+        return await picmodle.guess(data)
+
+    async def getrand(self, data: dict):
+        """获取随机曲目图片"""
+        return await picmodle.rand(data)
+
+    async def getill(
+        self, name: str, kind: Literal["common", "blur", "low"] = "common"
+    ):
+        """
+        获取曲绘，返回地址
+
+        :param  name: 原名
+        :param kind: 清晰度
+        :return: 网址或文件地址
+        """
+        return await getInfo.getill(name, kind)
+
+    def idgetavatar(self, id: str):
+        """
+        通过id获得头像文件名称
+
+        :param id: id
+        :return: file name
+        """
+        return getInfo.idgetavatar(id)
+
+    def idgetsong(self, id: str) -> str | None:
+        """
+        根据曲目id获取原名
+
+        :param str id: 曲目id
+        :return: 原名
+        """
+        return getInfo.idgetsong(id)
+
+    def SongGetId(self, song: str) -> str | None:
+        """
+        通过原曲曲目获取曲目id
+
+        :param str song: 原曲曲名
+        :return: 曲目id
+        """
+        return getInfo.SongGetId(song)
+
+    def getrks(self, acc: float, difficulty: int):
+        """
+        计算等效rks
+
+        :param acc: 准确度
+        :param difficulty: 原曲定数
+        :return: 等效rks
+        """
+        if acc == 100:
+            # 满分原曲定数即为有效rks
+            return difficulty
+        elif acc < 70:
+            # 无效acc
+            return 0
+        else:
+            # 非满分计算公式 [(((acc - 55) / 45) ^ 2) * 原曲定数]
+            return difficulty * (((acc - 55) / 45) ** 2)
+
+    def comsuggest(self, rks: float, difficulty: int, count: int | None = None):
+        """
+        计算所需acc
+
+        :param rks: 目标rks
+        :param difficulty: 原曲定数
+        :param count: 保留位数
+        :return: 建议acc
+        """
+        ans = 45 * math.sqrt(rks / difficulty) + 55
+        if ans >= 100:
+            return "无法推分"
+        else:
+            return f"{round(ans, count)}%" if count is not None else str(ans)
+
+
+def add_new_score(
+    pluginData: dict,
+    level: Literal["EZ", "HD", "IN", "AT", "LEGACY"],
+    nowRecord: LevelData,
+) -> int:
+    """
+    处理新成绩
+
+    :param pluginData: pluginData
+    :param level: level
+    :param nowRecord: 当前成绩
+    """
+    task = pluginData.get("plugin_data", {}).get("task")
+    add_money = 0
+    if task:
+        for i, _ in enumerate(task):
+            if not task[i]:
+                continue
+            if (
+                not task[i]["finished"]
+                and task[i].get("song") is None
+                and task[i]["request"]["rank"] == level
+            ):
+                match task[i]["request"]["type"]:
+                    case "acc":
+                        if nowRecord["acc"] >= task[i]["request"]["value"]:
+                            pluginData["plugin_data"]["task"][i]["finished"] = True
+                            pluginData["plugin_data"]["money"] += task[i]["reward"]
+                            add_money += task[i]["reward"]
+                    case "score":
+                        if nowRecord["score"] >= task[i]["request"]["value"]:
+                            pluginData["plugin_data"]["task"][i]["finished"] = True
+                            pluginData["plugin_data"]["money"] += task[i]["reward"]
+                            add_money += task[i]["reward"]
+    return add_money
+
+
+getdata = _getdata()

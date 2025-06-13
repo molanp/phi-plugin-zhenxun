@@ -2,7 +2,7 @@ import asyncio
 import csv
 from io import StringIO
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, cast
 
 import aiofiles
 from ruamel.yaml import YAML
@@ -13,6 +13,8 @@ from zhenxun.services.log import logger
 from .getRksRank import getRksRank
 from .getSave import getSave
 from .path import dataPath, pluginDataPath, savePath
+
+_SUPPORTED_FORMATS = Literal["JSON", "YAML", "CSV", "TXT"]
 
 
 async def csv_write(file_path: str | Path, data: list[dict[str, Any]]):
@@ -51,14 +53,14 @@ async def csv_read(file_path: str | Path) -> list[dict[str, Any]]:
     ```
     [
         {
-            "id": "1",
-            "name": "张三",
-            "age": "18"
+            "id": 1,
+            "name": "n1",
+            "age": 114
         },
         {
-            "id": "2",
-            "name": "李四",
-            "age": "19"
+            "id": 2,
+            "name": "n2",
+            "age": 39
         }
     ]
     """
@@ -73,20 +75,26 @@ async def csv_read(file_path: str | Path) -> list[dict[str, Any]]:
 
 class readFile:
     @classmethod
-    async def FileReader(cls, file_path: str | Path, style: str | None = None) -> Any:
+    async def FileReader(
+        cls,
+        file_path: str | Path,
+        style: _SUPPORTED_FORMATS | None = None,
+    ) -> Any:
         """
         读取文件
 
-        :param string file_path: 完整路径
-        :param 'JSON'|'YAML'|'CSV'|'TXT' style: 强制设置文件格式
-        :return Any:  读取内容，失败返回 False
+        :param file_path: 完整路径
+        :param style: 强制设置文件格式
+        :return:  读取内容，失败返回 False
         """
         try:
             if not Path(file_path).exists():
                 return False
             if style is None:
-                style = str(file_path).split(".")[-1].upper()
-                if style not in ["JSON", "YAML", "TXT", "CSV"]:
+                ext = Path(file_path).suffix[1:].upper()
+                if ext in ["JSON", "YAML", "CSV", "TXT"]:
+                    style = cast(_SUPPORTED_FORMATS, ext)
+                else:
                     style = None
             async with aiofiles.open(file_path, encoding="utf-8") as f:
                 content = await f.read()
@@ -113,14 +121,17 @@ class readFile:
 
     @classmethod
     async def SetFile(
-        cls, file_path: str | Path, data: Any, style: str | None = None
+        cls,
+        file_path: str | Path,
+        data: Any,
+        style: _SUPPORTED_FORMATS | None = None,
     ) -> bool:
         """
         储存文件
 
-        :param string file_path: 完整路径，含后缀
-        :param Any data: 储存内容
-        :param 'JSON'|'YAML'|'CSV'|'TXT' style: 强制设置文件格式
+        :param file_path: 完整路径，含后缀
+        :param data: 储存内容
+        :param style: 强制设置文件格式
         :return bool:  储存成功返回 True，失败返回 False
         """
         try:
@@ -129,7 +140,10 @@ class readFile:
                 dir_path.mkdir(parents=True, exist_ok=True)
             if not style:
                 ext = Path(file_path).suffix[1:].upper()
-                style = ext if ext in ["JSON", "YAML", "CSV", "TXT"] else None
+                if ext in ["JSON", "YAML", "CSV", "TXT"]:
+                    style = cast(_SUPPORTED_FORMATS, ext)
+                else:
+                    style = None
             match style:
                 case "JSON":
                     data = json.dumps(data)
@@ -172,6 +186,7 @@ class readFile:
     async def DelDir(cls, dir_path: str | Path) -> bool:
         """
         删除文件夹
+
         :param string dir_path: 完整路径
         :return bool:  删除成功返回 True，失败返回 False
         """
@@ -192,9 +207,10 @@ class readFile:
             return False
 
     @classmethod
-    async def DelEmptyDir(cls, dir_path: str | Path) -> bool:
+    async def rmEmptyDir(cls, dir_path: str | Path) -> bool:
         """
         删除空文件夹
+
         :param string dir_path: 完整路径
         :return bool:  删除成功返回 True，失败返回 False
         """
@@ -207,14 +223,14 @@ class readFile:
                 if file.is_file():
                     return False
                 elif file.is_dir():
-                    if not await cls.DelEmptyDir(file):
+                    if not await cls.rmEmptyDir(file):
                         return False
             Path(dir_path).rmdir()
             return True
         except Exception as e:
             logger.error(
-                f"[phi-plugin][DelEmptyDir] 删除失败: {dir_path}",
-                "phi-plugin_DelEmptyDir",
+                f"删除失败: {dir_path}",
+                "phi-plugin",
                 e=e,
             )
             return False
@@ -223,6 +239,7 @@ class readFile:
     async def movJsonFile(cls, _path: str | Path) -> None:
         """
         将本地 JSON 用户数据迁移到数据库，并整理结构
+
         :param _path: 待迁移的数据目录
         """
         root_path = Path(_path)
@@ -282,7 +299,7 @@ class readFile:
 
                 already += 1
             except Exception as e:
-                logger.error(f"[phi-plugin][数据迁移失败] 用户: {user_id}", e=e)
+                logger.error(f"数据迁移失败 | 用户: {user_id}", e=e)
 
         # 等待所有文件处理完成
         while already < tot:

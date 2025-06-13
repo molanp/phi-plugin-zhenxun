@@ -1,6 +1,7 @@
 import asyncio
 from pathlib import Path
 import random
+from typing import Literal
 
 from nonebot import require
 from nonebot_plugin_uninfo import Uninfo
@@ -52,7 +53,7 @@ class fCompute:
         elif count is not None:
             return f"{ans:.{count}f}%"
         else:
-            return ans
+            return str(ans)
 
     @staticmethod
     async def sendFile(e: Event, file: bytes, filename: str):
@@ -64,7 +65,7 @@ class fCompute:
             await send.send_with_At(e, f"文件上传错误: {err}")
 
     @staticmethod
-    async def getBackground(save_background: str) -> Path | str | bool:
+    async def getBackground(save_background: str) -> Path | str | Literal[False]:
         """获取角色介绍背景曲绘"""
         try:
             match save_background:
@@ -398,18 +399,18 @@ class fCompute:
         return f"{dt.year}/{month}/{day} {time_str}"
 
     @staticmethod
-    def range(value: float, range_list: list) -> str:
+    def range(value: float, range_list: list) -> float:
         """
         计算一个值在给定区间中的百分比位置，并返回对应的百分数
 
         :param value: 需要计算的值
         :param range_list: 区间数组，例如 [0, 1]
-        :return: 百分数字符串，如 '50%'
+        :return: 百分数
         """
         if range_list[0] == range_list[-1]:
-            return "50%"
+            return 50
         percentage = (value - range_list[0]) / (range_list[-1] - range_list[0]) * 100
-        return f"{percentage:.2f}%"
+        return round(percentage, 2)
 
     @staticmethod
     def fuzzySearch(search_str: str, data: dict) -> list:
