@@ -14,34 +14,6 @@ class SaveManager {
     static save = SaveManager.baseUrl + "/classes/_GameSave";
     static userInfo = SaveManager.baseUrl + "/users/me";
     static files = SaveManager.baseUrl + "/files/"
-    saveModel;
-    md5;
-    user;
-    data;
-
-    constructor(user, saveInfo) {
-        if (saveInfo) {
-            try {
-                this.md5 = MD5;
-            } catch (e) {
-                throw new Error(e);
-            }
-            this.user = user;
-            let saveModel = new SaveModel();
-            saveModel.summary = saveInfo.summary;
-            saveModel.objectId = saveInfo.objectId;
-            saveModel.userObjectId = saveInfo.user.objectId;
-            saveInfo = saveInfo.gameFile;
-            saveModel.gameObjectId = saveInfo.objectId;
-            saveModel.updatedTime = saveInfo.updatedAt;
-            saveModel.checksum = saveInfo.metaData._checksum;
-            user.saveUrl = URL(saveInfo.url);
-            this.saveModel = saveModel;
-        } else {
-            this(user, SaveManager.saveCheck(user.session));
-        }
-    }
-
 
     static async getPlayerId(session) {
         let request = await this.globalRequest.copy().header("X-LC-Session", session).uri(this.userInfo).build();

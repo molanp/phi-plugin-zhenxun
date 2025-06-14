@@ -31,24 +31,3 @@ class Util:
         else:
             data &= ~result
         return data
-
-    @staticmethod
-    async def repair(session: str, index: int) -> str:
-        """
-        修复存档
-
-        :param session: 会话令牌
-        :param index: 存档索引
-        :return: 修复结果
-        """
-        array = await SaveManager.saveArray(session)
-        if len(array) == 1:
-            raise ValueError("存档无误")
-
-        builder = ""
-        for i, item in enumerate(array):
-            if i == index:
-                continue
-            response = await SaveManager.delete(session, item["objectId"])
-            builder += str(response) + "\n"
-        return builder

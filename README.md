@@ -4,9 +4,9 @@
 <details>
 <summary>当前同步版本号</summary>
 
-[083d3e18c1eca6ff8f5be02c438097d6bd8c0035](https://github.com/Catrong/phi-plugin/commit/083d3e18c1eca6ff8f5be02c438097d6bd8c0035)
+[b00902b54185bebc974a99296a6cc8fbd266fe29](https://github.com/Catrong/phi-plugin/commit/b00902b54185bebc974a99296a6cc8fbd266fe29)
 
-[已落后的变更](https://github.com/Catrong/phi-plugin/compare/083d3e18c1eca6ff8f5be02c438097d6bd8c0035...main)
+[已落后的变更](https://github.com/Catrong/phi-plugin/compare/b00902b54185bebc974a99296a6cc8fbd266fe29...main)
 </details>
 
 # 插件正在火热开发中...
