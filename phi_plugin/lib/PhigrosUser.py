@@ -1,127 +1,168 @@
+import io
 import re
+from typing import Any, cast
+from urllib.parse import urlparse
+import zipfile
+
+from nonebot.utils import run_sync
+
+from zhenxun.services.log import logger
+
+from ..model.cls.Save import SaveInfo
 from .ByteReader import ByteReader
 from .GameProgress import GameProgress
 from .GameRecord import GameRecord
 from .GameSettings import GameSettings
 from .GameUser import GameUser
+from .http import Builder, HttpClient
 from .SaveManager import SaveManager
-from ..model.cls.Save import SaveInfo
-from ..model.cls.LevelRecordInfo import LevelData
+
+
+class readZip:
+    def __init__(self, b: bytes):
+        self.data = io.BytesIO(b)
+
+    @run_sync
+    def file(self, filename: str):
+        with zipfile.ZipFile(self.data) as zf:
+            return zf.read(filename)
 
 class PhigrosUser:
-    def __init__(self, session: str):
-        if not re.fullmatch(r"[a-zA-Z0-9]{25}", session):
+    """Phigros 用户类"""
+
+    session: str
+    saveInfo: list[SaveInfo]
+    gameRecord: dict[str, list[Any]]
+
+    def __init__(self, session: str) -> None:
+        """
+        初始化
+
+        :param session: 会话令牌
+        """
+        self.session = ""
+        self.saveInfo = []
+        self.gameRecord = {}
+        if not re.match(r"[a-z0-9A-Z]{25}", session):
+            logger.error("SessionToken格式错误")
             raise ValueError("SessionToken格式错误")
-        self.session: str = session
-        self.saveInfo: SaveInfo = {} # type: ignore
-        self.gameRecord: dict[str, LevelData] = {}
+        self.session = session
+        self.http = HttpClient()
 
-# class PhigrosUser {
+    def chooseSave(self, choose: int) -> bool:
+        """
+        选择存档
 
-#     /**多个存档问题的解决方案 */
-#     chooseSave(choose) {
-#         if (this.saveInfo[choose]) {
-#             this.saveInfo = [this.saveInfo[choose]]
-#             return true
-#         }
-#         return false
-#     }
+        :param choose: 存档索引
+        :return: 是否成功
+        """
+        if isinstance(self.saveInfo, list) and 0 <= choose < len(self.saveInfo):
+            self.saveInfo = [self.saveInfo[choose]]
+            return True
+        return False
 
-#     /**
-#      * 获取 SaveInfo
-#      */
-#     async getSaveInfo() {
-#         this.saveInfo = await SaveManager.saveCheck(this.session)
+    async def getSaveInfo(self) -> list[SaveInfo]:
+        """
+        获取存档信息
 
-#         // console.info(this.saveInfo)
+        :return: 存档信息
+        """
+        raw_save_info = await SaveManager.saveCheck(self.session)
+        if (
+            isinstance(raw_save_info, list)
+            and raw_save_info
+            and isinstance(raw_save_info[0], dict)
+        ):
+            self.saveInfo = [cast(SaveInfo, raw_save_info[0])]
+        else:
+            logger.error("错误的存档")
+            logger.error(str(raw_save_info))
+            raise ValueError("未找到存档QAQ！")
+        try:
+            if (
+                isinstance(self.saveInfo, list)
+                and self.saveInfo
+                and isinstance(self.saveInfo[0], dict)
+                and "gameFile" in self.saveInfo[0]
+                and isinstance(self.saveInfo[0]["gameFile"], dict)
+                and "url" in self.saveInfo[0]["gameFile"]
+            ):
+                self.saveUrl = urlparse(str(self.saveInfo[0]["gameFile"]["url"]))
+            else:
+                raise ValueError("存档信息格式错误")
+        except Exception as e:
+            logger.error("设置saveUrl失败", e=e)
+            raise ValueError("设置saveUrl失败") from e
+        return self.saveInfo
 
-#         if (this.saveInfo[0] && this.saveInfo[0].createdAt) {
-#             /**多个存档默认选择第一个 */
-#             // this.saveInfo = this.saveInfo[0]
-#             this.saveInfo = this.saveInfo[0]
-#         } else {
-#             logger.error(`[Phi-Plugin]错误的存档`, this.session)
-#             logger.error(this.saveInfo)
-#             throw new Error("未找到存档QAQ！")
-#         }
+    async def buildRecord(self) -> bool:
+        """
+        构建记录
 
-#         try {
-#             this.saveUrl = new URL(this.saveInfo.gameFile.url);
-#         } catch (err) {
+        :return: 是否成功
+        """
+        if not hasattr(self, "saveUrl"):
+            await self.getSaveInfo()
 
-#             logger.error("[phi-plugin]设置saveUrl失败！", this.session, err)
+        if (
+            isinstance(self.saveInfo, list)
+            and self.saveInfo
+            and isinstance(self.saveInfo[0], dict)
+            and "summary" in self.saveInfo[0]
+            and isinstance(self.saveInfo[0]["summary"], dict)
+            and self.saveInfo[0]["summary"].get("saveVersion") == "1"
+        ):
+            raise ValueError("存档版本过低，请更新Phigros！")
 
-#             throw new Error(err)
-#         }
-#         return this.saveInfo
-#     }
+        if getattr(self, "saveUrl", None):
+            # 从saveurl获取存档zip
+            try:
+                response = await self.http.send(
+                    await Builder(self.saveUrl.geturl()).GET().build()
+                )
+                if not response:
+                    raise ValueError("获取存档失败")
+                savezip = readZip(response.content)
 
-#     /**
-#      * 
-#      * @returns 返回未绑定的信息数组，没有则为false
-#      */
-#     async buildRecord() {
-#         if (!this.saveUrl) {
+                # 插件存档版本
+                self.Recordver = 1.0
 
-#             await this.getSaveInfo()
+                # 获取 gameProgress
+                file = ByteReader(await savezip.file("gameProgress"))
+                file.getByte()
+                self.gameProgress = GameProgress(
+                    await SaveManager.decrypt(file.getAllByte())
+                )
 
-#         }
+                # 获取 gameuser
+                file = ByteReader(await savezip.file("user"))
+                file.getByte()
+                self.gameuser = GameUser(await SaveManager.decrypt(file.getAllByte()))
 
-#         if (this.saveInfo.summary.saveVersion == '1') {
-#             throw new Error("存档版本过低，请更新Phigros！")
-#         }
-#         if (this.saveUrl) {
-#             /**从saveurl获取存档zip */
-#             let save = await fetch(this.saveUrl, { method: 'GET' })
+                # 获取 gamesetting
+                file = ByteReader(await savezip.file("settings"))
+                file.getByte()
+                self.gamesettings = GameSettings(
+                    await SaveManager.decrypt(file.getAllByte())
+                )
 
-#             try {
-#                 var savezip = await JSZip.loadAsync(await save.arrayBuffer())
+                # 获取gameRecord
+                file = ByteReader(await savezip.file("gameRecord"))
+                if file.getByte() != GameRecord.version:
+                    self.gameRecord = {}
+                    logger.info("版本号已更新，请更新PhigrosLibrary。")
+                    raise ValueError("版本号已更新")
 
-#             } catch (err) {
-#                 logger.error(err, this.session)
-#                 throw new Error("解压zip文件失败！ " + err)
+                record = GameRecord(await SaveManager.decrypt(file.getAllByte()))
+                await record.init([])
+                self.gameRecord = record.Record
 
-#             }
+            except Exception as e:
+                logger.error("解压zip文件失败", e=e)
+                raise ValueError("解压zip文件失败") from e
 
+        else:
+            logger.info("获取存档链接失败！")
+            raise ValueError("获取存档链接失败！")
 
-#             /**插件存档版本 */
-#             this.Recordver = 1.0
-
-#             /**获取 gameProgress */
-#             let file = new ByteReader(await savezip.file('gameProgress').async('nodebuffer'))
-#             file.getByte()
-#             this.gameProgress = new GameProgress(await SaveManager.decrypt(file.getAllByte()))
-
-#             /**获取 gameuser */
-#             file = new ByteReader(await savezip.file('user').async('nodebuffer'))
-#             file.getByte()
-#             this.gameuser = new GameUser(await SaveManager.decrypt(file.getAllByte()))
-
-#             /**获取 gamesetting */
-#             file = new ByteReader(await savezip.file('settings').async('nodebuffer'))
-#             file.getByte()
-#             this.gamesettings = new GameSettings(await SaveManager.decrypt(file.getAllByte()))
-
-#             /**获取gameRecord */
-#             file = new ByteReader(await savezip.file('gameRecord').async('nodebuffer'))
-#             if (file.getByte() != GameRecord.version) {
-#                 this.gameRecord = {}
-
-#                 logger.info("版本号已更新，请更新PhigrosLibrary。", this.session);
-
-#                 throw new Error("版本号已更新")
-#             }
-#             let Record = new GameRecord(await SaveManager.decrypt(file.getAllByte()));
-#             await Record.init()
-#             this.gameRecord = Record.Record
-
-#         } else {
-#             logger.info("获取存档链接失败！", this.session)
-
-#             throw new Error("获取存档链接失败！")
-#         }
-#         return false
-#     }
-
-# }
-# export default PhigrosUser
+        return False

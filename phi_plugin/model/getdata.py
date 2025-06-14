@@ -8,6 +8,7 @@ from zhenxun.services.log import logger
 from zhenxun.utils.platform import PlatformUtils
 
 from ..config import PluginConfig
+from ..lib.PhigrosUser import PhigrosUser
 from ..utils import Date, Event2session, to_dict
 from .cls.LevelRecordInfo import LevelData
 from .cls.Save import Save

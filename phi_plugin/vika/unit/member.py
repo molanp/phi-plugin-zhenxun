@@ -2,8 +2,8 @@
 Unit of member instance.
 """
 
-from vika.types.unit_model import ModifyMemberRequest, RawMember
-from vika.unit.unit import Unit
+from ..types.unit_model import ModifyMemberRequest, RawMember
+from .unit import Unit
 
 
 class Member(Unit):

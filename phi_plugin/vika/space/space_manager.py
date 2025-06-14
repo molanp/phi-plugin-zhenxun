@@ -1,9 +1,9 @@
 from urllib.parse import urljoin
 
-from vika.types.response import (
+from ..types.response import (
     GETSpaceListResponse
 )
-from vika.utils import handle_response
+from ..utils import handle_response
 
 
 class SpaceManager:

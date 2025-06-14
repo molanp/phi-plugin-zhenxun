@@ -6,13 +6,13 @@ from urllib.parse import urljoin
 
 import requests
 
-from vika.const import API_GET_DATASHEET_QS_SET, DEFAULT_PAGE_SIZE
-from vika.exceptions import ErrorSortParams
-from vika.datasheet.field_manager import FieldManager
-from vika.datasheet.record import Record
-from vika.datasheet.record_manager import RecordManager
-from vika.types import EmbedLinkCreateRo
-from vika.types.response import (
+from ..const import API_GET_DATASHEET_QS_SET, DEFAULT_PAGE_SIZE
+from ..exceptions import ErrorSortParams
+from .field_manager import FieldManager
+from .record import Record
+from .record_manager import RecordManager
+from ..types import EmbedLinkCreateRo
+from ..types.response import (
     GETMetaFieldResponse,
     PostMetaFieldResponse,
     PatchRecordResponse,
@@ -29,8 +29,8 @@ from vika.types.response import (
     GetEmbedLinkResponseData,
     DeleteEmbedLinkResponse,
 )
-from vika.utils import FieldKeyMap, handle_response, check_sort_params, trans_data, timed_lru_cache
-from vika.datasheet.view_manager import ViewManager
+from ..utils import FieldKeyMap, handle_response, check_sort_params, trans_data, timed_lru_cache
+from .view_manager import ViewManager
 
 
 class Datasheet:

@@ -5,12 +5,12 @@ from pydantic import BaseModel
 
 
 class ViewTypeEnum(str, Enum):
-    Grid = 'Grid'
-    Gallery = 'Gallery'
-    Kanban = 'Kanban'
-    Gantt = 'Gantt'
-    Calendar = 'Calendar'
-    Architecture = 'Architecture'
+    Grid = "Grid"
+    Gallery = "Gallery"
+    Kanban = "Kanban"
+    Gantt = "Gantt"
+    Calendar = "Calendar"
+    Architecture = "Architecture"
 
 
 class MetaView(BaseModel):

@@ -1,5 +1,5 @@
 import contextlib
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
 
 from nonebot import get_bot, require
@@ -42,33 +42,20 @@ def to_dict(c: Any) -> dict:
 
 def Date(date_input: str | float | datetime | None) -> datetime:
     """
-    将多种格式的时间输入转换为 Python datetime 对象，并始终使用 UTC 时区。
+    将多种格式的时间输入转换为 Python datetime 对象，并始终使用本地时区。
 
     :param str | float | int | datetime | None date_input: 时间表示
-    :return: 解析后的时间对象，失败返回时间戳 0 对应的 UTC 时间
+    :return: 解析后的时间对象，失败返回时间戳 0 对应的本地时间
     """
     if date_input is None:
-        return datetime.utcfromtimestamp(0).replace(tzinfo=timezone.utc)
+        return datetime.fromtimestamp(0)
 
     if isinstance(date_input, datetime):
-        # 如果已有时区信息，则转成 UTC
-        if date_input.tzinfo is not None:
-            return date_input.astimezone(timezone.utc)
-        # 无时区信息则视为 UTC
-        return date_input.replace(tzinfo=timezone.utc)
-
+        return date_input if date_input.tzinfo is None else date_input.astimezone(None)
     try:
         if isinstance(date_input, str):
-            # 优先尝试 ISO 格式
             with contextlib.suppress(ValueError):
-                dt = datetime.fromisoformat(date_input)
-                return (
-                    dt.replace(tzinfo=timezone.utc)
-                    if dt.tzinfo is None
-                    else dt.astimezone(timezone.utc)
-                )
-
-            # 常见格式列表
+                return datetime.fromisoformat(date_input)
             formats = (
                 "%Y-%m-%d %H:%M:%S",
                 "%Y-%m-%d",
@@ -80,29 +67,22 @@ def Date(date_input: str | float | datetime | None) -> datetime:
 
             for fmt in formats:
                 try:
-                    dt = datetime.strptime(date_input, fmt)
-                    if fmt.endswith("%Z"):  # 如果包含时区（如 GMT）
-                        # 假设是 GMT/UTC 时间
-                        return dt.replace(tzinfo=timezone.utc)
-                    # 没有时区信息，直接作为 UTC 处理
-                    return dt.replace(tzinfo=timezone.utc)
+                    return datetime.strptime(date_input, fmt)
                 except ValueError:
                     continue
 
         elif isinstance(date_input, float | int):
             timestamp = float(date_input)
             if timestamp < 0:
-                return datetime.utcfromtimestamp(0).replace(tzinfo=timezone.utc)
-            if timestamp > 1e12:  # 毫秒转秒
+                return datetime.fromtimestamp(0)
+            if timestamp > 1e12:
                 timestamp /= 1000
-            return datetime.utcfromtimestamp(timestamp).replace(tzinfo=timezone.utc)
+            return datetime.fromtimestamp(timestamp)
 
     except Exception:
-        # 所有异常都兜底返回时间戳 0 的 UTC 时间
-        return datetime.utcfromtimestamp(0).replace(tzinfo=timezone.utc)
+        return datetime.fromtimestamp(0)
 
-    # 如果所有解析失败
-    return datetime.utcfromtimestamp(0).replace(tzinfo=timezone.utc)
+    return datetime.fromtimestamp(0)
 
 
 async def Event2session(event: Event) -> Uninfo:

@@ -1,10 +1,10 @@
 from typing import List
 
-from vika.const import MAX_WRITE_RECORDS_PRE_REQ
-from vika.datasheet.record import Record
-from vika.exceptions import RecordDoesNotExist
-from vika.types import RawRecord
-from vika.utils import chunks, trans_key
+from ..const import MAX_WRITE_RECORDS_PRE_REQ
+from .record import Record
+from ..exceptions import RecordDoesNotExist
+from ..types import RawRecord
+from ..utils import chunks, trans_key
 
 
 class QuerySet:

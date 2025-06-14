@@ -1,10 +1,10 @@
 from urllib.parse import urljoin
 
-from vika.datasheet import Datasheet, DatasheetManager
-from vika.node import NodeManager
-from vika.types.response import PostDatasheetMetaResponse
-from vika.unit import Member, Role, Team
-from vika.utils import get_dst_id, handle_response
+from ..datasheet import Datasheet, DatasheetManager
+from ..node import NodeManager
+from ..types.response import PostDatasheetMetaResponse
+from ..unit import Member, Role, Team
+from ..utils import get_dst_id, handle_response
 
 
 class Space:

@@ -1,11 +1,11 @@
 from urllib.parse import urljoin
 
-from vika.types.response import (
+from ..types.response import (
     GETNodeListResponse,
     GETNodeDetailResponse,
     GETSearchNodeListResponse
 )
-from vika.utils import handle_response
+from ..utils import handle_response
 
 
 class NodeManager:

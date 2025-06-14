@@ -1,12 +1,12 @@
 from typing import Dict, Any, List, Optional
 
-from vika.types.embedlink import EmbedLinkThemeEnum, EmbedLinkPayload
-from vika.types.node import NodeListItem, NodeDetail, NodeSearchInfo
-from vika.types.space import SpaceListItem
-from vika.types.record import RawRecord
-from vika.types.view import MetaView
-from vika.types.field import MetaField
-from pydantic import ConfigDict, BaseModel, Field
+from .embedlink import EmbedLinkThemeEnum, EmbedLinkPayload
+from .node import NodeListItem, NodeDetail, NodeSearchInfo
+from .space import SpaceListItem
+from .record import RawRecord
+from .view import MetaView
+from .field import MetaField
+from pydantic import BaseModel, Field
 
 
 class ResponseBase(BaseModel):

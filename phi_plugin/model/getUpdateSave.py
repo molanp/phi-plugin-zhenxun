@@ -52,8 +52,8 @@ class getUpdateSave:
         session = await Event2session(e)
         old = await getSave.getSave(session.user.id)
         token = token or old.session if old else None
-        User = PhigrosUser(token)
         try:
+            User = PhigrosUser(token)
             save_info = await User.getSaveInfo()
             if (
                 old

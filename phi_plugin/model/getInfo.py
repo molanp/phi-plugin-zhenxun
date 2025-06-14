@@ -32,7 +32,7 @@ class levelDetail(TypedDict):
     """note统计[tap,drag,hold,flick]"""
 
 
-class LevelRecord(TypedDict):
+class LevelRecordList(TypedDict):
     EZ: levelDetail
     HD: levelDetail
     IN: levelDetail
@@ -106,30 +106,6 @@ class _getInfo:
                 "未下载曲绘文件，建议使用 /phi downill 命令进行下载", "phi-plugin"
             )
         self.initIng = True
-        # 之前改过一次名称，修正别名
-        # 咱移植不需要修正
-        # nick = await readFile.FileReader(configPath / "nickconfig.yaml", "TXT")
-        # if nick:
-        #     wait_to_replace = {
-        #         "Winter↑cube↓": "Winter ↑cube↓",
-        #         "Cipher: /2&//<|0": "Cipher : /2&//<|0",
-        #         "NYA!!!(Phigros ver.)": "NYA!!! (Phigros ver.)",
-        #         "JunXion Between Life And Death(VIP Mix)": (
-        #             "JunXion Between Life And Death(VIP Mix)"
-        #         ),
-        #         "Dash from SOUL NOTES": "Dash",
-        #         "Drop It from SOUL NOTES": "Drop It",
-        #         "Diamond Eyes from SOUL NOTES": "Diamond Eyes",
-        #     }
-        #     flag = False
-        #     for old, new in wait_to_replace.items():
-        #         if old in nick:
-        #             flag = True
-        #             nick = nick.replace(old, new)
-        #     if flag:
-        #         await readFile.SetFile(configPath / "nickconfig.yaml", nick, "TXT")
-        #         logger.success("自动修正别名", "phi-plugin")
-
         for file in DlcInfoPath.iterdir():
             if file.suffix == ".json":
                 self.DLC_Info[file.stem] = await readFile.FileReader(file)
@@ -155,14 +131,14 @@ class _getInfo:
             self.sp_info[song] = value
 
         #  note统计
-        noteInfo: dict[str, LevelRecord] = await readFile.FileReader(
+        noteInfo: dict[str, LevelRecordList] = await readFile.FileReader(
             infoPath / "notesInfo.json"
         )
         CsvInfo: list[csvDetail] = await readFile.FileReader(infoPath / "info.csv")
         Csvdif: list[dict] = await readFile.FileReader(infoPath / "difficulty.csv")
         Jsoninfo: dict = await readFile.FileReader(infoPath / "infolist.json")
         oldDif: list[dict] = await readFile.FileReader(oldInfoPath / "difficulty.csv")
-        oldNotes: dict[str, LevelRecord] = await readFile.FileReader(
+        oldNotes: dict[str, LevelRecordList] = await readFile.FileReader(
             oldInfoPath / "notesInfo.json"
         )
 

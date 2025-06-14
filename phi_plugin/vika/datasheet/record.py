@@ -1,6 +1,6 @@
-from vika.exceptions import RecordWasDeleted, ErrorFieldKey
-from vika.types import RawRecord
-from vika.utils import trans_key, trans_data
+from ..exceptions import RecordWasDeleted, ErrorFieldKey
+from ..types import RawRecord
+from ..utils import trans_key, trans_data
 
 
 class Record:

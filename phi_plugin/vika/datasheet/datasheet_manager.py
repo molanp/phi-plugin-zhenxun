@@ -1,4 +1,4 @@
-from vika.types.response import PostDatasheetMetaResponseData
+from ..types.response import PostDatasheetMetaResponseData
 
 
 class DatasheetManager:

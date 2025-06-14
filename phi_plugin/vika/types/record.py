@@ -1,5 +1,5 @@
 from typing import Dict, Any, Optional
-from pydantic import ConfigDict, BaseModel, Field
+from pydantic import BaseModel, Field
 
 
 # Avoid the same name as the Record class
@@ -10,4 +10,3 @@ class RawRecord(BaseModel):
 
     id: Optional[str] = Field(alias="recordId")
     data: Dict[str, Any] = Field(alias="fields")
-   

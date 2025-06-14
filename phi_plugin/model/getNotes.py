@@ -59,7 +59,7 @@ class getNotes:
         """
         data = await readFile.FileReader(pluginDataPath / f"{user_id}_.json")
         if not data or not data.get("plugin_data"):
-            data:  = {
+            data: dict[Literal["plugin_data"], pluginData] = {
                 "plugin_data": {
                     "money": 0,
                     "sign_in": "Wed Apr 03 2024 23:03:52 GMT+0800 (中国标准时间)",
