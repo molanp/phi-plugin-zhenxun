@@ -1,37 +1,33 @@
-from nonebot import get_bot, require
-from nonebot.adapters import Event
+from typing import Any
 
-from .cls.Save import Save
-from .getSave import getSave
-
-require("nonebot_plugin_alconna")
-require("nonebot_plugin_uninfo")
-from nonebot_plugin_alconna import Image, Text
+from nonebot.internal.matcher import Matcher
+from nonebot_plugin_alconna import Image, Text, UniMessage
 from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.services.log import logger
 from zhenxun.utils.message import MessageUtils
-from zhenxun.utils.platform import PlatformUtils
 
 from ..config import PluginConfig
+from .cls.Save import Save
+from .getSave import getSave
 from .getUpdateSave import getUpdateSave
 
 
 class send:
     @classmethod
     async def send_with_At(
-        cls, e: Event, msg: list[Text | Image] | Text | str, quote=True
+        cls, e: Matcher, msg: Any, quote=True
     ):
         """
-        :param Event e: 事件对象
-        :param list[Text | Image] | Text msg: 消息内容
-        :param bool quote: 是否引用回复
+        :param e: 响应器对象
+        :param msg: 消息内容
+        :param quote: 是否引用回复
         """
-        await MessageUtils.build_message(msg).send(e, at_sender=True, reply=quote)  # type: ignore
+        await e.send(UniMessage(msg), at_sender=True, reply_to=quote)  # type: ignore
 
     @classmethod
     async def getsave_result(
-        cls, e: Event, session: Uninfo, ver, send=True
+        cls, e: Matcher, session: Uninfo, ver, send=True
     ) -> bool | Save:
         """
         检查存档部分
@@ -85,7 +81,9 @@ class send:
                 )
             return False
 
-        user_save = (await getUpdateSave.getNewSaveFromLocal(e, sessionToken))["save"]
+        user_save = (await getUpdateSave.getNewSaveFromLocal(e, session, sessionToken))[
+            "save"
+        ]
 
         if not user_save or (
             ver and (not user_save.Recordver or user_save.Recordver < ver)
@@ -99,20 +97,21 @@ class send:
         return user_save
 
     @classmethod
-    async def pick_send(cls, e: Event, session: Uninfo, msg: list[Text | Image]):
+    async def pick_send(cls, e: Matcher, msg: list[Text | Image]):
         """
         转发到私聊
 
         :param session: 会话对象
         :param list[Text | Image] | Text msg: 消息内容
         """
-        user = await PlatformUtils.get_user(get_bot(session.self_id), session.user.id)
         try:
-            await MessageUtils.alc_forward_msg(
-                msg,
-                session.self_id,
-                user.name if user else session.user.id,
-            ).send(e, reply=True)
+            await e.send(
+                MessageUtils.alc_forward_msg(
+                    msg,
+                    "80000000",
+                    "匿名消息",
+                )  # type: ignore
+            )
         except Exception as err:
             logger.error("消息转发失败", "phi-plugin", e=err)
             await cls.send_with_At(e, "转发失败QAQ！请尝试在私聊触发命令！")

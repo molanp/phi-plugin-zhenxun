@@ -50,11 +50,3 @@ class GameRecord:
         except Exception as e:
             logger.error("初始化记录失败", e=e)
             raise ValueError("初始化记录失败") from e
-
-    def __str__(self) -> str:
-        """
-        获取字符串表示
-
-        :return: 字符串表示
-        """
-        return f"GameRecord(version={self.version}, record_count={len(self.Record)})"

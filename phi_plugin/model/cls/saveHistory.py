@@ -51,6 +51,76 @@ class rksLineWithdataLine(rksLine, dataLine):
     pass
 
 
+def merge(m: list, n: list) -> list:
+    """
+    数组合并按照 date 排序并去重
+
+    :param m: 第一个数组
+    :param n: 第二个数组
+    :return: 合并后的数组
+    """
+    t = m + n
+    # 按照 date 排序
+    t.sort(key=lambda x: x["date"])
+
+    i = 1
+    while i < len(t) - 1:
+        # 因绘制折线图需要，需要保留同一值两端
+        if checkValue(t[i]["value"], t[i - 1]["value"]) and checkValue(
+            t[i]["value"], t[i + 1]["value"]
+        ):
+            t.pop(i)
+        else:
+            i += 1
+    return t
+
+
+def createHistory(
+    acc: float, score: int, date: datetime | str, fc: bool
+) -> tuple[float, int, datetime, bool]:
+    """
+    创建历史记录
+
+    :param acc: 准确度
+    :param score: 分数
+    :param date: 日期
+    :param fc: 是否全连
+    :return: 历史记录列表
+    """
+    return (round(acc, 4), score, Date(date), fc)
+
+
+def openHistory(data: list | tuple) -> HistoryModel:
+    """
+    展开信息
+
+    :param data:历史成绩
+    """
+    return {
+        "acc": data[0],
+        "score": data[1],
+        "date": Date(data[2]),
+        "fc": data[3],
+    }
+
+
+def checkValue(a: Any, b: Any):
+    """
+    比较两个数组
+
+    :param a: 第一个值
+    :param b: 第二个值
+    :return: bool
+    """
+    if not isinstance(a, list):
+        return a == b
+
+    if a is None or b is None:
+        return False
+
+    return all(a[i] == b[i] for i in range(len(a)))
+
+
 class saveHistory:
     scoreHistory: dict[
         str,
@@ -444,73 +514,3 @@ class saveHistory:
             "data_range": data_range,
             "data_date": data_date,
         }
-
-
-def merge(m: list, n: list) -> list:
-    """
-    数组合并按照 date 排序并去重
-
-    :param m: 第一个数组
-    :param n: 第二个数组
-    :return: 合并后的数组
-    """
-    t = m + n
-    # 按照 date 排序
-    t.sort(key=lambda x: x["date"])
-
-    i = 1
-    while i < len(t) - 1:
-        # 因绘制折线图需要，需要保留同一值两端
-        if checkValue(t[i]["value"], t[i - 1]["value"]) and checkValue(
-            t[i]["value"], t[i + 1]["value"]
-        ):
-            t.pop(i)
-        else:
-            i += 1
-    return t
-
-
-def createHistory(
-    acc: float, score: int, date: datetime | str, fc: bool
-) -> tuple[float, int, datetime, bool]:
-    """
-    创建历史记录
-
-    :param acc: 准确度
-    :param score: 分数
-    :param date: 日期
-    :param fc: 是否全连
-    :return: 历史记录列表
-    """
-    return (round(acc, 4), score, Date(date), fc)
-
-
-def openHistory(data: list | tuple) -> HistoryModel:
-    """
-    展开信息
-
-    :param data:历史成绩
-    """
-    return {
-        "acc": data[0],
-        "score": data[1],
-        "date": Date(data[2]),
-        "fc": data[3],
-    }
-
-
-def checkValue(a: Any, b: Any):
-    """
-    比较两个数组
-
-    :param a: 第一个值
-    :param b: 第二个值
-    :return: bool
-    """
-    if not isinstance(a, list):
-        return a == b
-
-    if a is None or b is None:
-        return False
-
-    return all(a[i] == b[i] for i in range(len(a)))

@@ -1,16 +1,14 @@
 from typing import Literal
 
-from nonebot import require
-
-require("nonebot_plugin_alconna")
 from nonebot_plugin_alconna import Image
+from nonebot_plugin_htmlrender import template_to_pic
 
 from ..config import PATH
 
 
 class picmodle:
     @classmethod
-    async def alias(cls, info) -> Image:
+    async def atlas(cls, info) -> Image:
         """曲目图鉴"""
         return await cls.common(
             "atlas",
@@ -110,11 +108,32 @@ class picmodle:
         return await cls.common("chap", data)
 
     @classmethod
-    async def common(cls, kind: str, data: dict) -> Image:
+    async def common(
+        cls,
+        kind: Literal[
+            "atlas",
+            "task",
+            "b19",
+            "arcgrosB19",
+            "update",
+            "tasks",
+            "lvsco",
+            "list",
+            "ill",
+            "chartInfo",
+            "guess",
+            "rand",
+            "help",
+            "chap",
+            "rankingList",
+            "clg",
+        ],
+        data: dict,
+    ) -> Image:
         """
-        :param {'alias'|'task'|'b19'|'arcgrosB19'|'update'|'tasks'|'lvsco'|'list'|'ill'|'chartInfo'|'guess'|'rand'|'help'|'chap'|'rankingList'|'clg'} kind: 类型
+        :param kind: 类型
         :param dict data: 数据
-        """  # noqa: E501
+        """
         return await cls.render(
             f"{kind}/{kind}",
             {
@@ -131,8 +150,6 @@ class picmodle:
         :param str path: 模板路径
         :param dict params: 渲染参数
         """
-        require("nonebot_plugin_htmlrender")
-        from nonebot_plugin_htmlrender import template_to_pic
 
         template_dir = PATH / "resources" / "html" / path
         pic = await template_to_pic(

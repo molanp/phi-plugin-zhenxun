@@ -7,6 +7,27 @@ from ..fCompute import fCompute
 from ..getInfo import getInfo
 
 
+def Rating(score: int | None, fc: bool):
+    if score is None:
+        return "NEW"
+    elif fc:
+        return "FC"
+    elif score >= 1000000:
+        return "phi"
+    elif score < 700000:
+        return "F"
+    elif score < 820000:
+        return "C"
+    elif score < 880000:
+        return "B"
+    elif score < 920000:
+        return "A"
+    elif score < 960000:
+        return "S"
+    else:
+        return "V"
+
+
 class LevelData(TypedDict):
     fc: bool
     """是否 Full Combo"""
@@ -84,24 +105,3 @@ class LevelRecordInfo:
             Date(self.date),
             self.fc,
         )
-
-
-def Rating(score: int | None, fc: bool):
-    if score is None:
-        return "NEW"
-    elif fc:
-        return "FC"
-    elif score >= 1000000:
-        return "phi"
-    elif score < 700000:
-        return "F"
-    elif score < 820000:
-        return "C"
-    elif score < 880000:
-        return "B"
-    elif score < 920000:
-        return "A"
-    elif score < 960000:
-        return "S"
-    else:
-        return "V"

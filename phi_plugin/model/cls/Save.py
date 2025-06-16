@@ -11,6 +11,30 @@ from ..makeRequest import OriSave
 from .LevelRecordInfo import LevelRecordInfo
 
 
+def checkLimit(record: LevelRecordInfo, limit: dict[str, dict[str, str | list[float]]]):
+    for lim in limit.values():
+        value = lim.get("value")
+        assert isinstance(value, list), (
+            f"Expected 'value' to be a list, got {type(value)}"
+        )
+        assert len(value) == 2, f"Expected 'value' to have 2 elements, got {len(value)}"
+        assert all(isinstance(x, int | float) for x in value), (
+            f"Expected all elements of 'value' to be numbers, got {value}"
+        )
+
+        match lim.get("type"):
+            case "acc":
+                if record.acc < value[0] or record.acc > value[1]:
+                    return False
+            case "score":
+                if record.score < value[0] or record.score > value[1]:
+                    return False
+            case "rks":
+                if record.rks < value[0] or record.rks > value[1]:
+                    return False
+    return True
+
+
 class statsRecord(TypedDict):
     title: str
     Rating: str
@@ -750,27 +774,3 @@ class Save:
         if challenge_rank % 100 == 0 and challenge_rank != 0:
             return True
         return challenge_rank % 1 != 0
-
-
-def checkLimit(record: LevelRecordInfo, limit: dict[str, dict[str, str | list[float]]]):
-    for lim in limit.values():
-        value = lim.get("value")
-        assert isinstance(value, list), (
-            f"Expected 'value' to be a list, got {type(value)}"
-        )
-        assert len(value) == 2, f"Expected 'value' to have 2 elements, got {len(value)}"
-        assert all(isinstance(x, int | float) for x in value), (
-            f"Expected all elements of 'value' to be numbers, got {value}"
-        )
-
-        match lim.get("type"):
-            case "acc":
-                if record.acc < value[0] or record.acc > value[1]:
-                    return False
-            case "score":
-                if record.score < value[0] or record.score > value[1]:
-                    return False
-            case "rks":
-                if record.rks < value[0] or record.rks > value[1]:
-                    return False
-    return True

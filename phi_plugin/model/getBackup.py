@@ -5,7 +5,7 @@ import shutil
 import zipfile
 
 import aiofiles
-from nonebot.adapters import Event
+from nonebot.internal.matcher import Matcher
 from nonebot.utils import run_sync
 import ujson as json
 
@@ -14,7 +14,8 @@ from zhenxun.services.log import logger
 from ..models import SstkData
 from ..utils import to_dict
 from .cls.saveHistory import saveHistory
-from .fCompute import fCompute
+
+# from .fCompute import fCompute
 from .path import backupPath, pluginDataPath, savePath
 from .progress_bar import ProgressBar
 from .send import send
@@ -33,7 +34,7 @@ def zip(zip_path: Path, files_path: Path):
 
 class getBackup:
     @staticmethod
-    async def backup(e: Event, send: "send") -> bool:
+    async def backup(e: Matcher, send: "send") -> bool:
         """备份"""
         zip_name = (
             f"{datetime.now().isoformat().replace(':', '-').replace('.', '-')}.zip"
@@ -128,10 +129,10 @@ class getBackup:
             )
 
             # 如果命令包含 'back' 则直接发送压缩包
-            if "back" in e.get_plaintext():
-                async with aiofiles.open(zip_path, "rb") as f:
-                    data = await f.read()
-                await fCompute.sendFile(e, data, zip_name)
+            # if "back" in e.get_receive().get_plaintext():
+            #     async with aiofiles.open(zip_path, "rb") as f:
+            #         data = await f.read()
+            #     await fCompute.sendFile(e, data, zip_name)
 
             return True
 

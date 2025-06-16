@@ -1,15 +1,11 @@
 from pathlib import Path
 from typing import Literal, TypedDict
 
-from nonebot import require
-
-from ..utils import to_dict
-
-require("nonebot_plugin_alconna")
 from nonebot_plugin_alconna import Image
 
 from zhenxun.services.log import logger
 
+from ..utils import to_dict
 from .getInfo import getInfo
 from .path import imgPath
 from .picmodle import picmodle
@@ -20,6 +16,7 @@ class SongsIllAtlasData(TypedDict):
     """曲绘地址"""
     illustrator: str | None
     """画师"""
+
 
 class pic:
     @staticmethod
@@ -34,7 +31,7 @@ class pic:
         if not data:
             return f"未找到{name}的相关曲目信息!QAQ"
         data["illustration"] = getInfo.getill(name)
-        return await picmodle.alias(data)
+        return await picmodle.atlas(data)
 
     @staticmethod
     async def GetSongsIllAtlas(name: str, data: SongsIllAtlasData | None = None):

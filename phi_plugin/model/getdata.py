@@ -2,14 +2,15 @@ import math
 from pathlib import Path
 from typing import Any, Literal
 
-from nonebot.adapters import Event
+from nonebot.internal.matcher import Matcher
+from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.services.log import logger
 from zhenxun.utils.platform import PlatformUtils
 
 from ..config import PluginConfig
 from ..lib.PhigrosUser import PhigrosUser
-from ..utils import Date, Event2session, to_dict
+from ..utils import Date, to_dict
 from .cls.LevelRecordInfo import LevelData
 from .cls.Save import Save
 from .cls.SongsInfo import SongsInfoObject
@@ -218,7 +219,7 @@ class _getdata:
         return await pic.GetSongsIllAtlas(name, data)
 
     async def buildingRecord(
-        self, e: Event, User: PhigrosUser
+        self, e: Matcher, session: Uninfo, User: PhigrosUser
     ) -> tuple[float, int] | Literal[False]:
         """
         更新存档
@@ -226,7 +227,6 @@ class _getdata:
         :param User: User
         :return: [rks变化值，note变化值]，失败返回 false
         """
-        session = await Event2session(e)
         old = await self.getsave(session.user.id)
         try:
             save_info = await User.getSaveInfo()
@@ -237,7 +237,8 @@ class _getdata:
             err = await User.buildRecord()
             if err:
                 await send.send_with_At(
-                    e, "以下曲目无信息，可能导致b19显示错误\n" + err.join("\n")
+                    e,
+                    "以下曲目无信息，可能导致b19显示错误\n",  # + err.join("\n")
                 )
         except Exception as err:
             if not PlatformUtils.is_qbot(session):

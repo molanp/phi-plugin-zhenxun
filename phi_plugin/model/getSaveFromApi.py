@@ -1,4 +1,4 @@
-from nonebot import require
+from nonebot_plugin_uninfo import Uninfo
 
 from ..models import userApiId
 from ..utils import to_dict
@@ -8,9 +8,6 @@ from .getFile import readFile
 from .makeRequest import makeRequest
 from .makeRequestFnc import makeRequestFnc
 from .path import apiSavePath
-
-require("nonebot_plugin_uninfo")
-from nonebot_plugin_uninfo import Uninfo
 
 
 class getSaveFromApi:

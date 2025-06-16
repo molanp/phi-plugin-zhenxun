@@ -27,5 +27,5 @@ class LevelRecord:
                 f'{{"fc":{str(self.fc).lower()},"score":{self.score},"acc":{self.acc}}}'
             )
         except Exception as e:
-            logger.error(f"生成字符串表示失败: {e}", "phi-plugin")
+            logger.error("生成字符串表示失败", "phi-plugin", e=e)
             raise ValueError(f"生成字符串表示失败: {e}")

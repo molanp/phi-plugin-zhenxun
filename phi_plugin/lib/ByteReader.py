@@ -28,7 +28,7 @@ class ByteReader:
         """
         return len(self.data) - self.position
 
-    def getByte(self) -> int:
+    def getByte(self) -> int:  # sourcery skip: class-extract-method
         """
         读取一个字节
 
@@ -56,8 +56,8 @@ class ByteReader:
         try:
             return base64.b64decode(self.data[self.position :])
         except Exception as e:
-            logger.error(f"解码 base64 数据失败: {e}", "phi-plugin")
-            raise ValueError(f"解码 base64 数据失败: {e}")
+            logger.error("解码 base64 数据失败", "phi-plugin", e=e)
+            raise ValueError(f"解码 base64 数据失败: {e}") from e
 
     def getShort(self) -> int:
         """
@@ -118,8 +118,8 @@ class ByteReader:
                 "<f", bytes(self.data[self.position - 4 : self.position])
             )[0]
         except Exception as e:
-            logger.error(f"读取浮点数失败: {e}", "phi-plugin")
-            raise ValueError(f"读取浮点数失败: {e}")
+            logger.error("读取浮点数失败", "phi-plugin", e=e)
+            raise ValueError(f"读取浮点数失败: {e}") from e
 
     def putFloat(self, num: float) -> None:
         """
@@ -131,8 +131,8 @@ class ByteReader:
             self.position += 4
             struct.pack_into("<f", self.data, self.position - 4, num)
         except Exception as e:
-            logger.error(f"写入浮点数失败: {e}", "phi-plugin")
-            raise ValueError(f"写入浮点数失败: {e}")
+            logger.error("写入浮点数失败", "phi-plugin", e=e)
+            raise ValueError(f"写入浮点数失败: {e}") from e
 
     def getVarInt(self) -> int:
         """
@@ -160,10 +160,7 @@ class ByteReader:
             for _ in range(num):
                 self.skipVarInt()
         else:
-            if self.data[self.position] < 0:
-                self.position += 2
-            else:
-                self.position += 1
+            self.position += 2 if self.data[self.position] < 0 else 1
 
     def getBytes(self) -> bytes:
         """
@@ -176,8 +173,8 @@ class ByteReader:
             self.position += length
             return bytes(self.data[self.position - length : self.position])
         except Exception as e:
-            logger.error(f"读取字节数组失败: {e}", "phi-plugin")
-            raise ValueError(f"读取字节数组失败: {e}")
+            logger.error("读取字节数组失败", "phi-plugin", e=e)
+            raise ValueError(f"读取字节数组失败: {e}") from e
 
     def getString(self) -> str:
         """
@@ -190,8 +187,8 @@ class ByteReader:
             self.position += length
             return self.data[self.position - length : self.position].decode("utf-8")
         except Exception as e:
-            logger.error(f"读取字符串失败: {e}", "phi-plugin")
-            raise ValueError(f"读取字符串失败: {e}")
+            logger.error("读取字符串失败", "phi-plugin", e=e)
+            raise ValueError(f"读取字符串失败: {e}") from e
 
     def putString(self, s: str) -> None:
         """
@@ -206,8 +203,8 @@ class ByteReader:
             self.data[self.position : self.position + len(b)] = b
             self.position += len(b)
         except Exception as e:
-            logger.error(f"写入字符串失败: {e}", "phi-plugin")
-            raise ValueError(f"写入字符串失败: {e}")
+            logger.error("写入字符串失败", "phi-plugin", e=e)
+            raise ValueError(f"写入字符串失败: {e}") from e
 
     def skipString(self) -> None:
         """
@@ -216,8 +213,8 @@ class ByteReader:
         try:
             self.position += self.getByte() + 1
         except Exception as e:
-            logger.error(f"跳过字符串失败: {e}", "phi-plugin")
-            raise ValueError(f"跳过字符串失败: {e}")
+            logger.error("跳过字符串失败", "phi-plugin", e=e)
+            raise ValueError(f"跳过字符串失败: {e}") from e
 
     def insertBytes(self, bytesData: bytes) -> None:
         """
@@ -227,13 +224,13 @@ class ByteReader:
         """
         try:
             result = bytearray(len(self.data) + len(bytesData))
-            result[0 : self.position] = self.data[0 : self.position]
+            result[: self.position] = self.data[: self.position]
             result[self.position : self.position + len(bytesData)] = bytesData
             result[self.position + len(bytesData) :] = self.data[self.position :]
             self.data = result
         except Exception as e:
-            logger.error(f"插入字节数组失败: {e}", "phi-plugin")
-            raise ValueError(f"插入字节数组失败: {e}")
+            logger.error("插入字节数组失败", "phi-plugin", e=e)
+            raise ValueError(f"插入字节数组失败: {e}") from e
 
     def replaceBytes(self, length: int, bytesData: bytes) -> None:
         """
@@ -247,12 +244,12 @@ class ByteReader:
                 self.data[self.position : self.position + length] = bytesData
                 return
             result = bytearray(len(self.data) + len(bytesData) - length)
-            result[0 : self.position] = self.data[0 : self.position]
+            result[: self.position] = self.data[: self.position]
             result[self.position : self.position + len(bytesData)] = bytesData
             result[self.position + len(bytesData) :] = self.data[
                 self.position + length :
             ]
             self.data = result
         except Exception as e:
-            logger.error(f"替换字节数组失败: {e}", "phi-plugin")
-            raise ValueError(f"替换字节数组失败: {e}")
+            logger.error("替换字节数组失败", "phi-plugin", e=e)
+            raise ValueError(f"替换字节数组失败: {e}") from e

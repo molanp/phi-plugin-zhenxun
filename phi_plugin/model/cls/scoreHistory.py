@@ -6,6 +6,25 @@ from ..fCompute import fCompute
 from ..getInfo import getInfo
 
 
+def Rating(score: int, fc: bool):
+    if fc:
+        return "FC"
+    elif score >= 1000000:
+        return "phi"
+    elif score < 700000:
+        return "F"
+    elif score < 820000:
+        return "C"
+    elif score < 880000:
+        return "B"
+    elif score < 920000:
+        return "A"
+    elif score < 960000:
+        return "S"
+    else:
+        return "V"
+
+
 class scoreHistory:
     @staticmethod
     def create(acc: float, score: int, date: datetime, fc: bool):
@@ -90,22 +109,3 @@ class scoreHistory:
         :return: 该成绩的日期
         """
         return Date(data[2])
-
-
-def Rating(score: int, fc: bool):
-    if fc:
-        return "FC"
-    elif score >= 1000000:
-        return "phi"
-    elif score < 700000:
-        return "F"
-    elif score < 820000:
-        return "C"
-    elif score < 880000:
-        return "B"
-    elif score < 920000:
-        return "A"
-    elif score < 960000:
-        return "S"
-    else:
-        return "V"

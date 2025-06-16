@@ -1,6 +1,3 @@
-from .SaveManager import SaveManager
-
-
 class Util:
     """工具类"""
 

@@ -1,10 +1,10 @@
-from nonebot.adapters import Event
+from nonebot.internal.matcher import Matcher
+from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.services.log import logger
 
 from ..config import PluginConfig
 from ..models import banGroup
-from ..utils import Event2session
 from .getSave import getSave
 from .makeRequest import makeRequest
 from .makeRequestFnc import makeRequestFnc
@@ -17,8 +17,7 @@ class getBanGroup:
         return await banGroup.getStatus(group_id, func)
 
     @staticmethod
-    async def get(e: Event, func: str) -> bool:
-        session = await Event2session(e)
+    async def get(e: Matcher, session: Uninfo, func: str) -> bool:
         group = session.scene.id
         if not group:
             return False

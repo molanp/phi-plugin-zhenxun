@@ -1,19 +1,21 @@
+from pathlib import Path
 import shutil
 
 from nonebot import get_driver
+import nonebot
 from nonebot.plugin import PluginMetadata
 
 from zhenxun.configs.utils import PluginExtraData
 from zhenxun.services.log import logger
 
-from .config import CONFIG, VERSION, PATH
+from .config import CONFIG, PATH, VERSION, PluginConfig
 from .model.path import configPath
 
 __plugin_meta__ = PluginMetadata(
     name="phi-plugin",
     description="Phigros查分及娱乐插件",
-    usage="""
-
+    usage=f"""
+    发送 {PluginConfig.get('cmdhead')}帮助 获取详细帮助信息
     """.strip(),
     extra=PluginExtraData(
         author="molanp",
@@ -47,3 +49,5 @@ async def handle_connect():
                 shutil.copy2(item, destination)
         shutil.rmtree(default_config_path)
     logger.success("配置文件初始化成功", "phi-plugin")
+
+nonebot.load_plugins(str(Path(__file__).parent.resolve() / "apps"))

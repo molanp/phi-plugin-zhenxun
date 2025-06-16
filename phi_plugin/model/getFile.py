@@ -109,14 +109,12 @@ class readFile:
                     return content
                 case _:
                     logger.error(
-                        f"[phi-plugin][Read]不支持的文件格式: {style}:{file_path}",
-                        "phi-plugin_Read",
+                        f"不支持的文件格式: {style}:{file_path}",
+                        "phi-plugin",
                     )
                     return content
         except Exception as e:
-            logger.error(
-                f"[phi-plugin][Read]读取文件失败: {file_path}", "phi-plugin_Read", e=e
-            )
+            logger.error(f"读取文件失败: {file_path}", "phi-plugin", e=e)
             return False
 
     @classmethod
@@ -156,17 +154,15 @@ class readFile:
                     data = data
                 case _:
                     logger.error(
-                        f"[phi-plugin][Set]不支持的文件格式: {style}:{file_path}",
-                        "phi-plugin_Set",
+                        f"不支持的文件格式: {style}:{file_path}",
+                        "phi-plugin",
                     )
                     return False
             async with aiofiles.open(file_path, "w", encoding="utf-8") as f:
                 await f.write(str(data))
             return True
         except Exception as e:
-            logger.error(
-                f"[phi-plugin][Set]写入文件失败: {file_path}", "phi-plugin_Set", e=e
-            )
+            logger.error(f"写入文件失败: {file_path}", "phi-plugin", e=e)
             return False
 
     @classmethod
@@ -177,9 +173,7 @@ class readFile:
             Path(path).unlink()
             return True
         except Exception as e:
-            logger.error(
-                f"[phi-plugin][Del] 删除失败: {path}", "phi-plugin_DelFile", e=e
-            )
+            logger.error(f"删除失败: {path}", "phi-plugin", e=e)
             return False
 
     @classmethod
@@ -201,9 +195,7 @@ class readFile:
             Path(dir_path).rmdir()
             return True
         except Exception as e:
-            logger.error(
-                f"[phi-plugin][DelDir] 删除失败: {dir_path}", "phi-plugin_DelDir", e=e
-            )
+            logger.error(f"删除失败: {dir_path}", "phi-plugin", e=e)
             return False
 
     @classmethod
@@ -334,8 +326,8 @@ class readFile:
                 await getRksRank.addUserRks(session_token, rks)
             except Exception as err:
                 logger.error(
-                    "[phi-plugin][数据转移失败]",
-                    f"跳过该用户 {user_id} {session_token}",
+                    "数据转移失败: 跳过该用户 {user_id} {session_token}",
+                    "phi-plugin",
                     e=err,
                 )
             already += 1

@@ -73,7 +73,7 @@ class SaveManager:
                 "Accept": "application/json",
             },
         )
-        return response["results"]
+        return response.json()["results"]
 
     @staticmethod
     async def saveCheck(session: str) -> list[dict]:
@@ -91,7 +91,7 @@ class SaveManager:
         """
         array = await SaveManager.saveArray(session)
         if not array:
-            logger.error("TK 对应存档列表为空，请检查是否同步存档QAQ！")
+            logger.error("TK 对应存档列表为空，请检查是否同步存档QAQ！", "phi-plugin")
             raise ValueError("TK 对应存档列表为空，请检查是否同步存档QAQ！")
         results = []
         for item in array:

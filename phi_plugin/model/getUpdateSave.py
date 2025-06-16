@@ -1,10 +1,14 @@
 from typing import Literal
 
-from nonebot import require
+from nonebot.internal.matcher import Matcher
+from nonebot_plugin_uninfo import Uninfo
+
+from zhenxun.services.log import logger
+from zhenxun.utils.platform import PlatformUtils
 
 from ..config import PluginConfig
 from ..lib.PhigrosUser import PhigrosUser
-from ..utils import Event2session, to_dict
+from ..utils import to_dict
 from .cls.Save import Save
 from .getInfo import getInfo
 from .getNotes import getNotes
@@ -13,13 +17,6 @@ from .getSaveFromApi import getSaveFromApi
 from .makeRequest import makeRequest
 from .makeRequestFnc import makeRequestFnc
 from .send import send
-
-require("nonebot_plugin_uninfo")
-from nonebot.adapters import Event
-from nonebot_plugin_uninfo import Uninfo
-
-from zhenxun.services.log import logger
-from zhenxun.utils.platform import PlatformUtils
 
 
 class getUpdateSave:
@@ -48,8 +45,9 @@ class getUpdateSave:
         return {"save": result, "added_rks_notes": added_rks_notes}
 
     @classmethod
-    async def getNewSaveFromLocal(cls, e: Event, token: str | None = None) -> dict:
-        session = await Event2session(e)
+    async def getNewSaveFromLocal(
+        cls, e: Matcher, session: Uninfo, token: str | None = None
+    ) -> dict:
         old = await getSave.getSave(session.user.id)
         token = token or old.session if old else None
         try:
@@ -69,14 +67,12 @@ class getUpdateSave:
             logger.error("信息更新失败", "phi-plugin", e=err)
             raise err
         try:
-            await getSave.putSave(session.user.id, User)
+            await getSave.putSave(session.user.id, to_dict(User))
         except Exception as err:
             await send.send_with_At(e, f"保存存档失败!\n{err}")
             logger.error("保存存档失败", "phi-plugin", e=err)
             raise err
-        now = await Save().constructor(
-            User
-        )  # TODO:在py里似乎需要转字典传入,使用model_dump?
+        now = await Save().constructor(to_dict(User))
 
         if old and (old.session and old.session != User.session):
             await send.send_with_At(

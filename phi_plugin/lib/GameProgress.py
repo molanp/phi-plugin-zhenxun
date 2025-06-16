@@ -36,11 +36,3 @@ class GameProgress:
         self.chapter8UnlockSecondPhase = Util.getBit(tem, 1)
         self.chapter8Passed = Util.getBit(tem, 2)
         self.chapter8SongUnlocked = reader.getByte()
-
-    def __str__(self) -> str:
-        """
-        获取字符串表示
-
-        :return: 字符串表示
-        """
-        return f"GameProgress(completed={self.completed}, money={self.money})"

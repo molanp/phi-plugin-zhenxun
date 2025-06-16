@@ -1,25 +1,21 @@
 import asyncio
+from datetime import datetime
 from pathlib import Path
 import random
+import re
 from typing import Literal
 
-from nonebot import require
-from nonebot_plugin_uninfo import Uninfo
-
-from .constNum import MAX_DIFFICULTY
-from .getInfo import getInfo
-from .send import send
-
-require("nonebot_plugin_alconna")
-from datetime import datetime
-import re
-
-from nonebot.adapters import Event
+from nonebot.internal.matcher import Matcher
 from nonebot_plugin_alconna import File, UniMessage
+from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.models.level_user import LevelUser
 from zhenxun.services.log import logger
 from zhenxun.utils.rules import ensure_group
+
+from .constNum import MAX_DIFFICULTY
+from .getInfo import getInfo
+from .send import send
 
 
 class fCompute:
@@ -56,10 +52,10 @@ class fCompute:
             return str(ans)
 
     @staticmethod
-    async def sendFile(e: Event, file: bytes, filename: str):
+    async def sendFile(e: Matcher, file: bytes, filename: str):
         """发送文件"""
         try:
-            await UniMessage(File(raw=file, name=filename)).send(e)
+            await send.send_with_At(e, UniMessage(File(raw=file, name=filename)))
         except Exception as err:
             logger.error(f"文件上传错误: {err}")
             await send.send_with_At(e, f"文件上传错误: {err}")
