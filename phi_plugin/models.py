@@ -1,4 +1,5 @@
-from typing import ClassVar
+from datetime import datetime, timedelta
+from typing import Any, ClassVar
 
 from tortoise import fields
 
@@ -8,7 +9,7 @@ from zhenxun.services.db_context import Model
 class SstkData(Model):
     id = fields.IntField(pk=True, generated=True, auto_increment=True)
     """自增id"""
-    uid = fields.CharField(255, description="用户uid")
+    uid = fields.CharField(255, description="用户uid", unique=True)
     """用户uid"""
     sessionToken = fields.CharField(255, description="用户SessionToken")
     """用户sstk"""
@@ -46,19 +47,16 @@ class SstkData(Model):
         return data.sessionToken if data else None
 
     @classmethod
-    async def add_sstk(cls, uid: str, sessionToken: str) -> bool:
+    async def set_sstk(cls, uid: str, sessionToken: str) -> bool:
         """
-        添加用户数据
+        添加/设置用户数据
         :param uid: 用户uid
         :param sessionToken: 用户sessionToken
-        :return: 是否添加成功
         """
-        data = await cls.get_or_none(uid=uid)
-        if data:
-            data.sessionToken = sessionToken
-        else:
-            data = cls(uid=uid, sessionToken=sessionToken)
-        await data.save()
+        await cls.update_or_create(
+            uid=uid,
+            defaults={"sessionToken": sessionToken},
+        )
         return True
 
     @classmethod
@@ -68,11 +66,8 @@ class SstkData(Model):
         :param uid: 用户uid
         :return: 是否删除成功
         """
-        data = await cls.get_or_none(uid=uid)
-        if data:
-            await data.delete()
-            return True
-        return False
+        deleted = await cls.filter(uid=uid).delete()
+        return deleted > 0
 
     @classmethod
     async def ban_sstk(cls, uid: str) -> bool:
@@ -81,12 +76,8 @@ class SstkData(Model):
         :param uid: 用户uid
         :return: 是否封禁成功
         """
-        data = await cls.get_or_none(uid=uid, is_banned=False)
-        if data:
-            data.is_banned = True
-            await data.save()
-            return True
-        return False
+        updated = await cls.filter(uid=uid, is_banned=False).update(is_banned=True)
+        return updated > 0
 
     @classmethod
     async def unban_sstk(cls, uid: str) -> bool:
@@ -95,12 +86,8 @@ class SstkData(Model):
         :param uid: 用户uid
         :return: 是否解封成功
         """
-        data = await cls.get_or_none(uid=uid, is_banned=True)
-        if data:
-            data.is_banned = False
-            await data.save()
-            return True
-        return False
+        updated = await cls.filter(uid=uid, is_banned=True).update(is_banned=False)
+        return updated > 0
 
     @classmethod
     async def is_ban_sessionToken(cls, sessionToken: str) -> bool:
@@ -125,7 +112,7 @@ class SstkData(Model):
 class RksRank(Model):
     id = fields.IntField(pk=True, generated=True, auto_increment=True)
     """自增ID"""
-    sessionToken = fields.CharField(255, description="用户SessionToken")
+    sessionToken = fields.CharField(255, description="用户SessionToken", unique=True)
     """关联用户的SessionToken"""
     rks = fields.FloatField(description="用户RKS分数")
     """用户的RKS数值"""
@@ -158,12 +145,10 @@ class RksRank(Model):
         :param sessionToken: 用户SessionToken
         :param rks: 用户RKS
         """
-        data = await cls.get_or_none(sessionToken=sessionToken)
-        if data:
-            data.rks = rks
-        else:
-            data = cls(sessionToken=sessionToken, rks=rks)
-        await data.save()
+        await cls.update_or_create(
+            sessionToken=sessionToken,
+            defaults={"rks": rks},
+        )
         return True
 
     @classmethod
@@ -173,11 +158,8 @@ class RksRank(Model):
         :param sessionToken: 用户SessionToken
         :return: 是否删除成功
         """
-        data = await cls.get_or_none(sessionToken=sessionToken)
-        if data:
-            await data.delete()
-            return True
-        return False
+        deleted = await cls.filter(sessionToken=sessionToken).delete()
+        return deleted > 0
 
     @classmethod
     async def getAllRank(cls) -> list[dict]:
@@ -217,7 +199,7 @@ class RksRank(Model):
 class userApiId(Model):
     id = fields.IntField(pk=True, generated=True, auto_increment=True)
     """自增id"""
-    uid = fields.CharField(255, description="用户uid")
+    uid = fields.CharField(255, description="用户uid", unique=True)
     """用户uid"""
     apiId = fields.CharField(255, description="用户的apiIId")
     """用户的apiId"""
@@ -230,13 +212,11 @@ class userApiId(Model):
         ]
 
     @classmethod
-    async def add_user_apiId(cls, user_id, apiId) -> bool:
-        data = await cls.get_or_none(uid=user_id)
-        if data:
-            data.apiId = apiId
-        else:
-            data = cls(uid=user_id, apiId=apiId)
-        await data.save()
+    async def set_user_apiId(cls, user_id, apiId) -> bool:
+        await cls.update_or_create(
+            uid=user_id,
+            defaults={"apiId": apiId},
+        )
         return True
 
     @classmethod
@@ -247,11 +227,8 @@ class userApiId(Model):
     @classmethod
     async def del_user_apiId(cls, user_id) -> bool:
         """删除 user_id 号对应的 apiId"""
-        data = await cls.get_or_none(uid=user_id)
-        if data:
-            await data.delete()
-            return True
-        return False
+        deleted = await cls.filter(uid=user_id).delete()
+        return deleted > 0
 
 
 class banGroup(Model):
@@ -269,3 +246,80 @@ class banGroup(Model):
     @classmethod
     async def getStatus(cls, group_id: str, func: str) -> bool:
         return await cls.filter(group_id=group_id, func=func).exists()
+
+    @classmethod
+    async def add(cls, group_id: str, func: str) -> bool:
+        if await cls.getStatus(group_id, func):
+            return False
+        await cls.create(group_id=group_id, func=func)
+        return True
+
+    @classmethod
+    async def remove(cls, group_id: str, func: str) -> bool:
+        deleted = await cls.filter(group_id=group_id, func=func).delete()
+        return deleted > 0
+
+
+def calculate_expiration():
+    """计算过期时间"""
+    now = datetime.now()
+    today_8am = now.replace(hour=8, minute=0, second=0, microsecond=0)
+
+    return today_8am + timedelta(days=1)
+
+
+def is_expired(expiration_time: datetime) -> bool:
+    """
+    判断指定时间是否已过期
+    """
+    now = datetime.now()
+    if expiration_time.tzinfo is not None:
+        expiration_time = expiration_time.replace(tzinfo=None)
+    return now > expiration_time
+
+
+class jrrpModel(Model):
+    id = fields.IntField(pk=True, generated=True, auto_increment=True)
+    """自增id"""
+    uid = fields.CharField(255, description="用户id", unique=True)
+    """用户id"""
+    content = fields.JSONField(description="今日人品内容", field_type=list[Any])
+    """今日人品内容"""
+    expiration_time = fields.DatetimeField(
+        description="记录过期时间", default=calculate_expiration
+    )
+    """过期时间"""
+
+    class Meta:  # type: ignore
+        table = "phiPlugin_jrrp"
+        table_description = "Phi 今日人品记录表"
+
+    @classmethod
+    async def get_jrrp(cls, user_id: str) -> list:
+        """
+        获取今日人品
+
+        :param user_id: 用户id
+        """
+        jrrp = await cls.get_or_none(uid=user_id)
+        if jrrp is None:
+            return []
+        if is_expired(jrrp.expiration_time):
+            await cls.del_jrrp(user_id)
+            return []
+        assert isinstance(jrrp.content, list)
+        return jrrp.content
+
+    @classmethod
+    async def set_jrrp(cls, user_id: str, content: list) -> bool:
+        await cls.update_or_create(
+            uid=user_id,
+            defaults={"content": content},
+        )
+        return True
+
+    @classmethod
+    async def del_jrrp(cls, user_id: str) -> bool:
+        """删除 user_id 号对应的 apiId"""
+        deleted = await cls.filter(uid=user_id).delete()
+        return deleted > 0

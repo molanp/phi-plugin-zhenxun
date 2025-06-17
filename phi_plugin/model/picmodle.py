@@ -127,6 +127,7 @@ class picmodle:
             "chap",
             "rankingList",
             "clg",
+            "jrrp"
         ],
         data: dict,
     ) -> Image:
