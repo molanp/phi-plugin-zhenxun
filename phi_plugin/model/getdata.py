@@ -2,7 +2,6 @@ import math
 from pathlib import Path
 from typing import Any, Literal
 
-from nonebot.internal.matcher import Matcher
 from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.services.log import logger
@@ -11,8 +10,8 @@ from zhenxun.utils.platform import PlatformUtils
 from ..config import PluginConfig
 from ..lib.PhigrosUser import PhigrosUser
 from ..utils import Date, to_dict
+from .cls.common import Save
 from .cls.LevelRecordInfo import LevelData
-from .cls.Save import Save
 from .cls.SongsInfo import SongsInfoObject
 from .constNum import Level
 from .getFile import _SUPPORTED_FORMATS, readFile
@@ -25,26 +24,26 @@ from .picmodle import picmodle
 from .send import send
 
 
-class _getdata:
-    def __init__(self):
-        self.Level = getInfo.Level
-        """难度映射"""
-        self.avatarid = getInfo.avatarid
-        """头像id"""
-        self.tips = getInfo.Tips
-        """Tips"""
-        self.ori_info = getInfo.ori_info
-        """原版信息"""
-        self.songsid = getInfo.songsid
-        """通过id获取曲名"""
-        self.idssong = getInfo.idssong
-        """原曲名称获取id"""
-        self.illlist = getInfo.illlist
-        """含有曲绘的曲目列表，原曲名称"""
-        self.songlist = getInfo.songlist
-        """所有曲目曲名列表"""
+class getdata:
+    Level = getInfo.Level
+    """难度映射"""
+    avatarid = getInfo.avatarid
+    """头像id"""
+    tips = getInfo.Tips
+    """Tips"""
+    ori_info = getInfo.ori_info
+    """原版信息"""
+    songsid = getInfo.songsid
+    """通过id获取曲名"""
+    idssong = getInfo.idssong
+    """原曲名称获取id"""
+    illlist = getInfo.illlist
+    """含有曲绘的曲目列表，原曲名称"""
+    songlist = getInfo.songlist
+    """所有曲目曲名列表"""
 
-    def fuzzysongsnick(self, mic: str, Distance: float = 0.85):
+    @staticmethod
+    async def fuzzysongsnick(mic: str, Distance: float = 0.85):
         """
         根据参数模糊匹配返回原曲名称
 
@@ -52,10 +51,11 @@ class _getdata:
         :param Distance: 匹配阈值，猜词0.95
         :return: 原曲名称
         """
-        return getInfo.fuzzysongsnick(mic, Distance)
+        return await getInfo.fuzzysongsnick(mic, Distance)
 
+    @staticmethod
     async def info(
-        self, song: str | None = None, original: bool = False
+        song: str | None = None, original: bool = False
     ) -> SongsInfoObject | dict[str, SongsInfoObject] | None:
         """
         :param song: 原曲曲名
@@ -65,8 +65,8 @@ class _getdata:
             return await getInfo.info(song, original)
         return await getInfo.all_info(original)
 
+    @staticmethod
     async def getData(
-        self,
         fileName: str,
         fatherPath: str | Path,
         style: _SUPPORTED_FORMATS | None = None,
@@ -80,8 +80,8 @@ class _getdata:
         """
         return await readFile.FileReader(Path(fatherPath) / fileName, style)
 
+    @staticmethod
     async def setData(
-        self,
         fileName: str,
         data: Any,
         fatherPath: str | Path,
@@ -97,7 +97,8 @@ class _getdata:
         """
         return await readFile.SetFile(Path(fatherPath) / fileName, data, style)
 
-    async def delData(self, fileName: str, fatherPath: str | Path):
+    @staticmethod
+    async def delData(fileName: str, fatherPath: str | Path):
         """
         删除 chos.yaml 文件
 
@@ -106,7 +107,8 @@ class _getdata:
         """
         return await readFile.DelFile(Path(fatherPath) / fileName)
 
-    async def getsave(self, id: str):
+    @staticmethod
+    async def getsave(id: str):
         """
         获取user_id对应的存档文件
 
@@ -114,7 +116,8 @@ class _getdata:
         """
         return await getSave.getSave(id)
 
-    async def putsave(self, id: str, data: dict):
+    @staticmethod
+    async def putsave(id: str, data: dict):
         """
         保存user_id对应的存档文件
 
@@ -122,7 +125,8 @@ class _getdata:
         """
         return await getSave.putSave(id, data)
 
-    async def delsave(self, id: str):
+    @staticmethod
+    async def delsave(id: str):
         """
         删除user_id对应的存档文件
 
@@ -130,15 +134,17 @@ class _getdata:
         """
         return await getSave.delSave(id)
 
-    async def delpluginData(self, id: str):
+    @staticmethod
+    async def delpluginData(id: str):
         """
         删除user_id对应的娱乐数据
 
         :param id: user_id
         """
-        return self.delData(f"{id}.json", pluginDataPath)
+        return await getdata.delData(f"{id}.json", pluginDataPath)
 
-    async def getpluginData(self, id: str):
+    @staticmethod
+    async def getpluginData(id: str):
         """
         获取user_id对应的娱乐数据
 
@@ -146,7 +152,8 @@ class _getdata:
         """
         return await getNotes.getPluginData(id)
 
-    async def putpluginData(self, id: str, data: dict):
+    @staticmethod
+    async def putpluginData(id: str, data: dict):
         """
         保存user_id对应的娱乐数据
 
@@ -155,7 +162,8 @@ class _getdata:
         """
         return await getNotes.putPluginData(id, data)
 
-    async def getNotesData(self, id: str, islock: bool = False):
+    @staticmethod
+    async def getNotesData(id: str, islock: bool = False):
         """
         获取并初始化 id 插件相关数据
 
@@ -165,7 +173,8 @@ class _getdata:
         """
         return await getNotes.getNotesData(id, islock)
 
-    def getimg(self, img: str, style: str = "png"):
+    @staticmethod
+    def getimg(img: str, style: str = "png"):
         """
         获取本地图片
 
@@ -174,7 +183,8 @@ class _getdata:
         """
         return pic.getimg(img, style)
 
-    async def getDan(self, id: str):
+    @staticmethod
+    async def getDan(id: str):
         """
         获取玩家 Dan 数据
 
@@ -182,16 +192,18 @@ class _getdata:
         """
         return await getSave.getDan(id)
 
-    def songsnick(self, mic: str):
+    @staticmethod
+    async def songsnick(mic: str):
         """
         匹配歌曲名称，根据参数返回原曲名称
 
         :param mic: 别名
         :return: 原曲名称
         """
-        return getInfo.songsnick(mic)
+        return await getInfo.songsnick(mic)
 
-    async def setnick(self, mic: str, nick: str):
+    @staticmethod
+    async def setnick(mic: str, nick: str):
         """
         设置别名
 
@@ -200,7 +212,8 @@ class _getdata:
         """
         return await getInfo.setnick(mic, nick)
 
-    async def GetSongsInfoAtlas(self, name: str, data: Any):
+    @staticmethod
+    async def GetSongsInfoAtlas(name: str, data: Any):
         """
         获取歌曲图鉴，曲名为原名
 
@@ -209,7 +222,8 @@ class _getdata:
         """
         return await pic.GetSongsInfoAtlas(name, data)
 
-    async def GetSongsIllAtlas(self, name: str, data: SongsIllAtlasData | None = None):
+    @staticmethod
+    async def GetSongsIllAtlas(name: str, data: SongsIllAtlasData | None = None):
         """
         通过曲目获取曲目图鉴
 
@@ -218,8 +232,9 @@ class _getdata:
         """
         return await pic.GetSongsIllAtlas(name, data)
 
+    @staticmethod
     async def buildingRecord(
-        self, e: Matcher, session: Uninfo, User: PhigrosUser
+        matcher, session: Uninfo, User: PhigrosUser
     ) -> tuple[float, int] | Literal[False]:
         """
         更新存档
@@ -227,36 +242,36 @@ class _getdata:
         :param User: User
         :return: [rks变化值，note变化值]，失败返回 false
         """
-        old = await self.getsave(session.user.id)
+        old = await getdata.getsave(session.user.id)
         try:
             save_info = await User.getSaveInfo()
             if old and Date(old.saveInfo["modifiedAt"]["iso"]) == Date(
                 save_info["modifiedAt"]["iso"]
             ):
                 return (0, 0)
-            err = await User.buildRecord()
-            if err:
-                await send.send_with_At(
-                    e,
-                    "以下曲目无信息，可能导致b19显示错误\n",  # + err.join("\n")
-                )
+            await User.buildRecord()
+            # if not err:
+            #     await send.sendWithAt(
+            #         matcher,
+            #         "以下曲目无信息，可能导致b19显示错误\n",  # + err.join("\n")
+            #     )
         except Exception as err:
             if not PlatformUtils.is_qbot(session):
-                await send.send_with_At(e, f"更新失败！QAQ\n{err}")
+                await send.sendWithAt(matcher, f"更新失败！QAQ\n{err}")
             else:
-                await send.send_with_At(e, "更新失败！QAQ\n请稍后重试")
+                await send.sendWithAt(matcher, "更新失败！QAQ\n请稍后重试")
             logger.error("更新失败！QAQ", "phi-plugin", e=err)
             return False
         try:
-            await self.putsave(session.user.id, to_dict(User))
+            await getdata.putsave(session.user.id, to_dict(User))
         except Exception as err:
-            await send.send_with_At(e, f"保存存档失败!\n{err}")
+            await send.sendWithAt(matcher, f"保存存档失败!\n{err}")
             logger.error("保存存档失败", "phi-plugin", e=err)
             return False
         now = await Save().constructor(to_dict(User))
         if old and (old.session and old.session != User.session):
-            await send.send_with_At(
-                e,
+            await send.sendWithAt(
+                matcher,
                 "检测到新的sessionToken，将自动更换绑定。如果需要删除统计"
                 f"记录请 ⌈{PluginConfig.get('cmdhead')}"
                 "unbind⌋ 进行解绑哦！",
@@ -312,7 +327,7 @@ class _getdata:
                                         "reward"
                                     ]
                                     add_money += task[i]["reward"]
-        await self.putpluginData(session.user.id, pluginData)
+        await getdata.putpluginData(session.user.id, pluginData)
         # rks变化
         add_rks = (
             now.saveInfo["summary"]["rankingScore"]
@@ -322,45 +337,53 @@ class _getdata:
         )
         return (add_rks, add_money)
 
-    async def getb19(self, data: dict):
+    @staticmethod
+    async def getb19(data: dict):
         """获取best19图片"""
         return await picmodle.b19(data)
 
-    async def getupdate(self, data: dict):
+    @staticmethod
+    async def getupdate(data: dict):
         """获取update图片"""
         return await picmodle.update(data)
 
-    async def gettasks(self, data: dict):
+    @staticmethod
+    async def gettasks(data: dict):
         """获取任务列表图片"""
         return await picmodle.tasks(data)
 
-    async def getuser_info(self, data: dict, kind: int):
+    @staticmethod
+    async def getuser_info(data: dict, kind: int):
         """获取个人信息图片"""
         return await picmodle.user_info(data, kind)
 
-    async def getlvsco(self, data: dict):
+    @staticmethod
+    async def getlvsco(data: dict):
         """获取定级区间成绩"""
         return await picmodle.lvsco(data)
 
-    async def getsingle(self, data: dict):
+    @staticmethod
+    async def getsingle(data: dict):
         """获取单曲成绩"""
         return await picmodle.score(data)
 
-    async def getillpicmodle(self, data: dict):
+    @staticmethod
+    async def getillpicmodle(data: dict):
         """获取曲绘图鉴"""
         return await picmodle.ill(data)
 
-    async def getguess(self, data: dict):
+    @staticmethod
+    async def getguess(data: dict):
         """获取猜曲绘图片"""
         return await picmodle.guess(data)
 
-    async def getrand(self, data: dict):
+    @staticmethod
+    async def getrand(data: dict):
         """获取随机曲目图片"""
         return await picmodle.rand(data)
 
-    async def getill(
-        self, name: str, kind: Literal["common", "blur", "low"] = "common"
-    ):
+    @staticmethod
+    async def getill(name: str, kind: Literal["common", "blur", "low"] = "common"):
         """
         获取曲绘，返回地址
 
@@ -370,34 +393,38 @@ class _getdata:
         """
         return await getInfo.getill(name, kind)
 
-    def idgetavatar(self, id: str):
+    @staticmethod
+    async def idgetavatar(id: str):
         """
         通过id获得头像文件名称
 
         :param id: id
         :return: file name
         """
-        return getInfo.idgetavatar(id)
+        return await getInfo.idgetavatar(id)
 
-    def idgetsong(self, id: str) -> str | None:
+    @staticmethod
+    async def idgetsong(id: str) -> str | None:
         """
         根据曲目id获取原名
 
         :param str id: 曲目id
         :return: 原名
         """
-        return getInfo.idgetsong(id)
+        return await getInfo.idgetsong(id)
 
-    def SongGetId(self, song: str) -> str | None:
+    @staticmethod
+    async def SongGetId(song: str) -> str | None:
         """
         通过原曲曲目获取曲目id
 
         :param str song: 原曲曲名
         :return: 曲目id
         """
-        return getInfo.SongGetId(song)
+        return await getInfo.SongGetId(song)
 
-    def getrks(self, acc: float, difficulty: int):
+    @staticmethod
+    def getrks(acc: float, difficulty: int):
         """
         计算等效rks
 
@@ -415,7 +442,8 @@ class _getdata:
             # 非满分计算公式 [(((acc - 55) / 45) ^ 2) * 原曲定数]
             return difficulty * (((acc - 55) / 45) ** 2)
 
-    def comsuggest(self, rks: float, difficulty: int, count: int | None = None):
+    @staticmethod
+    def comsuggest(rks: float, difficulty: int, count: int | None = None):
         """
         计算所需acc
 
@@ -466,6 +494,3 @@ def add_new_score(
                             pluginData["plugin_data"]["money"] += task[i]["reward"]
                             add_money += task[i]["reward"]
     return add_money
-
-
-getdata = _getdata()

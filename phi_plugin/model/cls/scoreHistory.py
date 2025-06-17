@@ -1,28 +1,9 @@
 from datetime import datetime
 from typing import Literal
 
-from ...utils import Date
+from ...utils import Date, Rating
 from ..fCompute import fCompute
 from ..getInfo import getInfo
-
-
-def Rating(score: int, fc: bool):
-    if fc:
-        return "FC"
-    elif score >= 1000000:
-        return "phi"
-    elif score < 700000:
-        return "F"
-    elif score < 820000:
-        return "C"
-    elif score < 880000:
-        return "B"
-    elif score < 920000:
-        return "A"
-    elif score < 960000:
-        return "S"
-    else:
-        return "V"
 
 
 class scoreHistory:
@@ -44,34 +25,14 @@ class scoreHistory:
         :param songsid: 曲目id
         :param level: 难度
         """
-        song = getInfo.idgetsong(songsid) or songsid
+        song = await getInfo.idgetsong(songsid) or songsid
         now[0] = int(now[0])
         now[1] = int(now[1])
         if old:
             old[0] = int(old[0])
             old[1] = int(old[1])
         info = await getInfo.info(song, True)
-        if info and info.chart.get(level) and info.chart[level].difficulty:
-            # 有难度信息
-            return {
-                "song": song,
-                "rank": level,
-                "illustration": await getInfo.getill(song),
-                "Rating": Rating(now[1], now[3]),
-                "rks_new": fCompute.rks(now[0], info.chart[level].difficulty),
-                "rks_old": (
-                    fCompute.rks(old[0], info.chart[level].difficulty)
-                    if old is not None
-                    else None
-                ),
-                "acc_new": now[0],
-                "acc_old": old[0] if old else None,
-                "score_new": now[1],
-                "score_old": old[1] if old else None,
-                "date_new": Date(now[2]),
-                "date_old": Date(old[2]) if old else None,
-            }
-        else:
+        if not info or not info.chart.get(level) or not info.chart[level].difficulty:
             # 无难度信息
             return {
                 "song": song,
@@ -85,6 +46,23 @@ class scoreHistory:
                 "date_new": Date(now[2]),
                 "date_old": Date(old[2]) if old else None,
             }
+        # 有难度信息
+        difficulty = info.chart[level].difficulty
+        assert isinstance(difficulty, float)
+        return {
+            "song": song,
+            "rank": level,
+            "illustration": await getInfo.getill(song),
+            "Rating": Rating(now[1], now[3]),
+            "rks_new": fCompute.rks(now[0], difficulty),
+            "rks_old": (fCompute.rks(old[0], difficulty) if old is not None else None),
+            "acc_new": now[0],
+            "acc_old": old[0] if old else None,
+            "score_new": now[1],
+            "score_old": old[1] if old else None,
+            "date_new": Date(now[2]),
+            "date_old": Date(old[2]) if old else None,
+        }
 
     @staticmethod
     def open(data: list) -> dict:

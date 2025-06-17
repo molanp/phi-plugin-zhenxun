@@ -8,7 +8,7 @@
   <div class="line">
     <div class="order">
       {% if cmdHead %}
-      <p name="pvis">{{ help.title | replace('/', '/' ~ cmdHead ~ ' ') }}</p>
+      <p name="pvis">{{ help.title | replace('/',  cmdHead ~ ' ') }}</p>
       {% else %}
       <p name="pvis">{{ help.title }}</p>
       {% endif %}
@@ -19,7 +19,7 @@
         <div class="song">
           {% if cmdHead %}
           <p name="pvis">
-            {{ (help.eg or help.title) | replace('/', '/' ~ cmdHead ~ ' ') }}
+            {{ (help.eg or help.title) | replace('/', cmdHead ~ ' ') }}
           </p>
           {% else %}
           <p name="pvis">{{ help.eg or help.title }}</p>
@@ -29,7 +29,7 @@
       <div class="down">
         <div class="desc">
           {% if help.desc %}
-          <p name="pvis">{{ help.desc | replace(' ', '&ensp;') }}</p>
+          <p name="pvis">{{ help.desc | replace('/', cmdHead ~ ' ')}}</p>
           {% endif %} {% if help.img %}
           <img
             src="{{ _res_path }}html/otherimg/{{ help.img }}"

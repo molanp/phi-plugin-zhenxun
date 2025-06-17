@@ -2,7 +2,7 @@ from nonebot_plugin_uninfo import Uninfo
 
 from ..models import userApiId
 from ..utils import to_dict
-from .cls.Save import Save
+from .cls.common import Save
 from .cls.saveHistory import saveHistory
 from .getFile import readFile
 from .makeRequest import makeRequest

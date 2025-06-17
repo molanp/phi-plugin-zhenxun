@@ -1,11 +1,9 @@
-import asyncio
 from datetime import datetime
 from pathlib import Path
 import random
 import re
 from typing import Literal
 
-from nonebot.internal.matcher import Matcher
 from nonebot_plugin_alconna import File, UniMessage
 from nonebot_plugin_uninfo import Uninfo
 
@@ -14,13 +12,11 @@ from zhenxun.services.log import logger
 from zhenxun.utils.rules import ensure_group
 
 from .constNum import MAX_DIFFICULTY
-from .getInfo import getInfo
-from .send import send
 
 
 class fCompute:
     @staticmethod
-    def rks(acc: float, difficulty: int) -> float:
+    def rks(acc: float, difficulty: float) -> float:
         """计算等效rks"""
         if acc == 100:
             # 满分原曲定数即为有效rks
@@ -33,14 +29,14 @@ class fCompute:
             return difficulty * (((acc - 55) / 45) ** 2)
 
     @staticmethod
-    def suggest(rks: float, difficulty: int, count: int | None = None) -> str:
+    def suggest(rks: float, difficulty: float, count: int | None = None) -> str:
         """
         计算所需acc
 
-        :param float rks: 目标rks
-        :param int difficulty: 定数
-        :param int count: 保留位数
-        :return float: 所需acc
+        :param rks: 目标rks
+        :param difficulty: 定数
+        :param count: 保留位数
+        :return: 所需acc
         """
         ans = 45 * (rks / difficulty) ** 0.5 + 55
 
@@ -52,17 +48,21 @@ class fCompute:
             return str(ans)
 
     @staticmethod
-    async def sendFile(e: Matcher, file: bytes, filename: str):
+    async def sendFile(e, file: bytes, filename: str):
         """发送文件"""
+        from .send import send
+
         try:
-            await send.send_with_At(e, UniMessage(File(raw=file, name=filename)))
+            await send.sendWithAt(e, UniMessage(File(raw=file, name=filename)))
         except Exception as err:
             logger.error(f"文件上传错误: {err}")
-            await send.send_with_At(e, f"文件上传错误: {err}")
+            await send.sendWithAt(e, f"文件上传错误: {err}")
 
     @staticmethod
     async def getBackground(save_background: str) -> Path | str | Literal[False]:
         """获取角色介绍背景曲绘"""
+        from .getInfo import getInfo
+
         try:
             match save_background:
                 case "Another Me ":
@@ -80,7 +80,7 @@ class fCompute:
                 case "Le temps perdu-":
                     save_background = "Le temps perdu"
             return await getInfo.getill(
-                getInfo.idgetsong(save_background) or save_background
+                await getInfo.idgetsong(save_background) or save_background
             )
         except Exception as e:
             logger.error("获取背景曲绘错误", "phi-plugin", e=e)
@@ -230,15 +230,15 @@ class fCompute:
         return rich_text
 
     @staticmethod
-    def is_admin(session: Uninfo) -> bool:
-        """是否是管理员"""
+    async def is_superuser(session: Uninfo) -> bool:
+        """是否是超级管理员"""
         if not ensure_group(session):
             return False
-        loop = asyncio.get_event_loop()
-        level = loop.run_until_complete(
-            LevelUser.get_user_level(session.user.id, session.scene.id)
+        level = await LevelUser.get_user_level(
+            session.user.id,
+            session.scene.id,
         )
-        return level >= 5
+        return level >= 9
 
     @staticmethod
     def match_range(msg: str, r: list | None = None) -> list[float]:

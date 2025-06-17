@@ -7,12 +7,13 @@ class Chart(BaseModel):
     rank: str = ""
     """Level"""
     charter: str = ""
-    difficulty: int
-    tap: int
-    drag: int
-    hold: int
-    flick: int
-    combo: int
-    maxTime: int = 0
-    distribution: list[float] = []
+    difficulty: float | str = 0
+    """定数"""
+    tap: int = 0
+    drag: int = 0
+    hold: int = 0
+    flick: int = 0
+    combo: int = 0
+    maxTime: float = 0
+    distribution: list[list[float]] = []
     is_new: bool = False

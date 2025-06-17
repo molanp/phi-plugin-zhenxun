@@ -1,6 +1,4 @@
-from typing import Literal
-
-Level: list[Literal["EZ", "HD", "IN", "AT", "LEGACY"]] = [
+Level: list[str] = [
     "EZ",
     "HD",
     "IN",

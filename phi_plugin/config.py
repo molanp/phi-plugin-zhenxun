@@ -17,7 +17,7 @@ CONFIG = (
         ),
         RegisterConfig(
             key="VikaToken",
-            value="",
+            value=None,
             help="Vika API Token, 用户的开发者Token，",
         ),
         RegisterConfig(
@@ -166,7 +166,7 @@ CONFIG = (
         ),
         RegisterConfig(
             key="phiPluginApiUrl",
-            value=False,
+            value=None,
             help="Phigros联合查分API地址"
         )
 

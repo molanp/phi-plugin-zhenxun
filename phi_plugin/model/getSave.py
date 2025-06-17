@@ -1,7 +1,7 @@
 import shutil
 
 from ..models import SstkData
-from .cls.Save import Save
+from .cls.common import Save
 from .cls.saveHistory import saveHistory
 from .getFile import readFile
 from .getRksRank import getRksRank

@@ -16,7 +16,7 @@ class pluginData(TypedDict):
 
 class getNotes:
     @staticmethod
-    async def getPluginData(user_id: str) -> dict[str, Any] | None:
+    async def getPluginData(user_id: str) -> dict[str, Any]:
         """
         获取uid对应的娱乐数据
 
@@ -28,7 +28,7 @@ class getNotes:
                 **(await getNotes.getNotesData(user_id)),
                 **(to_dict(await getSave.getHistory(user_id))),
             }
-        return None
+        return {}
 
     @staticmethod
     async def putPluginData(user_id: str, data: dict) -> bool:

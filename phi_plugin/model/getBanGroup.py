@@ -1,4 +1,3 @@
-from nonebot.internal.matcher import Matcher
 from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.services.log import logger
@@ -17,7 +16,7 @@ class getBanGroup:
         return await banGroup.getStatus(group_id, func)
 
     @staticmethod
-    async def get(e: Matcher, session: Uninfo, func: str) -> bool:
+    async def get(matcher, session: Uninfo, func: str) -> bool:
         group = session.scene.id
         if not group:
             return False
@@ -29,8 +28,8 @@ class getBanGroup:
                     makeRequestFnc.makePlatform(session)
                 )
                 if result:
-                    await send.send_with_At(
-                        e, "当前账户被加入黑名单，详情请联系管理员(1)。"
+                    await send.sendWithAt(
+                        matcher, "当前账户被加入黑名单，详情请联系管理员(1)。"
                     )
                     if sessionToken:
                         await getSave.banSessionToken(sessionToken)
@@ -38,7 +37,9 @@ class getBanGroup:
             except Exception as err:
                 logger.warning("API获取用户禁用状态失败", "phi-plugin", e=err)
         if sessionToken and await getSave.isBanSessionToken(sessionToken):
-            await send.send_with_At(e, "当前账户被加入黑名单，详情请联系管理员(2)。")
+            await send.sendWithAt(
+                matcher, "当前账户被加入黑名单，详情请联系管理员(2)。"
+            )
             return True
         match func:
             case "help" | "tkhelp":

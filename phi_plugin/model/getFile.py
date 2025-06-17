@@ -11,7 +11,6 @@ import ujson as json
 from zhenxun.services.log import logger
 
 from .getRksRank import getRksRank
-from .getSave import getSave
 from .path import dataPath, pluginDataPath, savePath
 
 _SUPPORTED_FORMATS = Literal["JSON", "YAML", "CSV", "TXT"]
@@ -234,6 +233,8 @@ class readFile:
 
         :param _path: 待迁移的数据目录
         """
+        from .getSave import getSave
+
         root_path = Path(_path)
         if not root_path.exists():
             return

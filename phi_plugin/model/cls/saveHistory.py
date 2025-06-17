@@ -1,54 +1,13 @@
 from datetime import datetime
 import math
-from typing import Any, TypedDict
+from typing import Any
 
 from ...utils import Date
 from ..constNum import MAX_DIFFICULTY, Level
 from ..fCompute import fCompute
+from .common import Save
 from .LevelRecordInfo import LevelRecordInfo
-from .Save import Save
-
-
-class DataRecord(TypedDict):
-    date: datetime
-    value: int
-
-
-class ChallengeModeRecord(TypedDict):
-    date: datetime
-    value: float
-
-
-class HistoryModel(TypedDict):
-    acc: float
-    """准确率"""
-    score: int
-    """得分"""
-    date: datetime
-    """日期"""
-    fc: bool
-    """是否 Full Combo"""
-
-
-class rksRecord(TypedDict):
-    date: datetime
-    value: float
-
-
-class rksLine(TypedDict):
-    rks_history: list[list[float]]
-    rks_range: list[float]
-    rks_date: list[int]
-
-
-class dataLine(TypedDict):
-    data_history: list[list[float]]
-    data_range: list[float | str]
-    data_date: list[int]
-
-
-class rksLineWithdataLine(rksLine, dataLine):
-    pass
+from .models import HistoryModel, RecordModel, dataLine, rksLine, rksLineWithdataLine
 
 
 def merge(m: list, n: list) -> list:
@@ -142,11 +101,11 @@ class saveHistory:
         }
     }
     """
-    data: list[DataRecord]
+    data: list[RecordModel]
     """data货币变更记录"""
-    rks: list[rksRecord]
+    rks: list[RecordModel]
     """rks变更记录"""
-    challengeModeRank: list[ChallengeModeRecord]
+    challengeModeRank: list[RecordModel]
     """课题模式成绩"""
     version: float | None
     """

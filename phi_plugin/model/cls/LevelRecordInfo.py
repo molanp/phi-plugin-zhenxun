@@ -2,30 +2,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import TypedDict
 
-from ...utils import Date
+from ...utils import Date, Rating
 from ..fCompute import fCompute
 from ..getInfo import getInfo
-
-
-def Rating(score: int | None, fc: bool):
-    if score is None:
-        return "NEW"
-    elif fc:
-        return "FC"
-    elif score >= 1000000:
-        return "phi"
-    elif score < 700000:
-        return "F"
-    elif score < 820000:
-        return "C"
-    elif score < 880000:
-        return "B"
-    elif score < 920000:
-        return "A"
-    elif score < 960000:
-        return "S"
-    else:
-        return "V"
 
 
 class LevelData(TypedDict):
@@ -54,7 +33,7 @@ class LevelRecordInfo:
     """曲名"""
     illustration: str | Path
     """曲绘链接"""
-    difficulty: int
+    difficulty: float
     """难度"""
     rks: float
     """等效RKS"""
@@ -77,7 +56,7 @@ class LevelRecordInfo:
         self.score = data.get("score", 0)
         self.acc = data["acc"]
         self.id = id
-        song = getInfo.idgetsong(id)
+        song = await getInfo.idgetsong(id)
         info = await getInfo.info(song, True) if song else None
         self.rank = (
             getInfo.Level[rank] if isinstance(rank, int) else rank
@@ -90,8 +69,10 @@ class LevelRecordInfo:
             return self
         self.song = info.song  # 曲名
         self.illustration = await getInfo.getill(self.song)  # 曲绘链接
-        if info.chart and info.chart[self.rank].difficulty:
-            self.difficulty = info.chart[self.rank].difficulty  # 难度
+        difficulty = info.chart[self.rank].difficulty
+        if info.chart and difficulty:
+            assert isinstance(difficulty, float)
+            self.difficulty = difficulty  # 难度
             self.rks = fCompute.rks(self.acc, self.difficulty)  # 等效rks
         else:
             self.difficulty = 0

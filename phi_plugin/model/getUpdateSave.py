@@ -1,6 +1,5 @@
 from typing import Literal
 
-from nonebot.internal.matcher import Matcher
 from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.services.log import logger
@@ -9,7 +8,7 @@ from zhenxun.utils.platform import PlatformUtils
 from ..config import PluginConfig
 from ..lib.PhigrosUser import PhigrosUser
 from ..utils import to_dict
-from .cls.Save import Save
+from .cls.common import Save
 from .getInfo import getInfo
 from .getNotes import getNotes
 from .getSave import getSave
@@ -46,7 +45,7 @@ class getUpdateSave:
 
     @classmethod
     async def getNewSaveFromLocal(
-        cls, e: Matcher, session: Uninfo, token: str | None = None
+        cls, matcher, session: Uninfo, token: str | None = None
     ) -> dict:
         old = await getSave.getSave(session.user.id)
         token = token or old.session if old else None
@@ -61,22 +60,22 @@ class getUpdateSave:
             await User.buildRecord()
         except Exception as err:
             if not PlatformUtils.is_qbot(session):
-                await send.send_with_At(e, f"更新失败！QAQ\n{err}")
+                await send.sendWithAt(matcher, f"更新失败！QAQ\n{err}")
             else:
-                await send.send_with_At(e, "更新失败！QAQ\n请稍后重试")
+                await send.sendWithAt(matcher, "更新失败！QAQ\n请稍后重试")
             logger.error("信息更新失败", "phi-plugin", e=err)
             raise err
         try:
             await getSave.putSave(session.user.id, to_dict(User))
         except Exception as err:
-            await send.send_with_At(e, f"保存存档失败!\n{err}")
+            await send.sendWithAt(matcher, f"保存存档失败!\n{err}")
             logger.error("保存存档失败", "phi-plugin", e=err)
             raise err
         now = await Save().constructor(to_dict(User))
 
         if old and (old.session and old.session != User.session):
-            await send.send_with_At(
-                e,
+            await send.sendWithAt(
+                matcher,
                 "检测到新的sessionToken，将自动更换绑定。"
                 "如果需要删除统计记录请"
                 f"⌈{PluginConfig.get('cmdhead')} unbind⌋ 进行解绑哦！",

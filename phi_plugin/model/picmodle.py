@@ -1,9 +1,9 @@
 from typing import Literal
 
 from nonebot_plugin_alconna import Image
-from nonebot_plugin_htmlrender import template_to_pic
 
 from ..config import PATH
+from .puppeteer import Puppeteer
 
 
 class picmodle:
@@ -150,11 +150,4 @@ class picmodle:
         :param str path: 模板路径
         :param dict params: 渲染参数
         """
-
-        template_dir = PATH / "resources" / "html" / path
-        pic = await template_to_pic(
-            template_path=str(template_dir),
-            template_name=f"{path}.html",
-            templates=params,
-        )
-        return Image(raw=pic)
+        return Image(raw=await Puppeteer.render(path, params))

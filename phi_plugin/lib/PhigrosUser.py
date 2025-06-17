@@ -8,7 +8,7 @@ from nonebot.utils import run_sync
 from zhenxun.services.log import logger
 from zhenxun.utils.http_utils import AsyncHttpx
 
-from ..model.cls.Save import SaveInfo
+from ..model.cls.common import SaveInfo
 from .ByteReader import ByteReader
 from .GameProgress import GameProgress
 from .GameRecord import GameRecord
