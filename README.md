@@ -1,5 +1,21 @@
-# zhenxun_plugin_phi-plugin
-适用于 zhenxun_bot 的 phigros 辅助插件，支持查询分数信息等功能，以及猜曲目等小游戏
+<div align="center">
+  <h1>
+    <!-- <picture>
+      <source srcset="https://github.com/user-attachments/assets/c18cd28c-220e-445d-9001-3f7a8f25ac51" type="image/avif" width="80%" />
+      <img src="https://github.com/Catrong/phi-plugin/assets/117198625/731e11cb-71d3-4575-8c0d-b9cedcd442d4" width="80%" />
+    </picture>
+   -->
+   <img src="" alt="这里是logo,还没做" width="80%">
+   <br/>
+   zhenxun_plugin_phi-plugin
+  </h1>
+
+[![Stars](https://img.shields.io/github/stars/molanp/zhenxun_plugin_phi-plugin?style=flat-square&color=yellow&label=Star)](../../stargazers)
+
+![version](https://img.shields.io/badge/插件版本-0.1.0_beta-9cf?style=flat-square)
+![version](https://img.shields.io/badge/Phigros-3.14.0-9cf?style=flat-square)  
+[![zhenxun_bot](https://img.shields.io/badge/zhenxun_bot-latest-9cf?style=flat-square&logo=dependabot)](https://github.com/zhenxun-org/zhenxun_bot)
+</div>
 
 <details>
 <summary>当前同步版本号</summary>
@@ -18,7 +34,7 @@
 
 具体功能可在安装插件后 通过 `/phi help` 查看详细指令
 
-> **以下 `/phi` 为默认插件前缀，可以在配置文件(`data/config.yaml`)中修改**
+> **以下 `/phi` 为插件默认前缀，可以在配置文件(`data/config.yaml`)中修改**
 >
 > 用户输入时，前缀和命令中间的空格**不是必需的**
 >
