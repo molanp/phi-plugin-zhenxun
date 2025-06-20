@@ -5,6 +5,8 @@ from tortoise import fields
 
 from zhenxun.services.db_context import Model
 
+from .utils import Date
+
 
 class SstkData(Model):
     id = fields.IntField(pk=True, generated=True, auto_increment=True)
@@ -122,9 +124,9 @@ class RksRank(Model):
     """关联用户的SessionToken"""
     rks = fields.FloatField(description="用户RKS分数")
     """用户的RKS数值"""
-    created_at = fields.DatetimeField(auto_now_add=True, timezone=False)
+    created_at = fields.DatetimeField(auto_now_add=True)
     """记录创建时间"""
-    updated_at = fields.DatetimeField(auto_now=True, timezone=False)
+    updated_at = fields.DatetimeField(auto_now=True)
     """最后更新时间"""
 
     class Meta:  # type: ignore
@@ -290,8 +292,7 @@ def is_expired(expiration_time: datetime) -> bool:
     """
     判断指定时间是否已过期
     """
-    now = datetime.now()
-    return now > expiration_time
+    return Date(datetime.now()) > Date(expiration_time)
 
 
 def remaining_expiration(expiration_time: datetime) -> int:
@@ -309,7 +310,7 @@ class jrrpModel(Model):
     content = fields.JSONField(description="今日人品内容", field_type=list[Any])
     """今日人品内容"""
     expiration_time = fields.DatetimeField(
-        description="记录过期时间", default=calculate_jrrp_expiration, timezone=False
+        description="记录过期时间", default=calculate_jrrp_expiration
     )
     """过期时间"""
 
@@ -356,7 +357,7 @@ class qrCode(Model):
     """登录二维码链接"""
     data = fields.JSONField(description="登录二维码响应数据")
     """登录二维码响应数据"""
-    expiration_time = fields.DatetimeField(description="记录过期时间", timezone=False)
+    expiration_time = fields.DatetimeField(description="记录过期时间")
     """过期时间"""
 
     class Meta:  # type: ignore
@@ -366,7 +367,7 @@ class qrCode(Model):
     @classmethod
     async def get_qrcode(cls, user_id: str) -> tuple[str, int, dict]:
         """
-        获取今日人品
+        获取二维码
 
         :param user_id: 用户id
         :return: [二维码链接, 剩余过期时间, 原始响应数据]
@@ -382,7 +383,7 @@ class qrCode(Model):
 
     @classmethod
     async def set_qrcode(
-        cls, user_id: str, qrcode: str, expiration_second: int
+        cls, user_id: str, qrcode: str, data: dict, expiration_second: int
     ) -> bool:
         """
         :param user_id: 用户ID
@@ -393,6 +394,7 @@ class qrCode(Model):
             uid=user_id,
             defaults={
                 "qrcode": qrcode,
+                "data": data,
                 "expiration_time": calculate_qrcode_expiration(expiration_second),
             },
         )

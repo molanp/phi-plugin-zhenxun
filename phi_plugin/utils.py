@@ -1,5 +1,5 @@
 import contextlib
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 
@@ -32,7 +32,7 @@ def to_dict(c: Any) -> dict:
     return dict(convert(c))
 
 
-def Date(date_input: str | float | None) -> datetime:
+def Date(date_input: datetime | str | float | None) -> datetime:
     """
     将多种格式的时间输入转换为 Python datetime 对象，并始终使用本地时区
 
@@ -41,17 +41,25 @@ def Date(date_input: str | float | None) -> datetime:
     """
     if date_input is None:
         return datetime.fromtimestamp(0)
-
+    if isinstance(date_input, datetime):
+        dt = date_input
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone()
     try:
         if isinstance(date_input, str):
+            # 优先尝试直接解析带时区的 ISO 格式（含 Z）
             with contextlib.suppress(ValueError):
-                return datetime.fromisoformat(date_input)
+                dt = datetime.fromisoformat(date_input.replace("Z", "+00:00"))
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                return dt.astimezone()
+
             formats = (
                 "%Y-%m-%d %H:%M:%S",
                 "%Y-%m-%d",
                 "%Y/%m/%d",
                 "%Y/%m/%d %H:%M:%S",
-                "%a, %d %b %Y %H:%M:%S %Z",
                 "%a %b %d %H:%M:%S %Y",
             )
 

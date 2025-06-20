@@ -1,6 +1,6 @@
 import io
 import re
-from typing import Any, cast
+from typing import Any
 import zipfile
 
 from nonebot.utils import run_sync
@@ -24,7 +24,8 @@ class readZip:
     @run_sync
     def file(self, filename: str):
         with zipfile.ZipFile(self.data) as zf:
-            return zf.read(filename)
+            with zf.open(filename) as file:
+                return file.read()
 
 
 class PhigrosUser:
@@ -72,7 +73,7 @@ class PhigrosUser:
             and raw_save_info
             and isinstance(raw_save_info[0], dict)
         ):
-            self.saveInfo = [cast(SaveInfo, raw_save_info[0])]
+            self.saveInfo = [SaveInfo(**raw_save_info[0])]
         else:
             logger.error("错误的存档", "phi-plugin")
             logger.error(str(raw_save_info), "phi-plugin")
@@ -81,14 +82,8 @@ class PhigrosUser:
             if not isinstance(self.saveInfo, list):
                 raise ValueError("存档信息格式错误")
             assert isinstance(self.saveInfo, list)
-            if (
-                self.saveInfo
-                and isinstance(self.saveInfo[0], dict)
-                and "gameFile" in self.saveInfo[0]
-                and isinstance(self.saveInfo[0]["gameFile"], dict)
-                and "url" in self.saveInfo[0]["gameFile"]
-            ):
-                self.saveUrl = self.saveInfo[0]["gameFile"]["url"]
+            if self.saveInfo[0].gameFile.url:
+                self.saveUrl = self.saveInfo[0].gameFile.url
         except Exception as e:
             logger.error("设置saveUrl失败", "phi-plugin", e=e)
             raise ValueError("设置saveUrl失败") from e
@@ -142,7 +137,10 @@ class PhigrosUser:
                 file = ByteReader(await savezip.file("gameRecord"))
                 if file.getByte() != GameRecord.version:
                     self.gameRecord = {}
-                    logger.info("版本号已更新，请更新PhigrosLibrary。", "phi-plugin")
+                    logger.info(
+                        "[PhigrosUser]版本号已更新，请更新PhigrosLibrary。",
+                        "phi-plugin",
+                    )
                     raise ValueError("版本号已更新")
 
                 record = GameRecord(await SaveManager.decrypt(file.getAllByte()))
@@ -151,9 +149,11 @@ class PhigrosUser:
                 return True
 
             except Exception as e:
+                if isinstance(e, ValueError):
+                    raise e
                 logger.error("解压zip文件失败", "phi-plugin", e=e)
-                raise ValueError("解压zip文件失败") from e
+                raise RuntimeError("解压zip文件失败") from e
 
         else:
             logger.info("获取存档链接失败！", "phi-plugin")
-            raise ValueError("获取存档链接失败！")
+            raise RuntimeError("获取存档链接失败！")

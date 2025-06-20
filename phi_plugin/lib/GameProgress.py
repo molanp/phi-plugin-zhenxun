@@ -5,7 +5,7 @@ from .Util import Util
 class GameProgress:
     """游戏进度"""
 
-    def __init__(self, data: bytes) -> None:
+    def __init__(self, data: bytes | str) -> None:
         """
         初始化
 

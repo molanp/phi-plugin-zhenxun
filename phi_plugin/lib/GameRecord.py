@@ -12,14 +12,14 @@ class GameRecord:
     name: str = "gameRecord"
     version: int = 1
 
-    def __init__(self, data: bytes) -> None:
+    def __init__(self, data: bytes | str) -> None:
         """
         初始化
 
         :param data: 二进制数据
         """
         self.Record: dict[str, list[LevelRecord | None]] = {}
-        self.data = data
+        self.data = ByteReader(data)
 
     async def init(self, song_data: list[Any]) -> None:
         """
@@ -28,25 +28,26 @@ class GameRecord:
         :param song_data: 歌曲数据
         """
         try:
-            reader = ByteReader(self.data)
-            if reader.getByte() != self.version:
-                logger.error("版本号已更新，请更新PhigrosLibrary。")
-                raise ValueError("版本号已更新")
+            self.songsnum =self.data.getVarInt()
+            # if self.data.getByte() != self.version:
+            #     print(self.data.getByte(),"/",GameRecord.version,"/", self.version)
+            #     logger.error("[GameRecord]版本号已更新，请更新PhigrosLibrary。")
+            #     raise ValueError("版本号已更新")
 
-            while reader.remaining() > 0:
-                key = reader.getString()
+            while self.data.remaining() > 0:
+                key = self.data.getString()
                 song: list[LevelRecord | None] = []
                 for _ in range(4):
-                    if reader.getVarInt() == 1:
+                    if self.data.getVarInt() == 1:
                         record = LevelRecord()
-                        record.fc = bool(reader.getVarInt())
-                        record.score = reader.getVarInt()
-                        record.acc = reader.getFloat()
+                        record.fc = bool(self.data.getVarInt())
+                        record.score = self.data.getVarInt()
+                        record.acc = self.data.getFloat()
                         song.append(record)
                     else:
                         song.append(None)
                 self.Record[key] = song
 
         except Exception as e:
-            logger.error("初始化记录失败", e=e)
+            logger.error("初始化记录失败", "phi-plugin", e=e)
             raise ValueError("初始化记录失败") from e

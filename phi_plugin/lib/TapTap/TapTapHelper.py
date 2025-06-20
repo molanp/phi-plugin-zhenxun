@@ -1,17 +1,38 @@
 import base64
-from hashlib import sha1
-import hmac
-import secrets
+import binascii
 import time
 from urllib.parse import urlparse
-import uuid
 
-import ujson
+import Crypto
+from Crypto.Hash import HMAC, SHA1
+import Crypto.Random
 
 from zhenxun.services.log import logger
 from zhenxun.utils.http_utils import AsyncHttpx
 
 from .CompleteQRCodeData import CompleteQRCodeData
+
+
+def generate_uuid_v4_without_hyphens():
+    """
+    使用 PyCryptodome 生成符合 UUID v4 规范的无连字符字符串
+
+    Returns:
+        str: 32 位小写无连字符 UUID（如 550e8400e29b41d4910a41a54a74966a）
+    """
+    # 1. 生成 16 字节随机数据
+    data = bytearray(Crypto.Random.get_random_bytes(16))
+    # 2. 设置 UUID v4 特征位
+    # - 第 7 字节（索引 6）的高 4 位必须为 0100（即 0x40-0x4f）
+    data[6] = (data[6] & 0x0F) | 0x40
+    # - 第 9 字节（索引 8）的高 2 位必须为 10xx（即 0x80-0xbf）
+    data[8] = (data[8] & 0x3F) | 0x80
+    # 3. 转换为十六进制字符串
+    hex_str = binascii.hexlify(data).decode("utf-8")
+    # 4. 插入 UUID 标准格式的连字符位置并移除
+    return f"{hex_str[:8]}{hex_str[8:12]}{hex_str[12:16]}{hex_str[16:20]}{hex_str[20:]}".replace(
+        "-", ""
+    )
 
 
 class TapTapHelper:
@@ -38,14 +59,14 @@ class TapTapHelper:
     ) -> dict:
         if permissions is None:
             permissions = ["public_profile"]
-        clientId = str(uuid.uuid4()).replace("-", "")
+        clientId = generate_uuid_v4_without_hyphens()
         data = {
             "client_id": "rAK3FfdieFob2Nn8Am",
             "response_type": "device_code",
             "scope": ",".join(permissions),
             "version": cls.TapSDKVersion,
             "platform": "unity",
-            "info": ujson.dumps({"device_id": clientId}),
+            "info": '{"device_id":"' + clientId + '"}',
         }
         url = cls.ChinaCodeUrl if useChinaEndpoint else cls.CodeUrl
         response = await AsyncHttpx.post(url, data=data)
@@ -65,7 +86,7 @@ class TapTapHelper:
             "code": qrCodeData.deviceCode,
             "version": "1.0",
             "platform": "unity",
-            "info": ujson.dumps({"device_id": qrCodeData.deviceID}),
+            "info": '{"device_id":"' + qrCodeData.deviceID + '"}',
         }
         url = cls.ChinaTokenUrl if useChinaEndpoint else cls.TokenUrl
         try:
@@ -112,7 +133,14 @@ def getAuthorization(requestUrl, method, keyId, macKey):
 
 
 def getRandomString(length):
-    return base64.b64encode(secrets.token_bytes(length)).decode("utf-8")
+    return (
+        base64.b64encode(Crypto.Random.get_random_bytes(length))
+        .decode("utf-8")
+        .replace("\n", "")
+    )
+
+
+# return crypto.randomBytes(length).toString('base64');
 
 
 def mergaData(time, randomCode, httpType, uri, domain, port, other: str | None = None):
@@ -129,9 +157,19 @@ def signData(signatureBaseString: str, key: str):
 
     :return: Base64编码的签名结果（去除填充字符=）
     """
-    signature_bytes = signatureBaseString.encode("utf-8")
-    key_bytes = key.encode("utf-8")
-    hmac_obj = hmac.new(key_bytes, signature_bytes, sha1)
-    digest = hmac_obj.digest()
-    # Base64编码并去除填充字符
-    return base64.b64encode(digest).decode("utf-8").rstrip("=")
+    encoded_data = signatureBaseString.encode("utf-8")
+    encoded_key = key.encode("utf-8")
+    # 创建HMAC-SHA1签名对象（使用PyCryptodome）
+    hmac_obj = HMAC.new(encoded_key, digestmod=SHA1)
+    hmac_obj.update(encoded_data)
+    # 生成Base64编码结果（与Node.js digest('base64')格式一致）
+    signature = base64.b64encode(hmac_obj.digest()).decode("utf-8")
+    # 移除换行符确保格式一致（跨语言加密规范#3）
+    return signature.replace("\n", "")
+
+
+# function signData(signatureBaseString, key) {
+#     const hmac = crypto.createHmac('sha1', key);
+#     hmac.update(signatureBaseString);
+#     return hmac.digest('base64');
+# }

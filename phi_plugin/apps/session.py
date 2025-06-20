@@ -1,4 +1,10 @@
+# TODO: 修复初始化失败问题
+# TODO: 06-21 02:59:17 [ERROR] zhenxun | CMD[phi-plugin] 初始化记录失败 || 错误 <class 'UnicodeDecodeError'>: 'utf-8' codec can't decode byte 0xf0 in position 18: invalid continuation byte
+# TODO: 06-21 02:59:17 [ERROR] zhenxun | CMD[phi-plugin] 信息更新失败 || 错误 <class 'ValueError'>: 初始化记录失败
+
+
 import asyncio
+import contextlib
 import random
 import re
 import time
@@ -13,7 +19,7 @@ from zhenxun.utils.platform import PlatformUtils
 from zhenxun.utils.rules import ensure_group
 from zhenxun.utils.withdraw_manage import WithdrawManager
 
-from ..config import PluginConfig, cmdhead
+from ..config import PluginConfig
 from ..lib.getQRcode import getQRcode
 from ..model.cls.common import Save
 from ..model.cls.saveHistory import saveHistory
@@ -31,6 +37,7 @@ from ..model.send import send
 from ..models import qrCode
 from ..utils import Date, to_dict
 
+cmdhead = re.escape(PluginConfig.get("cmdhead"))
 apiMsg = (
     "\n请注意，您尚未设置API Token！\n指令格式：\n"
     f"{cmdhead} setApiToken <apiToken>\n更多帮助：{cmdhead} apihelp"
@@ -136,7 +143,7 @@ async def _(bot, session: Uninfo, params: Arparma):
                         "请注意，登录TapTap可能造成账号及财产损失，"
                         "请在信任Bot来源的情况下扫码登录。\n"
                         f"二维码剩余时间:{QRCodetimeout}",
-                        getQRcode.getQRcode(qrcode),
+                        await getQRcode.getQRcode(qrcode),
                     ],
                     False,
                 )
@@ -160,7 +167,7 @@ async def _(bot, session: Uninfo, params: Arparma):
                     [
                         "请识别二维码并按照提示进行登录嗷！请勿错扫他人二维码。"
                         "请注意，登录TapTap可能造成账号及财产损失，请在信任Bot来源的情况下扫码登录。",
-                        getQRcode.getQRcode(request["data"]["qrcode_url"]),
+                        await getQRcode.getQRcode(request["data"]["qrcode_url"]),
                     ],
                 )
             else:
@@ -182,31 +189,11 @@ async def _(bot, session: Uninfo, params: Arparma):
         if PlatformUtils.is_qbot(session) and QRCodetimeout > 270:
             QRCodetimeout = 270
         await qrCode.set_qrcode(
-            session.user.id, request["data"]["qrcode_url"], QRCodetimeout
+            session.user.id, request["data"]["qrcode_url"], request, QRCodetimeout
         )
-        start_time = time.time()
-        # 是否发送过已扫描提示
-        flag = False
-        result = {}
-        while time.time() - start_time < QRCodetimeout:
-            result = await getQRcode.checkQRCodeResult(request)
-            if result.get("success"):
-                break
-            if result["data"].get("error") == "authorization_waiting" and not flag:
-                receipt = await send.sendWithAt(bind, "二维码已扫描，请确认登录")
-                WithdrawManager.append(
-                    bot,
-                    receipt.msg_ids[0]["message_id"],
-                    10,
-                )
-                WithdrawManager.remove(recall_id)
-                WithdrawManager.append(
-                    bot,
-                    qrCodeMsg.msg_ids[0]["message_id"],
-                    1,
-                )
-                flag = True
-            await asyncio.sleep(2)
+        result = await asyncio.create_task(
+            waitResponse(bot, QRCodetimeout, request, recall_id, qrCodeMsg)
+        )
         await qrCode.del_qecode(session.user.id)
         if not result.get("success"):
             await send.sendWithAt(bind, "操作超时，请重试QAQ！")
@@ -220,7 +207,6 @@ async def _(bot, session: Uninfo, params: Arparma):
                 "获取sessionToken失败QAQ！请确认您的Phigros已登录TapTap账号并同步！"
                 f"\n错误信息：{type(e)}: {e}",
             )
-        return
     if not PluginConfig.get("isGuild"):
         receipt = await send.sendWithAt(bind, "正在绑定，请稍等一下哦！\n >_<")
         WithdrawManager.append(bot, receipt.msg_ids[0]["message_id"], 5)
@@ -255,18 +241,12 @@ async def _(bot, session: Uninfo, params: Arparma):
         f"{cmdhead} sessionToken 哦！",
     )
     WithdrawManager.append(bot, receipt.msg_ids[0]["message_id"], 10)
-    try:
+    with contextlib.suppress(Exception):
         updateData = await getUpdateSave.getNewSaveFromLocal(
             bind, session, sessionToken
         )
         history = await getSave.getHistory(session.user.id)
         await build(bind, session, updateData, history)
-    except Exception as e:
-        logger.error("存档更新失败", "phi-plugin", e=e)
-        await send.sendWithAt(
-            bind,
-            f"更新失败，请检查你的sessionToken是否正确！\n错误信息：{type(e)}: {e}",
-        )
 
 
 @update.handle()
@@ -400,11 +380,38 @@ def comWidth(num: int):
     return num * 125 + 20 * num - 20
 
 
+async def waitResponse(bot, QRCodetimeout, request, recall_id, qrCodeMsg):
+    start_time = time.time()
+    # 是否发送过已扫描提示
+    flag = False
+    result = {}
+    while time.time() - start_time < QRCodetimeout:
+        result = await getQRcode.checkQRCodeResult(request)
+        if result.get("success"):
+            break
+        if result["data"].get("error") == "authorization_waiting" and not flag:
+            receipt = await send.sendWithAt(bind, "二维码已扫描，请确认登录")
+            WithdrawManager.append(
+                bot,
+                receipt.msg_ids[0]["message_id"],
+                10,
+            )
+            WithdrawManager.remove(recall_id)
+            WithdrawManager.append(
+                bot,
+                qrCodeMsg.msg_ids[0]["message_id"],
+                1,
+            )
+            flag = True
+        await asyncio.sleep(2)
+    return result
+
+
 async def build(matcher, session: Uninfo, updateData: dict, history: saveHistory):
     """
     保存PhigrosUser
 
-    逆天逻辑，这传参真的逆天，js版本怎么跑起来的
+    js版本怎么跑起来的
 
     :param matcher: matcher
     :param updateData: {save:Save, added_rks_notes: [number, number]}

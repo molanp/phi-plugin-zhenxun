@@ -152,9 +152,9 @@ class DateField(BaseModel):
 
 
 class ACLValue(BaseModel):
-    read: bool
+    read: bool = True
     """是否可读"""
-    write: bool
+    write: bool = True
     """是否可写"""
 
 
@@ -169,7 +169,7 @@ class SaveInfo(BaseModel):
     """用户id {24} 与 gameFile 中的不同"""
     summary: SaveInfoSummary
     """summary 子信息"""
-    ACL: ACLValue
+    ACL: ACLValue = ACLValue()
     """ACL权限"""
     authData: dict
     """authData"""

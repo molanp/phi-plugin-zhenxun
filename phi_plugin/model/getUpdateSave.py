@@ -10,12 +10,11 @@ from ..lib.PhigrosUser import PhigrosUser
 from ..utils import to_dict
 from .cls.common import Save
 from .getInfo import getInfo
-from .getNotes import getNotes, pluginDataDetail
+from .getNotes import getNotes
 from .getSave import getSave
 from .getSaveFromApi import getSaveFromApi
 from .makeRequest import makeRequest
 from .makeRequestFnc import makeRequestFnc
-from .send import send
 
 
 class getUpdateSave:
@@ -49,8 +48,10 @@ class getUpdateSave:
     async def getNewSaveFromLocal(
         cls, matcher, session: Uninfo, sessionToken: str | None = None
     ) -> dict:
+        from .send import send
+
         old = await getSave.getSave(session.user.id)
-        sessionToken = sessionToken or old.session if old else None
+        sessionToken = sessionToken or (old.session if old else None)
         try:
             User = PhigrosUser(sessionToken)
             save_info = await User.getSaveInfo()
@@ -105,10 +106,9 @@ class getUpdateSave:
         #     notesData.pop("task_update", None)
         # note数量变化
         add_money = 0
-        task = notesData.get("plugin_data", pluginDataDetail()).task
         add_money = 0
 
-        if task:
+        if task := notesData.plugin_data.task:
             for song_id, record_levels in now.gameRecord.items():
                 for i, task_info in enumerate(task):
                     if not task_info:  # 跳过空任务
@@ -148,8 +148,8 @@ class getUpdateSave:
                         task_info["finished"] = True
                         reward = task_info.get("reward", 0)
                         add_money += reward
-                        notesData["plugin_data"].money += reward
-        await getNotes.putNotesData(session.user.id, notesData)
+                        notesData.plugin_data.money += reward
+        await getNotes.putNotesData(session.user.id, to_dict(notesData))
 
         # rks变化
         add_rks = (

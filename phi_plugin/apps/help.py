@@ -1,9 +1,10 @@
 import random
+import re
 
 from nonebot_plugin_alconna import Alconna, on_alconna
 from nonebot_plugin_uninfo import Uninfo
 
-from ..config import PluginConfig, cmdhead
+from ..config import PluginConfig
 from ..model.fCompute import fCompute
 from ..model.getBanGroup import getBanGroup
 from ..model.getdata import getdata
@@ -11,6 +12,8 @@ from ..model.getFile import readFile
 from ..model.path import infoPath
 from ..model.picmodle import picmodle
 from ..model.send import send
+
+cmdhead = re.escape(PluginConfig.get("cmdhead"))
 
 help = on_alconna(
     Alconna(

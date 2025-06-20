@@ -1,5 +1,4 @@
 from pathlib import Path
-import re
 from typing import Any
 
 from zhenxun.configs.config import Config
@@ -89,6 +88,7 @@ CONFIG = (
                 "使用曲库的模式，若启用自定义则重名的以自定义为准。"
                 "0: 原版曲库;1:原版+自定义;2:仅自定义"
             ),
+            default_value=0,
         ),
         RegisterConfig(
             key="GuessTipCd",
@@ -176,6 +176,3 @@ class PluginConfig:
     def set(key: str, value):
         """设置配置项的值"""
         Config.set_config("phi_plugin", key.upper(), value, True)
-
-
-cmdhead = re.escape(PluginConfig.get("cmdhead"))

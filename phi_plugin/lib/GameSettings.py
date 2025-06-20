@@ -5,7 +5,7 @@ from .Util import Util
 class GameSettings:
     """游戏设置"""
 
-    def __init__(self, data: bytes) -> None:
+    def __init__(self, data: bytes | str) -> None:
         """
         初始化
 

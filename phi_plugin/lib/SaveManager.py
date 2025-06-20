@@ -1,40 +1,22 @@
 from datetime import datetime
-from urllib.parse import urljoin
 
 from zhenxun.services.log import logger
 from zhenxun.utils.http_utils import AsyncHttpx
 
-from .AES import decrypt, encrypt
+from ..utils import to_dict
+from .AES import Decrypt, Encrypt
 from .Summary import Summary
-
-# class SaveModel:
-#     """存档模型类"""
-
-#     summary: str | None
-#     object_id: str | None
-#     user_object_id: str | None
-#     game_object_id: str | None
-#     updated_time: str | None
-#     checksum: str | None
-
-#     def __init__(self):
-#         self.summary = None
-#         self.object_id = None
-#         self.user_object_id = None
-#         self.game_object_id = None
-#         self.updated_time = None
-#         self.checksum = None
 
 
 class SaveManager:
     """存档管理器类"""
 
     baseUrl = "https://rak3ffdi.cloud.tds1.tapapis.cn/1.1"
-    fileTokensUrl = urljoin(baseUrl, "/fileTokens")
-    fileCallbackUrl = urljoin(baseUrl, "/fileCallback")
-    saveUrl = urljoin(baseUrl, "/classes/_GameSave")
-    userInfoUrl = urljoin(baseUrl, "/users/me")
-    filesUrl = urljoin(baseUrl, "/files/")
+    fileTokensUrl = baseUrl + "/fileTokens"
+    fileCallbackUrl = baseUrl + "/fileCallback"
+    saveUrl = baseUrl + "/classes/_GameSave"
+    userInfoUrl = baseUrl + "/users/me"
+    filesUrl = baseUrl + "/files/"
 
     @staticmethod
     async def getPlayerId(session: str) -> dict:
@@ -94,7 +76,7 @@ class SaveManager:
             raise ValueError("TK 对应存档列表为空，请检查是否同步存档QAQ！")
         results = []
         for item in array:
-            item["summary"] = Summary(item["summary"])
+            item["summary"] = to_dict(Summary(item["summary"]))
             item.update(await SaveManager.getPlayerId(session))
             date = datetime.fromisoformat(item["updatedAt"].replace("Z", "+00:00"))
             item["updatedAt"] = date.strftime("%Y %b.%d %H:%M:%S")
@@ -104,7 +86,7 @@ class SaveManager:
         return results
 
     @staticmethod
-    async def decrypt(data: bytes) -> bytes:
+    async def decrypt(data: bytes | str) -> str:
         """
         解密数据
 
@@ -114,10 +96,10 @@ class SaveManager:
         Returns:
             解密后的数据
         """
-        return await decrypt(data)
+        return await Decrypt(data)
 
     @staticmethod
-    async def encrypt(data: bytes, key: str | bytes, iv: str | bytes) -> bytes:
+    async def encrypt(data: bytes | str, key: str | bytes, iv: str | bytes) -> str:
         """
         加密数据
 
@@ -129,4 +111,4 @@ class SaveManager:
         Returns:
             加密后的数据
         """
-        return await encrypt(data, key, iv)
+        return await Encrypt(data, key, iv)

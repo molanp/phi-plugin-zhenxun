@@ -1,21 +1,22 @@
 from datetime import datetime
 import math
 import random
+import re
 
 from nonebot_plugin_alconna import Alconna, on_alconna
 from nonebot_plugin_uninfo import Uninfo
 
-from zhenxun.plugins.phi_plugin.model.picmodle import picmodle
-
-from ..config import cmdhead
+from ..config import PluginConfig
 from ..model.fCompute import fCompute
 from ..model.getBanGroup import getBanGroup
 from ..model.getFile import readFile
 from ..model.getInfo import getInfo
 from ..model.path import infoPath
+from ..model.picmodle import picmodle
 from ..model.send import send
 from ..models import jrrpModel
 
+cmdhead = re.escape(PluginConfig.get("cmdhead"))
 jrrp = on_alconna(Alconna(rf"re:{cmdhead}\s*(jrrp|今日人品)"), priority=5, block=True)
 
 

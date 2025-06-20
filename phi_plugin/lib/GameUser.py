@@ -8,7 +8,7 @@ class GameUser:
     name: str = "user"
     version: int = 1
 
-    def __init__(self, data: bytes) -> None:
+    def __init__(self, data: bytes | str) -> None:
         """
         初始化
 
