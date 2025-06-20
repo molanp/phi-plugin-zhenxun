@@ -18,17 +18,11 @@
 <details>
 <summary>当前同步版本号</summary>
 
-原 js 版本(已放弃移植)
+当前同步的 js 版本
 
-[b00902b54185bebc974a99296a6cc8fbd266fe29](https://github.com/Catrong/phi-plugin/commit/b00902b54185bebc974a99296a6cc8fbd266fe29)
+[2baca33c3e902b83f07841e64e8f1e4c3ec07c6d](https://github.com/Catrong/phi-plugin/commit/2baca33c3e902b83f07841e64e8f1e4c3ec07c6d)
 
-[已落后的变更](https://github.com/Catrong/phi-plugin/compare/b00902b54185bebc974a99296a6cc8fbd266fe29...main)
-
-当前同步的 koishi 版本
-
-[a754cf31aa4f9131e5ff8c78a11fd4118d4081d9](https://github.com/Catrong/phi-plugin-koishi/commit/a754cf31aa4f9131e5ff8c78a11fd4118d4081d9)
-
-[已落后的变更](https://github.com/Catrong/phi-plugin-koishi/compare/a754cf31aa4f9131e5ff8c78a11fd4118d4081d9...main)
+[已落后的变更](https://github.com/Catrong/phi-plugin/compare/2baca33c3e902b83f07841e64e8f1e4c3ec07c6d...main)
 
 </details>
 

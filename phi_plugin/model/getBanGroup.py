@@ -17,8 +17,8 @@ class getBanGroup:
 
     @staticmethod
     async def get(matcher, session: Uninfo, func: str) -> bool:
-        group = session.scene.id
-        if not group:
+        group_id = session.scene.id
+        if not group_id:
             return False
         sessionToken = await getSave.get_user_token(session.user.id)
         if PluginConfig.get("openPhiPluginApi"):
@@ -43,9 +43,9 @@ class getBanGroup:
             return True
         match func:
             case "help" | "tkhelp":
-                return await getBanGroup.redis(group, "help")
+                return await getBanGroup.redis(group_id, "help")
             case "bind" | "unbind":
-                return await getBanGroup.redis(group, "bind")
+                return await getBanGroup.redis(group_id, "bind")
             case (
                 "b19"
                 | "p30"
@@ -59,9 +59,9 @@ class getBanGroup:
                 | "chap"
                 | "suggest"
             ):
-                return await getBanGroup.redis(group, "b19")
+                return await getBanGroup.redis(group_id, "b19")
             case "bestn" | "data":
-                return await getBanGroup.redis(group, "wb19")
+                return await getBanGroup.redis(group_id, "wb19")
             case (
                 "song"
                 | "ill"
@@ -76,23 +76,23 @@ class getBanGroup:
                 | "comment"
                 | "recallComment"
             ):
-                return await getBanGroup.redis(group, "song")
+                return await getBanGroup.redis(group_id, "song")
             case "rankList" | "godList":
-                return await getBanGroup.redis(group, "ranklist")
+                return await getBanGroup.redis(group_id, "ranklist")
             case "comrks" | "tips" | "newSong":
-                return await getBanGroup.redis(group, "fnc")
+                return await getBanGroup.redis(group_id, "fnc")
             case "tipgame":
-                return await getBanGroup.redis(group, "tipgame")
+                return await getBanGroup.redis(group_id, "tipgame")
             case "guessgame":
-                return await getBanGroup.redis(group, "guessgame")
+                return await getBanGroup.redis(group_id, "guessgame")
             case "ltrgame":
-                return await getBanGroup.redis(group, "ltrgame")
+                return await getBanGroup.redis(group_id, "ltrgame")
             case "sign" | "send" | "tasks" | "retask" | "jrrp":
-                return await getBanGroup.redis(group, "sign")
+                return await getBanGroup.redis(group_id, "sign")
             case "theme":
-                return await getBanGroup.redis(group, "setting")
+                return await getBanGroup.redis(group_id, "setting")
             case "dan" | "danupdate":
-                return await getBanGroup.redis(group, "dan")
+                return await getBanGroup.redis(group_id, "dan")
             case (
                 "auth"
                 | "clearApiData"
@@ -101,6 +101,6 @@ class getBanGroup:
                 | "tokenList"
                 | "tokenManage"
             ):
-                return await getBanGroup.redis(group, "apiSetting")
+                return await getBanGroup.redis(group_id, "apiSetting")
             case _:
                 return False
