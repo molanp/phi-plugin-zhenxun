@@ -20,6 +20,7 @@ from ..model.cls.saveHistory import saveHistory
 from ..model.cls.scoreHistory import scoreHistory
 from ..model.fCompute import fCompute
 from ..model.getBanGroup import getBanGroup
+from ..model.getdata import getdata
 from ..model.getNotes import getNotes
 from ..model.getSave import getSave
 from ..model.getSaveFromApi import getSaveFromApi
@@ -484,96 +485,106 @@ async def build(matcher, session: Uninfo, updateData: dict, history: saveHistory
         show += len(tot_update[date]["song"])
     # 预分行
     box_line = []
-
-
-# async function build(e, updateData, history) {
-
-
-#     /**预分行 */
-#     let box_line = []
-
-#     box_line[box_line.length - 1]
-
-#     /**循环中当前行的数量 */
-#     let line_num = 0
-
-
-#     line_num = 5
-#     let flag = false
-
-#     while (tot_update.length) {
-#         if (line_num == 5) {
-#             if (flag) {
-#                 box_line.push([{ color: tot_update[0].color, song: tot_update[0].song.splice(0, 5) }])
-#             } else {
-#                 box_line.push([{ date: tot_update[0].date, color: tot_update[0].color, song: tot_update[0].song.splice(0, 5) }])
-#             }
-#             let tem = box_line[box_line.length - 1]
-#             line_num = tem[tem.length - 1].song.length
-#         } else {
-#             let tem = box_line[box_line.length - 1]
-#             if (flag) {
-#                 tem.push({ color: tot_update[0].color, song: tot_update[0].song.splice(0, 5 - line_num) })
-#             } else {
-#                 tem.push({ date: tot_update[0].date, color: tot_update[0].color, song: tot_update[0].song.splice(0, 5 - line_num) })
-
-#             }
-#             line_num += tem[tem.length - 1].song.length
-#         }
-#         let tem = box_line[box_line.length - 1]
-#         tem[tem.length - 1].width = comWidth(tem[tem.length - 1].song.length)
-#         flag = true
-#         if (!tot_update[0].song.length) {
-#             tem[tem.length - 1].update_num = tot_update[0].update_num
-#             tot_update.shift()
-#             flag = false
-#         }
-#     }
-
-#     /**添加任务信息 */
-#     let task_data = pluginData?.plugin_data?.task
-#     let task_time = fCompute.date_to_string(pluginData?.plugin_data?.task_time)
-
-#     /**添加曲绘 */
-#     if (task_data) {
-#         for (let i in task_data) {
-#             if (task_data[i]) {
-#                 task_data[i].illustration = get.getill(task_data[i].song)
-#                 if (task_data[i].request.type == 'acc') {
-#                     task_data[i].request.value = task_data[i].request.value.toFixed(2) + '%'
-#                     if (task_data[i].request.value.length < 6) {
-#                         task_data[i].request.value = '0' + task_data[i].request.value
-#                     }
-#                 }
-#             }
-#         }
-#     }
-
-
-#     let { rks_history, rks_range, rks_date } = history.getRksLine()
-
-#     let data = {
-#         PlayerId: fCompute.convertRichText(now.saveInfo.PlayerId),
-#         Rks: Number(now.saveInfo.summary.rankingScore).toFixed(4),
-#         Date: now.saveInfo.summary.updatedAt,
-#         ChallengeMode: (now.saveInfo.summary.challengeModeRank - (now.saveInfo.summary.challengeModeRank % 100)) / 100,
-#         ChallengeModeRank: now.saveInfo.summary.challengeModeRank % 100,
-#         background: get.getill(get.illlist[Math.floor((Math.random() * (get.illlist.length - 1)))]),
-#         box_line: box_line,
-#         update_ans: newnum ? `更新了${newnum}份成绩` : `未收集到新成绩`,
-#         Notes: pluginData?.plugin_data?.money || 0,
-#         show: show,
-#         tips: get.tips[Math.floor((Math.random() * (get.tips.length - 1)) + 1)],
-#         task_data: task_data,
-#         task_time: task_time,
-#         dan: await get.getDan(e.user_id),
-#         added_rks_notes: added_rks_notes,
-#         theme: pluginData?.plugin_data?.theme || 'star',
-#         rks_date: [fCompute.date_to_string(rks_date[0]), fCompute.date_to_string(rks_date[1])],
-#         rks_history, rks_range,
-#     }
-
-#     send.send_with_At(e, [`PlayerId: ${fCompute.convertRichText(now.saveInfo.PlayerId, true)}`, await get.getupdate(e, data)])
-
-#     return false
-# }
+    # 循环中当前行的数量
+    line_num = 5
+    flag = False
+    while tot_update:
+        if line_num == 5:
+            if flag:
+                box_line.append(
+                    [
+                        {
+                            "color": tot_update[0]["color"],
+                            "song": tot_update[0]["song"][:5],
+                        }
+                    ]
+                )
+            else:
+                box_line.append(
+                    [
+                        {
+                            "date": tot_update[0]["date"],
+                            "color": tot_update[0]["color"],
+                            "song": tot_update[0]["song"][:5],
+                        }
+                    ]
+                )
+            line_num = len(box_line[-1][-1]["song"])
+        elif flag:
+            box_line[-1].append(
+                {
+                    "color": tot_update[0]["color"],
+                    "song": tot_update[0]["song"][: 5 - line_num],
+                }
+            )
+        else:
+            box_line[-1].append(
+                {
+                    "date": tot_update[0]["date"],
+                    "color": tot_update[0]["color"],
+                    "song": tot_update[0]["song"][: 5 - line_num],
+                }
+            )
+        box_line[-1][-1]["width"] = comWidth(len(box_line[-1][-1]["song"]))
+        flag = True
+        if not tot_update[0].get("song"):
+            box_line[-1][-1]["update_num"] = tot_update[0]["update_num"]
+            tot_update.pop(0)
+            flag = False
+    # 添加任务信息
+    task_data = pluginData.plugin_data.task
+    task_time = fCompute.date_to_string(pluginData.plugin_data.task_time)
+    # 添加曲绘
+    if task_data:
+        for i, _ in enumerate(task_data):
+            if task_data[i]:
+                task_data[i]["illustration"] = await getdata.getill(
+                    task_data[i]["song"]
+                )
+                if task_data[i]["request"]["type"] == "acc":
+                    task_data[i]["request"]["value"] = (
+                        round(task_data[i]["request"]["value"], 2) + "%"
+                    )
+                    if len(task_data[i]["request"]["value"]) < 6:
+                        task_data[i]["request"]["value"] = (
+                            "0" + task_data[i]["request"]["value"]
+                        )
+    d_ = history.getRksLine()
+    rks_history = d_.rks_history
+    rks_range = d_.rks_range
+    rks_date = d_.rks_date
+    data = {
+        "PlayerId": fCompute.convertRichText(now.saveInfo.PlayerId),
+        "Rks": round(now.saveInfo.summary.rankingScore, 4),
+        "Date": now.saveInfo.summary.updatedAt,
+        "ChallengeMode": (
+            now.saveInfo.summary.challengeModeRank
+            - (now.saveInfo.summary.challengeModeRank % 1000)
+        )
+        / 100,
+        "ChallengeModeRank": now.saveInfo.summary.challengeModeRank % 100,
+        "background": await getdata.getill(random.choice(getdata.illlist)),
+        "box_line": box_line,
+        "update_ans": f"更新了{newnum}份成绩" if newnum else "未收集到新成绩",
+        "Notes": pluginData.plugin_data.money,
+        "show": show,
+        "tips": random.choice(getdata.tips),
+        "task_data": task_data,
+        "task_time": task_time,
+        "dan": await getdata.getDan(session.user.id),
+        "added_rks_notes": added_rks_notes,
+        "theme": pluginData.plugin_data.theme,
+        "rks_date": [
+            fCompute.date_to_string(rks_date[0]),
+            fCompute.date_to_string(rks_date[1]),
+        ],
+        "rks_history": rks_range,
+    }
+    await send.sendWithAt(
+        matcher,
+        [
+            f"PlayerId: ${fCompute.convertRichText(now.saveInfo.PlayerId, True)}",
+            await getdata.getupdate(data),
+        ],
+    )
+    return False

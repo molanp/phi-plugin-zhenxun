@@ -11,6 +11,7 @@ from zhenxun.models.level_user import LevelUser
 from zhenxun.services.log import logger
 from zhenxun.utils.rules import ensure_group
 
+from ..utils import Date
 from .constNum import MAX_DIFFICULTY
 
 
@@ -366,24 +367,24 @@ class fCompute:
             return "F"
 
     @staticmethod
-    def date_to_string(date: str | datetime) -> str:
+    def date_to_string(dt: str | datetime | float) -> str:
         """
         转换时间格式
 
-        :param date: 时间（字符串或 datetime 对象）
+        :param dt: 时间（字符串或 datetime 对象）
         :return: 格式化后的字符串，如 '2020/10/8 10:08:08' 或 空字符串
         """
-        if not date:
+        if not dt:
             return ""
         # 统一转为 datetime 对象
-        if isinstance(date, str):
+        if isinstance(dt, str):
             try:
-                dt = datetime.fromisoformat(date.replace("Z", "+00:00"))
+                dt = datetime.fromisoformat(dt.replace("Z", "+00:00"))
             except ValueError:
                 # 如果不支持 ISO 格式，尝试其他常见格式
-                dt = datetime.strptime(date.replace("Z", "+00:00"), "%Y/%m/%d %H:%M:%S")
-        else:
-            dt = date
+                dt = datetime.strptime(dt.replace("Z", "+00:00"), "%Y/%m/%d %H:%M:%S")
+        if isinstance(dt, float | int):
+            dt = Date(dt)
 
         # 格式化月份和日期（前导零）
         month = f"0{dt.month}" if dt.month < 10 else dt.month

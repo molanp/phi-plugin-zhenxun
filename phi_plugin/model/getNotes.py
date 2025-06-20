@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -16,6 +16,10 @@ class pluginDataDetail(BaseModel):
     theme: str = "star"
 
 
+class pluginData(BaseModel):
+    plugin_data: pluginDataDetail = pluginDataDetail()
+
+
 class getNotes:
     @staticmethod
     async def getPluginData(user_id: str) -> dict[str, Any]:
@@ -27,8 +31,8 @@ class getNotes:
         session = await getSave.get_user_token(user_id)
         if session is not None:
             return {
-                **(await getNotes.getNotesData(user_id)),
-                **(to_dict(await getSave.getHistory(user_id))),
+                **to_dict(await getNotes.getNotesData(user_id)),
+                **to_dict(await getSave.getHistory(user_id)),
             }
         return {}
 
@@ -50,9 +54,7 @@ class getNotes:
         return await readFile.SetFile(pluginDataPath / f"{user_id}_.json", data)
 
     @staticmethod
-    async def getNotesData(
-        user_id: str, islock: bool = False
-    ) -> dict[Literal["plugin_data"], pluginDataDetail]:
+    async def getNotesData(user_id: str, islock: bool = False) -> pluginData:
         """
         获取并初始化用户数据
 
@@ -61,8 +63,9 @@ class getNotes:
         """
         data = await readFile.FileReader(pluginDataPath / f"{user_id}_.json")
         if not data or not data.get("plugin_data"):
-            data = {}
-        return data
+            return pluginData()
+        else:
+            return pluginData(**data.get("plugin_data"))
 
     @staticmethod
     async def putNotesData(user_id: str, data: dict) -> bool:
