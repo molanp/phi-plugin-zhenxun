@@ -7,6 +7,7 @@ from zhenxun.services.log import logger
 from zhenxun.utils.message import MessageUtils
 
 from ..config import PluginConfig
+from ..utils import to_dict
 from .cls.common import Save
 from .getSave import getSave
 from .getUpdateSave import getUpdateSave
@@ -91,7 +92,7 @@ class send:
                 )
             return None
 
-        return await Save().constructor(user_save)
+        return await Save().constructor(to_dict(user_save))
 
     @classmethod
     async def pickSend(cls, matcher, msg: list[Text | Image]):

@@ -2,7 +2,7 @@ from datetime import datetime
 import math
 from typing import Any
 
-from ...utils import Date
+from ...utils import Date, to_dict
 from ..constNum import MAX_DIFFICULTY, Level
 from ..fCompute import fCompute
 from .common import Save
@@ -123,9 +123,11 @@ class saveHistory:
 
     def __init__(self, data: dict[str, Any]):
         self.scoreHistory = data.get("scoreHistory") or {}
-        self.data = data.get("data") or []
-        self.rks = data.get("rks") or []
-        self.challengeModeRank = data.get("challengeModeRank") or []
+        self.data = [RecordModel(**i) for i in data.get("data") or []]
+        self.rks = [RecordModel(**i) for i in data.get("rks") or []]
+        self.challengeModeRank = [
+            RecordModel(**i) for i in data.get("challengeModeRank") or []
+        ]
         self.version = data.get("version") or None
         self.dan = data.get("dan") or []
 
@@ -362,7 +364,7 @@ class saveHistory:
                 # 获取最新的一条记录并展开信息
                 last_record = openHistory(records[-1])
                 # 创建 LevelRecordInfo 实例
-                level_info = await LevelRecordInfo.init(last_record, id, level)
+                level_info = await LevelRecordInfo.init(to_dict(last_record), id, level)
                 # 保留原始日期
                 level_info.date = last_record.date
                 t[level] = [level_info.to_tuple()]

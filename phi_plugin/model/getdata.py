@@ -11,12 +11,12 @@ from ..config import PluginConfig
 from ..lib.PhigrosUser import PhigrosUser
 from ..utils import to_dict
 from .cls.common import Save
-from .cls.LevelRecordInfo import LevelData
+from .cls.models import LevelData
 from .cls.SongsInfo import SongsInfoObject
 from .constNum import Level
 from .getFile import SUPPORTED_FORMATS, readFile
 from .getInfo import getInfo
-from .getNotes import getNotes, pluginDataDetail
+from .getNotes import getNotes
 from .getPic import SongsIllAtlasData, pic
 from .getSave import getSave
 from .path import pluginDataPath
@@ -25,22 +25,6 @@ from .send import send
 
 
 class getdata:
-    Level = getInfo.Level
-    """难度映射"""
-    avatarid = getInfo.avatarid
-    """头像id"""
-    tips = getInfo.Tips
-    """Tips"""
-    ori_info = getInfo.ori_info
-    """原版信息"""
-    songsid = getInfo.songsid
-    """通过id获取曲名"""
-    idssong = getInfo.idssong
-    """原曲名称获取id"""
-    illlist = getInfo.illlist
-    """含有曲绘的曲目列表，原曲名称"""
-    songlist = getInfo.songlist
-    """所有曲目曲名列表"""
 
     @staticmethod
     async def fuzzysongsnick(mic: str, Distance: float = 0.85):
@@ -267,7 +251,7 @@ class getdata:
             logger.error("保存存档失败", "phi-plugin", e=err)
             return False
         now = await Save().constructor(to_dict(User))
-        if old and (old.session and old.session != User.session):
+        if old and (old.sessionToken and old.sessionToken != User.sessionToken):
             await send.sendWithAt(
                 matcher,
                 "检测到新的sessionToken，将自动更换绑定。如果需要删除统计"
@@ -287,7 +271,7 @@ class getdata:
         #     pluginData.pop("task_update", None)
         # note数量变化
         add_money = 0
-        task = pluginData.get("plugin_data", pluginDataDetail()).task
+        task = pluginData.plugin_data.task
         if task:
             for id in now.gameRecord:
                 for i, _ in enumerate(task):
@@ -306,26 +290,18 @@ class getdata:
                                     now.gameRecord[id][level].acc
                                     >= task[i]["request"]["value"]
                                 ):
-                                    pluginData["plugin_data"].task[i]["finished"] = (
-                                        True
-                                    )
-                                    pluginData["plugin_data"].money += task[i][
-                                        "reward"
-                                    ]
+                                    pluginData.plugin_data.task[i]["finished"] = True
+                                    pluginData.plugin_data.money += task[i]["reward"]
                                     add_money += task[i]["reward"]
                             case "score":
                                 if (
                                     now.gameRecord[id][level].score
                                     >= task[i]["request"]["value"]
                                 ):
-                                    pluginData["plugin_data"].task[i]["finished"] = (
-                                        True
-                                    )
-                                    pluginData["plugin_data"].money += task[i][
-                                        "reward"
-                                    ]
+                                    pluginData.plugin_data.task[i]["finished"] = True
+                                    pluginData.plugin_data.money += task[i]["reward"]
                                     add_money += task[i]["reward"]
-        await getdata.putpluginData(session.user.id, pluginData)
+        await getdata.putpluginData(session.user.id, to_dict(pluginData))
         # rks变化
         add_rks = (
             now.saveInfo.summary.rankingScore - old.saveInfo.summary.rankingScore

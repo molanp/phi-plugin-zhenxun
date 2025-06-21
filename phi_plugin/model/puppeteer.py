@@ -1,17 +1,9 @@
 from pathlib import Path
 
-from jinja2 import Environment, FileSystemLoader
-from nonebot_plugin_htmlrender import html_to_pic
+from nonebot_plugin_htmlrender import template_to_pic
 
 from ..config import VERSION
 from .path import imgPath, pluginResources
-
-# 配置 Jinja2（启用异步模式）
-env = Environment(
-    loader=FileSystemLoader(pluginResources),
-    autoescape=False,
-    enable_async=True,
-)
 
 
 class Puppeteer:
@@ -23,7 +15,6 @@ class Puppeteer:
         app, tpl = path.parts
 
         template_path = f"html/{app}/{tpl}.html"
-        template = env.get_template(template_path)
 
         layout_path = "html/common/layout"
         default_layout = f"{layout_path}/default.html"
@@ -46,11 +37,12 @@ class Puppeteer:
                     f"Created By phi-Plugin<span class='version'>{VERSION}</span>"
                 ),
             },
-            "Version": VERSION,
+            "Version": {"ver": VERSION},
             "_plugin": "phi-plugin",
         }
 
-        html_content = await template.render_async(data)
-        return await html_to_pic(
-            html_content, wait=2, template_path=f"file:///{pluginResources}"
+        return await template_to_pic(
+            template_path=str(pluginResources),
+            template_name=template_path,
+            templates=data,
         )

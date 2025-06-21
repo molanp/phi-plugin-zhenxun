@@ -1,22 +1,21 @@
 {% extends defaultLayout %} {% block css %}
 <link rel="stylesheet" href="{{ _res_path }}html/update/update.css" />
 {% endblock %} {% block main %}
+
 <div class="title">
   <div class="r">
     <p>Player: {{ PlayerId }}</p>
     <p>
-      RankingScore: {{ Rks }} {% if added_rks_notes[0] %}
-      <span
-        style="color: {% if '+' in added_rks_notes[0] %}gold{% else %}red{% endif %};"
+      RankingScore: {{ Rks }} {% if added_rks_notes and added_rks_notes[0] %}
+      <span style="color: {{ 'gold' if '+' in added_rks_notes[0] else 'red' }};"
+        >{{ added_rks_notes[0] }}</span
       >
-        {{ added_rks_notes[0] }}
-      </span>
       {% endif %}
     </p>
     <div class="Challenge">
       <p>ChallengeMode:</p>
       {% if dan %}
-      <div class="CLG {% if dan.EX %}colorful{% endif %}">
+      <div class="CLG{% if dan.EX %} colorful{% endif %}">
         <p>{{ dan.Dan }}</p>
       </div>
       {% endif %}
@@ -29,19 +28,17 @@
       </div>
     </div>
     <p>
-      Notes: {{ Notes }} {% if added_rks_notes[1] %}
-      <span
-        style="color: {% if '+' in added_rks_notes[1] %}gold{% else %}red{% endif %};"
+      Notes: {{ Notes }}{% if added_rks_notes and added_rks_notes[1] %}
+      <span style="color: {{ 'gold' if '+' in added_rks_notes[1] else 'red' }};"
+        >{{ added_rks_notes[1] }}</span
       >
-        {{ added_rks_notes[1] }}
-      </span>
       {% endif %}
     </p>
     <p>Date: {{ Date }}</p>
   </div>
   <div class="rks_line">
     <div class="svg-box">
-      {% if rks_history %}
+      {% if rks_history and rks_history[0] %}
       <div class="value_box">
         <p>{{ "%.4f"|format(rks_range[1]) }}</p>
         <p>{{ "%.4f"|format(rks_range[0]) }}</p>
@@ -82,10 +79,10 @@
     </div>
   </div>
 </div>
-
-{% if box_line or task_data %}
+{% if (box_line and box_line[0]) or task_data %}
 <div class="record_box">
-  {% if task_data %}
+  {% if task_data and (task_data[0] or task_data[1] or task_data[2] or
+  task_data[3] or task_data[4]) %}
   <div class="title_box">
     <div
       class="box_title"
@@ -108,16 +105,30 @@
       <div class="imgbox">
         <img src="{{ song.illustration }}" alt="{{ song.song }}" />
       </div>
-      <div class="coinbox_{% if song.finished %}ed{% else %}un{% endif %}">
+      {% if song.finished %}
+      <div class="coinbox">
         <p>+{{ song.reward }} Notes</p>
       </div>
+      {% else %}
+      <div class="coinbox_un">
+        <p>+{{ song.reward }} Notes</p>
+      </div>
+      {% endif %}
       <div class="infobox">
-        <div class="namebox_{% if song.finished %}ed{% else %}un{% endif %}">
+        {% if song.finished %}
+        <div class="namebox_ed">
           <div class="songsname">
             <p name="pvis">{{ song.song }}</p>
           </div>
         </div>
-        <div class="songsinfo_{% if song.finished %}ed{% else %}un{% endif %}">
+        {% else %}
+        <div class="namebox_un">
+          <div class="songsname">
+            <p name="pvis">{{ song.song }}</p>
+          </div>
+        </div>
+        {% endif %} {% if song.finished %}
+        <div class="songsinfo_ed">
           <div class="rank">
             <p>{{ song.request.rank }}</p>
           </div>
@@ -125,6 +136,16 @@
             <p>{{ song.request.value }}</p>
           </div>
         </div>
+        {% else %}
+        <div class="songsinfo_un">
+          <div class="rank">
+            <p>{{ song.request.rank }}</p>
+          </div>
+          <div class="score">
+            <p>{{ song.request.value }}</p>
+          </div>
+        </div>
+        {% endif %}
       </div>
     </div>
     {% endif %} {% endfor %}
@@ -134,7 +155,7 @@
     {% for date in time_line %}
     <div
       class="box_title"
-      style="width: {{ date.width }}px; filter: drop-shadow(0px 2px 2px {{ date.color }});"
+      style="width: {{ date.width }}px;filter: drop-shadow(0px 2px 2px {{ date.color }});"
     >
       <div
         class="box_title-right-down"
@@ -144,7 +165,7 @@
       <div class="box_title-left" style="background-color: {{ date.color }};">
         <p name="pvis">{{ date.date }}</p>
       </div>
-      {% endif %} {% if date.update_num > 1 %}
+      {% endif %} {% if date.update_num and date.update_num > 1 %}
       <div class="box_title-right">
         <p name="pvis">Updated × {{ date.update_num }}</p>
       </div>
@@ -189,7 +210,7 @@
               <p>{{ song.acc_new | int }}</p>
             </div>
             <div class="acc_2">
-              <p>.{{ "%.4f"|format(song.acc_new % 1)[2:] }}%</p>
+              <p>.{{ ('%.4f' % (song.acc_new % 1))[2:] }}%</p>
             </div>
           </div>
           {% if song.rks_new %}
@@ -204,4 +225,47 @@
   </div>
   {% endfor %}
 </div>
+{% else %}
+<div class="Nosignal">
+  <div class="border_corner border_corner_left_top"></div>
+  <div class="border_corner border_corner_right_top"></div>
+  <div class="border_corner border_corner_left_bottom"></div>
+  <div class="border_corner border_corner_right_bottom"></div>
+  <div class="line"></div>
+  <div class="timeout">
+    <p>NOT_FOUND</p>
+  </div>
+  <div class="client">
+    <p>>>> PhigrOS Client Finding NewScore</p>
+  </div>
+  <div class="sqrt"></div>
+</div>
+{% endif %}
+<div class="createdbox">
+  <div class="phi-plugin">
+    <p>{{ _plugin }}</p>
+  </div>
+  <div class="ver">
+    <p>{{ Version.ver }}</p>
+  </div>
+</div>
+{% if tips %}
+<div class="tips">
+  <p>Tip:{{ tips }}</p>
+</div>
+{% endif %} {% if theme == "snow" %}
+<div class="snow-box"></div>
+<script>
+  themeSnow();
+</script>
+{% elif theme == "topText" or theme == "foolsDay" %}
+<div class="topTextBox" id="topTextBox"></div>
+<script>
+  themeTopText();
+</script>
+{% elif theme == "star" %}
+<canvas id="stars"></canvas>
+<script>
+  themeStar();
+</script>
 {% endif %} {% endblock %}

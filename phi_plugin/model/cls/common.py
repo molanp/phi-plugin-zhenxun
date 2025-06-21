@@ -3,8 +3,8 @@ from datetime import datetime
 import math
 from typing import Any
 
-from nonebot.compat import PYDANTIC_V2, ConfigDict, field_validator
-from pydantic import BaseModel, Field
+from nonebot.compat import field_validator
+from pydantic import BaseModel
 
 from zhenxun.services.log import logger
 
@@ -76,7 +76,7 @@ class SaveInfoSummary(BaseModel):
 
 
 class SaveInfoGameFile(BaseModel):
-    type: str = Field(alias="__type")
+    __type: str  # type: ignore
     """文件类型"""
     bucket: str
     """存档bucket"""
@@ -97,30 +97,11 @@ class SaveInfoGameFile(BaseModel):
     updatedAt: str
     """存档更新时间 2023-10-05T07:41:24.503Z"""
     url: str
-    """https:rak3ffdi.tds1.tapfiles.cn/gamesaves/{32}/.save"""
-
-    @property
-    def __type(self) -> str:
-        """允许通过.__type访问属性"""
-        return self.type
-
-    @__type.setter
-    def __type(self, value: str):
-        self.type = value
-
-    if PYDANTIC_V2:
-        model_config: ConfigDict = ConfigDict(  # type: ignore
-            validate_by_name=True, validate_by_alias=True
-        )
-    else:
-
-        class Config:
-            allow_population_by_field_name = True
-            populate_by_name = True
+    """https://rak3ffdi.tds1.tapfiles.cn/gamesaves/{32}/.save"""
 
 
 class DateField(BaseModel):
-    type: str = Field(alias="__type")
+    __type: str  # type: ignore
     """固定为 'Date'"""
     iso: datetime
     """iso格式日期"""
@@ -130,25 +111,6 @@ class DateField(BaseModel):
     def parse_iso(cls, value: Any) -> datetime:
         """自动将字符串转换为datetime对象"""
         return Date(value)
-
-    @property
-    def __type(self) -> str:
-        """允许通过.__type访问属性"""
-        return self.type
-
-    @__type.setter
-    def __type(self, value: str):
-        self.type = value
-
-    if PYDANTIC_V2:
-        model_config: ConfigDict = ConfigDict(  # type: ignore
-            validate_by_name=True, validate_by_alias=True
-        )
-    else:
-
-        class Config:
-            allow_population_by_field_name = True
-            populate_by_name = True
 
 
 class ACLValue(BaseModel):
@@ -198,7 +160,7 @@ class SaveInfo(BaseModel):
 class GameUser(BaseModel):
     name: str = ""
     """user"""
-    version: str = ""
+    version: int = 1
     """版本"""
     showPlayerId: bool = False
     """是否展示Id"""
@@ -225,7 +187,7 @@ class GameProgress(BaseModel):
     """???"""
     challengeModeRank: int
     """课题分"""
-    money: int
+    money: list[float]
     """data货币"""
     unlockFlagOfSpasmodic: int
     """痉挛解锁"""
@@ -248,11 +210,10 @@ class GameProgress(BaseModel):
 
 
 class Save:
-    session: str
-    apiId: str
+    sessionToken: str
     saveInfo: SaveInfo
     saveUrl: str
-    Recordvr: int
+    Recordver: int
     """官方存档版本号"""
     gameProgress: GameProgress
     gameuser: GameUser
@@ -266,111 +227,26 @@ class Save:
         :param data: 原始数据
         :param ignore: 跳过存档检查
         """
-        self.session = data["session"]
-        self.apiId = data["apiId"]
-        self.saveInfo = SaveInfo(
-            **{
-                "createdAt": data["saveInfo"]["createdAt"],
-                "gameFile": {
-                    "__type": data["saveInfo"]["gameFile"]["__type"],
-                    "bucket": data["saveInfo"]["gameFile"]["bucket"],
-                    "createdAt": data["saveInfo"]["gameFile"]["createdAt"],
-                    "key": data["saveInfo"]["gameFile"]["key"],
-                    "metaData": data["saveInfo"]["gameFile"]["metaData"],
-                    "mime_type": data["saveInfo"]["gameFile"]["mime_type"],
-                    "name": data["saveInfo"]["gameFile"]["name"],
-                    "objectId": data["saveInfo"]["gameFile"]["objectId"],
-                    "provider": data["saveInfo"]["gameFile"]["provider"],
-                    "updatedAt": data["saveInfo"]["gameFile"]["updatedAt"],
-                    "url": data["saveInfo"]["gameFile"]["url"],
-                },
-                "modifiedAt": {
-                    "__type": "Date",
-                    "iso": data["saveInfo"]["modifiedAt"]["iso"],
-                },
-                "objectId": data["saveInfo"]["objectId"],
-                "summary": {
-                    "updatedAt": data["saveInfo"]["summary"]["updatedAt"],
-                    "saveVersion": data["saveInfo"]["summary"]["saveVersion"],
-                    "challengeModeRank": data["saveInfo"]["summary"][
-                        "challengeModeRank"
-                    ],
-                    "rankingScore": data["saveInfo"]["summary"]["rankingScore"],
-                    "gameVersion": data["saveInfo"]["summary"]["gameVersion"],
-                    "avatar": data["saveInfo"]["summary"]["avatar"],
-                    "cleared": data["saveInfo"]["summary"]["cleared"],
-                    "fullCombo": data["saveInfo"]["summary"]["fullCombo"],
-                    "phi": data["saveInfo"]["summary"]["phi"],
-                },
-                "ACL": data["saveInfo"]["ACL"],
-                "authData": data["saveInfo"]["authData"],
-                "avatar": data["saveInfo"]["avatar"],
-                "emailVerified": data["saveInfo"]["emailVerified"],
-                "mobilePhoneVerified": data["saveInfo"]["mobilePhoneVerified"],
-                "nickname": data["saveInfo"]["nickname"],
-                "sessionToken": data["saveInfo"]["sessionToken"],
-                "shortId": data["saveInfo"]["shortId"],
-                "username": data["saveInfo"]["username"],
-                "updatedAt": data["saveInfo"]["updatedAt"],
-                "user": data["saveInfo"]["user"],
-                "PlayerId": data["saveInfo"]["PlayerId"],
-            }
-        )
+        self.sessionToken = data["sessionToken"]
+        if isinstance(data["saveInfo"], list):
+            data["saveInfo"] = data["saveInfo"][0]
+        self.saveInfo = SaveInfo(**data["saveInfo"])
         self.saveUrl = data["saveUrl"]
-        self.Recordvr = data["Recordvr"]
-        self.gameProgress = GameProgress(
-            **{
-                "isFirstRun": data["gameProgress"]["isFirstRun"],
-                "legacyChapterFinished": data["gameProgress"]["legacyChapterFinished"],
-                "alreadyShowCollectionTip": data["gameProgress"][
-                    "alreadyShowCollectionTip"
-                ],
-                "alreadyShowAutoUnlockINTip": data["gameProgress"][
-                    "alreadyShowAutoUnlockINTip"
-                ],
-                "completed": data["gameProgress"]["completed"],
-                "songUpdateInfo": data["gameProgress"]["songUpdateInfo"],
-                "challengeModeRank": data["gameProgress"]["challengeModeRank"],
-                "money": data["gameProgress"]["money"],
-                "unlockFlagOfSpasmodic": data["gameProgress"]["unlockFlagOfSpasmodic"],
-                "unlockFlagOfIgallta": data["gameProgress"]["unlockFlagOfIgallta"],
-                "unlockFlagOfRrharil": data["gameProgress"]["unlockFlagOfRrharil"],
-                "flagOfSongRecordKey": data["gameProgress"]["flagOfSongRecordKey"],
-                "randomVersionUnlocked": data["gameProgress"]["randomVersionUnlocked"],
-                "chapter8UnlockBegin": data["gameProgress"]["chapter8UnlockBegin"],
-                "chapter8UnlockSecondPhase": data["gameProgress"][
-                    "chapter8UnlockSecondPhase"
-                ],
-                "chapter8Passed": data["gameProgress"]["chapter8Passed"],
-                "chapter8SongUnlocked": data["gameProgress"]["chapter8SongUnlocked"],
-            }
-        )
-        self.gameuser = GameUser(
-            **(
-                {
-                    "name": data["gameuser"]["name"],
-                    "version": data["gameuser"]["version"],
-                    "showPlayerId": data["gameuser"]["showPlayerId"],
-                    "selfIntro": data["gameuser"]["selfIntro"],
-                    "avatar": data["gameuser"]["avatar"],
-                    "background": data["gameuser"]["background"],
-                }
-                if data.get("gameuser")
-                else {}
-            )
-        )
+        self.Recordver = data["Recordver"]
+        self.gameProgress = GameProgress(**data["gameProgress"])
+        self.gameuser = GameUser(**(data["gameuser"] if data.get("gameuser") else {}))
         if self.checkIg():
-            await getRksRank.delUserRks(self.session)
-            logger.warning(f"封禁tk {self.session}", "phi-plugin")
+            await getRksRank.delUserRks(self.sessionToken)
+            logger.warning(f"封禁tk {self.sessionToken}", "phi-plugin")
             raise ValueError(
                 "您的存档rks异常，该 token 已禁用，如有异议请联系机器人管理员。\n"
-                f"{self.session}"
+                f"{self.sessionToken}"
             )
         self.gameRecord = {}
         for id in data.get("gameRecord", {}):
             self.gameRecord[id] = []
-            for i in data["gameRecord"][id]:
-                level = int(i)
+            for i, _ in enumerate(data["gameRecord"][id]):
+                level = i
                 record = data["gameRecord"][id][i]
                 if not record:
                     while len(self.gameRecord[id]) <= level:
@@ -380,20 +256,22 @@ class Save:
 
                 if not ignore:
                     if record["acc"] > 100 or record["acc"] < 0:
-                        logger.error(f"acc > 100 封禁tk {self.session}", "phi-plugin")
-                        await getRksRank.delUserRks(self.session)
+                        logger.error(
+                            f"acc > 100 封禁tk {self.sessionToken}", "phi-plugin"
+                        )
+                        await getRksRank.delUserRks(self.sessionToken)
                         raise ValueError(
                             "您的存档 acc 异常，该 token 已禁用"
-                            f"，如有异议请联系机器人管理员。\n{self.session}"
+                            f"，如有异议请联系机器人管理员。\n{self.sessionToken}"
                         )
                     if record["score"] > 1000000 or record["score"] < 0:
                         logger.error(
-                            f"score > 1000000 封禁tk {self.session}", "phi-plugin"
+                            f"score > 1000000 封禁tk {self.sessionToken}", "phi-plugin"
                         )
-                        await getRksRank.delUserRks(self.session)
+                        await getRksRank.delUserRks(self.sessionToken)
                         raise ValueError(
                             "您的存档 score 异常，该 token 已禁用，"
-                            f"如有异议请联系机器人管理员。\n{self.session}"
+                            f"如有异议请联系机器人管理员。\n{self.sessionToken}"
                         )
                 # 保持和 JS 一致，直接赋值到指定下标
                 while len(self.gameRecord[id]) <= level:
@@ -732,7 +610,7 @@ class Save:
 
         :return: 存档sessionToken
         """
-        return self.session
+        return self.sessionToken
 
     async def getStats(self) -> list[statsRecord]:
         """获取存档成绩总览"""

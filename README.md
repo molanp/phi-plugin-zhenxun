@@ -20,9 +20,9 @@
 
 当前同步的 js 版本
 
-[5e8a9582d0cc357dcc7eee7d3eca7a2d6410ccc6](https://github.com/Catrong/phi-plugin/commit/5e8a9582d0cc357dcc7eee7d3eca7a2d6410ccc6)
+[21a89ba3cb3751a7194670219080c090f7d33438](https://github.com/Catrong/phi-plugin/commit/21a89ba3cb3751a7194670219080c090f7d33438)
 
-[已落后的变更](https://github.com/Catrong/phi-plugin/compare/5e8a9582d0cc357dcc7eee7d3eca7a2d6410ccc6...main)
+[已落后的变更](https://github.com/Catrong/phi-plugin/compare/21a89ba3cb3751a7194670219080c090f7d33438...main)
 
 </details>
 

@@ -143,7 +143,7 @@ class readFile:
                     style = None
             match style:
                 case "JSON":
-                    data = json.dumps(data)
+                    data = json.dumps(data, default=str, ensure_ascii=False)
                 case "YAML":
                     data = YAML().dump(data)
                 case "CSV":
@@ -261,7 +261,7 @@ class readFile:
                 if not json_data:
                     continue
 
-                session = json_data.get("session")
+                session = json_data.get("sessionToken")
                 if not session:
                     continue
 

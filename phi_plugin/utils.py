@@ -19,12 +19,12 @@ def to_dict(c: Any) -> dict:
 
         if isinstance(value, type):
             return {
-                k: convert(v) for k, v in vars(value).items() if not k.startswith("__")
+                k: convert(v) for k, v in vars(value).items()
             }
 
         if hasattr(value, "__dict__"):
             return {
-                k: convert(v) for k, v in vars(value).items() if not k.startswith("__")
+                k: convert(v) for k, v in vars(value).items()
             }
 
         return value

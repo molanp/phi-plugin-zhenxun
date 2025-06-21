@@ -2,12 +2,21 @@ from datetime import datetime
 from typing import Any, Literal
 from typing_extensions import Self
 
+from nonebot.compat import field_validator
 from pydantic import BaseModel
+
+from ...utils import Date
 
 
 class RecordModel(BaseModel):
     date: datetime
-    value: float
+    value: Any
+
+    @field_validator("date")
+    @classmethod
+    def parse_iso(cls, value: Any) -> datetime:
+        """自动将字符串转换为datetime对象"""
+        return Date(value)
 
 
 class LevelData(BaseModel):
@@ -35,7 +44,6 @@ class dataLine(BaseModel):
     data_range: list[float | str]
     """[min, max], 如果数字大于1024，则转为KiB，MiB，GiB，TiB，Pib"""
     data_date: list[int]
-
 
 
 class rksLineWithdataLine(rksLine, dataLine):

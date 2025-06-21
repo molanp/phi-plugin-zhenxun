@@ -79,10 +79,9 @@ class getSave:
         :param str user_id: user_id
         :param dict data: data
         """
-        sstk = data.get("sessionToken")
+        sstk = data["sessionToken"]
         if await cls.isBanSessionToken(sstk):
             raise ValueError(f"{sstk} 已被禁用")
-        assert sstk is not None
         await cls.add_user_token(user_id, sstk)
         return await readFile.SetFile(savePath / sstk / "save.json", data)
 
@@ -98,9 +97,11 @@ class getSave:
         if await cls.isBanSessionToken(sstk):
             raise ValueError(f"{sstk} 已被禁用")
         result = (
-            await readFile.FileReader(savePath / sstk / "history.json") if sstk else {}
+            (await readFile.FileReader(savePath / sstk / "history.json"))
+            if sstk
+            else {}
         )
-        return saveHistory(result)
+        return saveHistory(result) if result else saveHistory({})
 
     @classmethod
     async def getHistoryBySessionToken(cls, sstk: str) -> "saveHistory":

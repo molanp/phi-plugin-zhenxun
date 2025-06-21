@@ -9,6 +9,7 @@ from ..model.fCompute import fCompute
 from ..model.getBanGroup import getBanGroup
 from ..model.getdata import getdata
 from ..model.getFile import readFile
+from ..model.getInfo import getInfo
 from ..model.path import infoPath
 from ..model.picmodle import picmodle
 from ..model.send import send
@@ -53,7 +54,7 @@ async def _(session: Uninfo):
                 "helpGroup": helpGroup,
                 "cmdHead": cmdhead,
                 "isMaster": await fCompute.is_superuser(session),
-                "background": await getdata.getill(random.choice(getdata.illlist)),
+                "background": await getdata.getill(random.choice(getInfo.illlist)),
                 "theme": pluginData.get("plugin_data", {}).get("theme") or "star",
             }
         ),
@@ -93,7 +94,7 @@ async def _(session: Uninfo):
                 "helpGroup": apiHelp,
                 "cmdHead": cmdhead,
                 "isMaster": await fCompute.is_superuser(session),
-                "background": await getdata.getill(random.choice(getdata.illlist)),
+                "background": await getdata.getill(random.choice(getInfo.illlist)),
                 "theme": pluginData.get("plugin_data", {}).get("theme") or "star",
             }
         ),

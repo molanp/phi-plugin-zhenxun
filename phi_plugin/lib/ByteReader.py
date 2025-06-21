@@ -93,7 +93,15 @@ class ByteReader:
     def getString(self):
         length = self.getVarInt()
         self.position += length
-        return self.data[self.position - length : self.position].decode("utf-8")
+        raw = self.data[self.position - length : self.position]
+        try:
+            return raw.decode("utf-8")
+        except UnicodeDecodeError:
+            try:
+                return raw.decode("latin1")
+            except Exception:
+                # 如果还是不行，返回十六进制字符串
+                return raw.hex()
 
     def putString(self, s):
         b = s.encode("utf-8")

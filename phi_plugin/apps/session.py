@@ -1,10 +1,4 @@
-# TODO: 修复初始化失败问题
-# TODO: 06-21 02:59:17 [ERROR] zhenxun | CMD[phi-plugin] 初始化记录失败 || 错误 <class 'UnicodeDecodeError'>: 'utf-8' codec can't decode byte 0xf0 in position 18: invalid continuation byte
-# TODO: 06-21 02:59:17 [ERROR] zhenxun | CMD[phi-plugin] 信息更新失败 || 错误 <class 'ValueError'>: 初始化记录失败
-
-
 import asyncio
-import contextlib
 import random
 import re
 import time
@@ -27,6 +21,7 @@ from ..model.cls.scoreHistory import scoreHistory
 from ..model.fCompute import fCompute
 from ..model.getBanGroup import getBanGroup
 from ..model.getdata import getdata
+from ..model.getInfo import getInfo
 from ..model.getNotes import getNotes
 from ..model.getSave import getSave
 from ..model.getSaveFromApi import getSaveFromApi
@@ -80,6 +75,9 @@ async def _(bot, session: Uninfo, params: Arparma):
     sessionToken = re.compile(r"[0-9a-zA-Z]{25}|qrcode", re.IGNORECASE).search(param)
     localPhigrosToken = await getSave.get_user_token(session.user.id)
     sessionToken = sessionToken[0] if sessionToken else localPhigrosToken
+    if localPhigrosToken:
+        await send.sendWithAt(bind, "不要重复绑定啊喂!")
+        return
     if not sessionToken:
         apiId = re.compile(r"[0-9]{10}", re.IGNORECASE).search(param)
         apiId = apiId[0] if apiId else None
@@ -241,12 +239,10 @@ async def _(bot, session: Uninfo, params: Arparma):
         f"{cmdhead} sessionToken 哦！",
     )
     WithdrawManager.append(bot, receipt.msg_ids[0]["message_id"], 10)
-    with contextlib.suppress(Exception):
-        updateData = await getUpdateSave.getNewSaveFromLocal(
-            bind, session, sessionToken
-        )
-        history = await getSave.getHistory(session.user.id)
-        await build(bind, session, updateData, history)
+    # with contextlib.suppress(Exception):
+    updateData = await getUpdateSave.getNewSaveFromLocal(bind, session, sessionToken)
+    history = await getSave.getHistory(session.user.id)
+    await build(bind, session, updateData, history)
 
 
 @update.handle()
@@ -278,7 +274,7 @@ async def _(bot, session: Uninfo):
         )
         return
     if not PluginConfig.get("isGuild"):
-        receipt = await send.sendWithAt(bind, "正在绑定，请稍等一下哦！\n >_<")
+        receipt = await send.sendWithAt(bind, "正在生成，请稍等一下哦！\n >_<")
         WithdrawManager.append(bot, receipt.msg_ids[0]["message_id"], 5)
     try:
         updateData = await getUpdateSave.getNewSaveFromLocal(
@@ -356,7 +352,7 @@ async def _(session: Uninfo):
     await send.sendWithAt(
         getSstk,
         f"PlayerId: {fCompute.convertRichText(save.saveInfo.PlayerId, True)}\n"
-        f"sessionToken: {save.session}\nObjectId: ${save.saveInfo.objectId}\n"
+        f"sessionToken: {save.sessionToken}\nObjectId: {save.saveInfo.objectId}\n"
         f"QQId: {session.user.id}",
     )
 
@@ -444,7 +440,7 @@ async def build(matcher, session: Uninfo, updateData: dict, history: saveHistory
             _history = tem[level]
             for i, _ in enumerate(_history):
                 score_date = fCompute.date_to_string(scoreHistory.date(_history[i]))
-                score_info = scoreHistory.extend(
+                score_info = await scoreHistory.extend(
                     song, level, _history[i], _history[i - 1]
                 )
                 if time_vis.get(score_date) is None:
@@ -457,12 +453,12 @@ async def build(matcher, session: Uninfo, updateData: dict, history: saveHistory
                             "song": [],
                         }
                     )
-                    tot_update[time_vis[score_date]]["update_num"] += 1
-                    tot_update[time_vis[score_date]]["song"].append(score_info)
+                tot_update[time_vis[score_date]]["update_num"] += 1
+                tot_update[time_vis[score_date]]["song"].append(score_info)
     newnum = (
-        tot_update[time_vis[fCompute.date_to_string(now.saveInfo.modifiedAt.iso)]].get(
-            "update_num"
-        )
+        tot_update[
+            time_vis.get(fCompute.date_to_string(now.saveInfo.modifiedAt.iso), 0)
+        ].get("update_num")
         or 0
     )
     tot_update = sorted(tot_update, key=lambda x: Date(x["date"]), reverse=True)
@@ -483,7 +479,7 @@ async def build(matcher, session: Uninfo, updateData: dict, history: saveHistory
             break
         # 预处理每日显示上限
         tot_update[date]["song"] = sorted(
-            tot_update[date]["song"], key=lambda x: x["rks_new"], reverse=True
+            tot_update[date]["song"], key=lambda x: x.get("rks_new", 0), reverse=True
         )
         tot_update[date]["song"] = tot_update[date]["song"][
             : min(DayNum, TotNum - show)
@@ -538,6 +534,7 @@ async def build(matcher, session: Uninfo, updateData: dict, history: saveHistory
             box_line[-1][-1]["update_num"] = tot_update[0]["update_num"]
             tot_update.pop(0)
             flag = False
+        tot_update.pop(0)
     # 添加任务信息
     task_data = pluginData.plugin_data.task
     task_time = fCompute.date_to_string(pluginData.plugin_data.task_time)
@@ -564,18 +561,20 @@ async def build(matcher, session: Uninfo, updateData: dict, history: saveHistory
         "PlayerId": fCompute.convertRichText(now.saveInfo.PlayerId),
         "Rks": round(now.saveInfo.summary.rankingScore, 4),
         "Date": now.saveInfo.summary.updatedAt,
-        "ChallengeMode": (
-            now.saveInfo.summary.challengeModeRank
-            - (now.saveInfo.summary.challengeModeRank % 1000)
-        )
-        / 100,
+        "ChallengeMode": int(
+            (
+                now.saveInfo.summary.challengeModeRank
+                - (now.saveInfo.summary.challengeModeRank % 1000)
+            )
+            / 100
+        ),
         "ChallengeModeRank": now.saveInfo.summary.challengeModeRank % 100,
-        "background": await getdata.getill(random.choice(getdata.illlist)),
+        "background": await getdata.getill(random.choice(getInfo.illlist)),
         "box_line": box_line,
         "update_ans": f"更新了{newnum}份成绩" if newnum else "未收集到新成绩",
         "Notes": pluginData.plugin_data.money,
         "show": show,
-        "tips": random.choice(getdata.tips),
+        "tips": random.choice(getInfo.Tips),
         "task_data": task_data,
         "task_time": task_time,
         "dan": await getdata.getDan(session.user.id),
@@ -585,13 +584,13 @@ async def build(matcher, session: Uninfo, updateData: dict, history: saveHistory
             fCompute.date_to_string(rks_date[0]),
             fCompute.date_to_string(rks_date[1]),
         ],
-        "rks_history": rks_range,
+        "rks_history": rks_history,
+        "rks_range": rks_range,
     }
     await send.sendWithAt(
         matcher,
         [
-            f"PlayerId: ${fCompute.convertRichText(now.saveInfo.PlayerId, True)}",
+            f"PlayerId: {fCompute.convertRichText(now.saveInfo.PlayerId, True)}",
             await getdata.getupdate(data),
         ],
     )
-    return False

@@ -3,14 +3,13 @@
 body {
     flex-direction: column;
     display: flex;
-    width: auto;
+    width: 1200px;
     height: fit-content;
     font-family: 'PHI', 'HIMALAYA', '吞弥恰俊';
     align-items: center;
     color: white;
     position: relative;
     margin: 0;
-    background-image: none;
 }
 
 body p {

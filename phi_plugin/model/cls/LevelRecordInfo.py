@@ -6,7 +6,6 @@ from pydantic import BaseModel
 from ...utils import Rating
 from ..fCompute import fCompute
 from ..getInfo import getInfo
-from .models import LevelData
 
 
 class LevelRecordInfo(BaseModel):
@@ -30,21 +29,21 @@ class LevelRecordInfo(BaseModel):
     """难度"""
     rks: float
     """等效RKS"""
-    suggest: str
+    suggest: str = ""
     """推分建议"""
-    num: int
+    num: int = 0
     """是 Best 几"""
-    date: datetime
+    date: datetime = datetime.now()
     """更新时间(iso)"""
 
     @classmethod
-    async def init(cls, data: LevelData, id: str, rank: int | str) -> "LevelRecordInfo":
+    async def init(cls, data: dict, id: str, rank: int | str) -> "LevelRecordInfo":
         """
         :param data: 原始数据
         :param id: 曲目id
         :param rank: 难度
         """
-        data_ = {"fc": data.fc, "score": data.score, "acc": data.acc, "id": id}
+        data_ = {"fc": data["fc"], "score": data["score"], "acc": data["acc"], "id": id}
         song = await getInfo.idgetsong(id)
         info = await getInfo.info(song, True) if song else None
         data_["rank"] = (
@@ -58,7 +57,11 @@ class LevelRecordInfo(BaseModel):
             return cls(**data_)
         data_["song"] = info.song  # 曲名
         data_["illustration"] = await getInfo.getill(data_["song"])  # 曲绘链接
-        difficulty = info.chart[data_["rank"]].difficulty
+        difficulty = (
+            info.chart[data_["rank"]].difficulty
+            if data_["rank"] in info.chart
+            else None
+        )
         if info.chart and difficulty:
             assert isinstance(difficulty, float)
             data_["difficulty"] = difficulty  # 难度

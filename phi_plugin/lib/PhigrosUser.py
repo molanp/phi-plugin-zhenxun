@@ -31,7 +31,7 @@ class readZip:
 class PhigrosUser:
     """Phigros 用户类"""
 
-    session: str
+    sessionToken: str
     saveInfo: list[SaveInfo]
     gameRecord: dict[str, list[Any]]
 
@@ -47,7 +47,7 @@ class PhigrosUser:
             session = ""
         if not re.match(r"[a-z0-9A-Z]{25}", session):
             raise ValueError("SessionToken格式错误")
-        self.session = session
+        self.sessionToken = session
 
     def chooseSave(self, choose: int) -> bool:
         """
@@ -67,7 +67,7 @@ class PhigrosUser:
 
         :return: 存档信息
         """
-        raw_save_info = await SaveManager.saveCheck(self.session)
+        raw_save_info = await SaveManager.saveCheck(self.sessionToken)
         if (
             isinstance(raw_save_info, list)
             and raw_save_info

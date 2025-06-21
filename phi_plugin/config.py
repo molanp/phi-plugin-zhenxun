@@ -46,17 +46,17 @@ CONFIG = (
         ),
         RegisterConfig(
             key="HistoryDayNum",
-            value=2,
+            value=10,
             help="/update 展现历史成绩的单日最大数量，至少为2",
         ),
         RegisterConfig(
             key="HistoryScoreDate",
-            value=1,
+            value=2,
             help="/update 展现历史成绩的最大天数",
         ),
         RegisterConfig(
             key="HistoryScoreNum",
-            value=10,
+            value=20,
             help="/update 展现历史成绩的最大数量",
         ),
         RegisterConfig(

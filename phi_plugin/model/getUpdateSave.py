@@ -51,7 +51,7 @@ class getUpdateSave:
         from .send import send
 
         old = await getSave.getSave(session.user.id)
-        sessionToken = sessionToken or (old.session if old else None)
+        sessionToken = sessionToken or (old.sessionToken if old else None)
         try:
             User = PhigrosUser(sessionToken)
             save_info = await User.getSaveInfo()
@@ -68,19 +68,19 @@ class getUpdateSave:
         try:
             await getSave.putSave(session.user.id, to_dict(User))
         except Exception as err:
-            await send.sendWithAt(matcher, f"保存存档失败!\n{err}")
-            logger.error("保存存档失败", "phi-plugin", e=err)
+            await send.sendWithAt(matcher, f"[getUpdateSave]保存存档失败!\n{err}")
+            logger.error("[getUpdateSave]保存存档失败", "phi-plugin", e=err)
             raise err
         now = await Save().constructor(to_dict(User))
 
-        if old and (old.session and old.session != User.session):
+        if old and (old.sessionToken and old.sessionToken != User.sessionToken):
             await send.sendWithAt(
                 matcher,
                 "检测到新的sessionToken，将自动更换绑定。"
                 "如果需要删除统计记录请"
                 f"⌈{PluginConfig.get('cmdhead')} unbind⌋ 进行解绑哦！",
             )
-            await getSave.add_user_token(session.user.id, User.session)
+            await getSave.add_user_token(session.user.id, User.sessionToken)
             old = await getSave.getSave(session.user.id)
         # await now.init()
         history = await getSave.getHistory(session.user.id)
