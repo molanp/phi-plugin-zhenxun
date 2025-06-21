@@ -281,7 +281,7 @@ class getdata:
                         not task[i]["finished"]
                         and getInfo.songsid.get(id) == task[i]["song"]
                     ):
-                        level = Level[task[i]["request"]["rank"]]
+                        level = Level.index(task[i]["request"]["rank"])
                         if not now.gameRecord[id][level]:
                             continue
                         match task[i]["request"]["type"]:

@@ -21,9 +21,9 @@ class Summary:
         self.gameVersion = 0
         self.avatar = ""
 
-        self.cleared: list[int] = [0] * 4
-        self.fullCombo: list[int] = [0] * 4
-        self.phi: list[int] = [0] * 4
+        self.cleared: list[int] = [0, 0, 0, 0]
+        self.fullCombo: list[int] = [0, 0, 0, 0]
+        self.phi: list[int] = [0, 0, 0, 0]
 
         reader = ByteReader(base64.b64decode(summary))
         self.saveVersion = reader.getByte()

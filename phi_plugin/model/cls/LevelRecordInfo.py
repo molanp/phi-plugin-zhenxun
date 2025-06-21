@@ -48,7 +48,7 @@ class LevelRecordInfo(BaseModel):
         info = await getInfo.info(song, True) if song else None
         data_["rank"] = (
             getInfo.Level[rank] if isinstance(rank, int) else rank
-        )  # AT IN HD EZ LEGACY
+        )  # EZ HD IN AT LEGACY
         data_["Rating"] = Rating(data_["score"], data_["fc"])  # V S A
         if info is None:
             data_["song"] = id

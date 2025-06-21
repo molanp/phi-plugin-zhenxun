@@ -298,12 +298,12 @@ async def _(session: Uninfo):
     if not await getSave.get_user_token(
         session.user.id
     ) and not await getSaveFromApi.get_user_apiId(session.user.id):
-        await send.sendWithAt(unbind, "没有找到你的存档信息嗷！'")
+        await send.sendWithAt(unbind, "没有找到你的存档信息嗷！")
         return
     ensure = await prompt(
         "解绑会导致历史数据全部清空呐QAQ！真的要这么做吗?(确认/取消)", timeout=30
     )
-    if ensure == "确认":
+    if str(ensure).strip() == "确认":
         flag = True
         try:
             await getSave.delSave(session.user.id)
@@ -326,7 +326,7 @@ async def _(session: Uninfo):
         "请注意，本操作将会删除Phi-Plugin关于您的所有信息QAQ！真的要这么做吗?(确认/取消)",
         timeout=30,
     )
-    if ensure == "确认":
+    if str(ensure).strip() == "确认":
         flag = True
         try:
             await getSave.delSave(session.user.id)
@@ -547,7 +547,7 @@ async def build(matcher, session: Uninfo, updateData: dict, history: saveHistory
                 )
                 if task_data[i]["request"]["type"] == "acc":
                     task_data[i]["request"]["value"] = (
-                        round(task_data[i]["request"]["value"], 2) + "%"
+                        round(task_data[i]["request"]["value"], 4) + "%"
                     )
                     if len(task_data[i]["request"]["value"]) < 6:
                         task_data[i]["request"]["value"] = (

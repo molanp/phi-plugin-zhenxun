@@ -9,6 +9,7 @@ from .Util import Util
 
 class GameRecord:
     """游戏记录"""
+
     name: str = "gameRecord"
     version: int = 1
 
@@ -37,7 +38,7 @@ class GameRecord:
                 self.data.skipVarInt()
                 length = self.data.getByte()
                 fc = self.data.getByte()
-                song: list[LevelRecord] = [LevelRecord()]*4
+                song: list[LevelRecord] = [LevelRecord() for _ in range(4)]
                 for level in range(4):
                     if Util.getBit(length, level):
                         song[level].score = self.data.getInt()

@@ -407,7 +407,7 @@ class fCompute:
         if range_list[0] == range_list[-1]:
             return 50
         percentage = (value - range_list[0]) / (range_list[-1] - range_list[0]) * 100
-        return round(percentage, 2)
+        return round(percentage, 4)
 
     @staticmethod
     def fuzzySearch(search_str: str, data: dict) -> list:

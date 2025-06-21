@@ -29,11 +29,11 @@ class scoreHistory:
             now = list(now)
         if isinstance(old, tuple):
             old = list(old)
-        now[0] = int(now[0])
-        now[1] = int(now[1])
+        now[0] = now[0]
+        now[1] = now[1]
         if old:
-            old[0] = int(old[0])
-            old[1] = int(old[1])
+            old[0] = old[0]
+            old[1] = old[1]
         info = await getInfo.info(song, True)
         if not info or not info.chart.get(level) or not info.chart[level].difficulty:
             # 无难度信息
