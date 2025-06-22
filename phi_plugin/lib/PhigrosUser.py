@@ -35,19 +35,19 @@ class PhigrosUser:
     saveInfo: list[SaveInfo]
     gameRecord: dict[str, list[Any]]
 
-    def __init__(self, session: str | None) -> None:
+    def __init__(self, sessionToken: str | None) -> None:
         """
         初始化
 
-        :param session: 会话令牌
+        :param sessionToken: 会话令牌
         """
         self.saveInfo = []
         self.gameRecord = {}
-        if session is None:
-            session = ""
-        if not re.match(r"[a-z0-9A-Z]{25}", session):
+        if sessionToken is None:
+            sessionToken = ""
+        if not re.match(r"[a-z0-9A-Z]{25}", sessionToken):
             raise ValueError("SessionToken格式错误")
-        self.sessionToken = session
+        self.sessionToken = sessionToken
 
     def chooseSave(self, choose: int) -> bool:
         """

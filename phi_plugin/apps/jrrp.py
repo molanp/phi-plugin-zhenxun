@@ -16,7 +16,7 @@ from ..model.picmodle import picmodle
 from ..model.send import send
 from ..models import jrrpModel
 
-cmdhead = re.escape(PluginConfig.get("cmdhead"))
+cmdhead = re.escape(PluginConfig.get("cmdhead", "/phi"))
 jrrp = on_alconna(Alconna(rf"re:{cmdhead}\s*(jrrp|今日人品)"), priority=5, block=True)
 
 

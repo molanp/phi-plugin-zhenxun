@@ -32,7 +32,7 @@ from ..model.send import send
 from ..models import qrCode
 from ..utils import Date, to_dict
 
-cmdhead = re.escape(PluginConfig.get("cmdhead"))
+cmdhead = re.escape(PluginConfig.get("cmdhead", "/phi"))
 apiMsg = (
     "\n请注意，您尚未设置API Token！\n指令格式：\n"
     f"{cmdhead} setApiToken <apiToken>\n更多帮助：{cmdhead} apihelp"

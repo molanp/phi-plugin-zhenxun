@@ -16,8 +16,20 @@ from .LevelRecordInfo import LevelRecordInfo
 from .models import OriSave
 
 
-def checkLimit(record: LevelRecordInfo, limit: dict[str, dict[str, str | list[float]]]):
-    for lim in limit.values():
+def checkLimit(record: LevelRecordInfo, limit: list[dict[str, str | list[float]]]):
+    """
+    :param limit: 限制条件
+    ```
+    [
+        {
+            "type": 限制条目 acc|score|rks,
+            "value": [min, max]
+        },
+        ...
+    ]
+    :return: 不满足返回False
+    """
+    for lim in limit:
         value = lim.get("value")
         assert isinstance(value, list), (
             f"Expected 'value' to be a list, got {type(value)}"
@@ -480,11 +492,20 @@ class Save:
         }
 
     async def getBestWithLimit(
-        self, num: int, limit: dict[str, dict[str, str | list[float]]]
+        self, num: int, limit: list[dict[str, str | list[float]]]
     ) -> dict[str, list[LevelRecordInfo] | float]:
         """
         :param num: B几
-        :param limit: 条件
+        :param limit: 限制条件
+        ```
+        [
+            {
+                "type": 限制条目 acc|score|rks,
+                "value": [min, max]
+            },
+            ...
+        ]
+        ```
         :return:
         ```
         {
@@ -505,17 +526,21 @@ class Save:
             i -= 1
         # p3
         phi = [philist.pop(0) for _ in range(min(3, len(philist)))]
-        # logger.info(phi, "pgi-plugin")
+        # logger.info(phi, "phi-plugin")
+        if len(phi) < 3:
+            # 在末尾补到3位
+            phi += [False] * (3 - len(phi))
         # 处理数据
         for i in range(3):
-            if i >= len(phi):
-                phi[i] = False  # type: ignore
+            record = phi[i]
+            if isinstance(record, bool):
                 continue
-            if phi[i].rks:
-                phi[i] = copy.deepcopy(phi[i])
-                sum_rks += float(phi[i].rks)  # 计算 rks
-                phi[i].illustration = await getInfo.getill(phi[i].song)
-                phi[i].suggest = "无法推分"
+            if record.rks:
+                temp = copy.deepcopy(record)  # 防止污染原数据
+                sum_rks += temp.rks  # 计算 rks
+                temp.illustration = await getInfo.getill(temp.song)
+                temp.suggest = "无法推分"
+                phi[i] = temp
         # 所有成绩
         rkslist = self.getRecord()
         # 真实 rks
@@ -543,7 +568,7 @@ class Save:
                 )
                 if (
                     "无" in suggest
-                    and (not phi or (record.rks > phi[-1].rks))
+                    and (not phi or (record.rks > getattr(phi[-1], "rks", 0)))
                     and record.rks < 100
                 ):
                     suggest = "100.00%"
@@ -558,12 +583,13 @@ class Save:
             b19_list.append(record)
         com_rks = sum_rks / 30
         self.B19List = {
-            "phi": phi,
+            "phi": phi, # type: ignore
             "b19_list": b19_list,
+            "com_rks": com_rks,
         }
         self.b19_rks = b19_list[min(len(b19_list) - 1, 26)].rks
         return {
-            "phi": phi,
+            "phi": phi, # type: ignore
             "b19_list": b19_list,
             "com_rks": com_rks,
         }

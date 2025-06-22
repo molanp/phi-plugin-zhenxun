@@ -14,7 +14,7 @@ from ..model.path import infoPath
 from ..model.picmodle import picmodle
 from ..model.send import send
 
-cmdhead = re.escape(PluginConfig.get("cmdhead"))
+cmdhead = re.escape(PluginConfig.get("cmdhead", "/phi"))
 
 help = on_alconna(
     Alconna(

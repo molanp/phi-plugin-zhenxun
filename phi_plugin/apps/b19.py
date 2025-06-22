@@ -21,10 +21,13 @@ import math
 import random
 import re
 
-from nonebot_plugin_alconna import Alconna, Args, Arparma, on_alconna
+from nonebot_plugin_alconna import Alconna, Args, Arparma, CommandMeta, on_alconna
 from nonebot_plugin_uninfo import Uninfo
 
+from zhenxun.services.log import logger
+
 from ..config import PluginConfig
+from ..lib.PhigrosUser import PhigrosUser
 from ..model.fCompute import fCompute
 from ..model.getBanGroup import getBanGroup
 from ..model.getdata import getdata
@@ -37,36 +40,52 @@ from ..utils import to_dict
 ChallengeModeName = ["白", "绿", "蓝", "红", "金", "彩"]
 
 Level = ["EZ", "HD", "IN", "AT", None]  # 存档的难度映射
-cmdhead = re.escape(PluginConfig.get("cmdhead"))
+cmdhead = re.escape(PluginConfig.get("cmdhead", "/phi"))
 
 b19 = on_alconna(
-    Alconna(rf"re:{cmdhead}\s*(b|rks|pgr|PGR|B|RKS)", Args["nnum", int, 33]),
+    Alconna(
+        rf"re:{cmdhead}\s*(b|rks|pgr|PGR|B|RKS)",
+        Args["nnum", int, 33],
+        meta=CommandMeta(compact=True),
+    ),
     block=True,
     priority=5,
 )
 
 p30 = on_alconna(
-    Alconna(rf"re:{cmdhead}\s*(p|P)", Args["nnum", int, 33]),
+    Alconna(
+        rf"re:{cmdhead}\s*(p|P)", Args["nnum", int, 33], meta=CommandMeta(compact=True)
+    ),
     block=True,
     priority=5,
 )
+
 arcgrosB19 = on_alconna(
     Alconna(
-        rf"re:{cmdhead}\s*(a|arc|啊|阿|批|屁|劈)\s*((b|B)|[比必币])",
-        Args["nnum", int, 32],
+        rf"re:{cmdhead}\s*(a|arc|啊|阿|批|屁|劈)",
+        Args["nnum", str, "b32"],
+        meta=CommandMeta(compact=True),
     ),
     block=True,
     priority=5,
 )
 
 lmtAcc = on_alconna(
-    Alconna(rf"re:{cmdhead}\s*lmtacc", Args["nnum", float]),
+    Alconna(
+        rf"re:{cmdhead}\s*lmtacc",
+        Args["acc", float, None],
+        meta=CommandMeta(compact=True),
+    ),
     block=True,
     priority=5,
 )
 
 singlescore = on_alconna(
-    Alconna(rf"re:{cmdhead}\s*(score|单曲成绩)", Args["song", str]),
+    Alconna(
+        rf"re:{cmdhead}\s*(score|单曲成绩)",
+        Args["song", str],
+        meta=CommandMeta(compact=True),
+    ),
     block=True,
     priority=5,
 )
@@ -99,7 +118,7 @@ async def _(session: Uninfo, params: Arparma):
     nnum = params.query("nnum") or 33
     nnum = max(nnum, 33)
     nnum = min(nnum, PluginConfig.get("B19MaxNum"))
-    # 因响应器限制，暂时无法实现匹配中间消息(bksong)(取消息不可预料)
+    # NOTE: 因响应器限制，暂时无法实现匹配中间消息(bksong)(取消息不可预料)
     plugin_data = await getNotes.getNotesData(session.user.id)
     if not PluginConfig.get("isGuild"):
         await send.sendWithAt(
@@ -140,249 +159,187 @@ async def _(session: Uninfo, params: Arparma):
     await send.sendWithAt(b19, res)
 
 
-#     /**P30 */
-#     async p30(e) {
-
-#         if (await getBanGroup.get(e, 'p30')) {
-#             send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-#             return false
-#         }
-
-#         let save = await send.getsave_result(e)
-#         if (!save) {
-#             return true
-#         }
-
-#         let err = save.checkNoInfo()
-
-#         if (err.length) {
-#             send.send_with_At(e, "以下曲目无信息，可能导致b19显示错误\n" + err.join('\n'))
-#         }
-
-
-#         let nnum = e.msg.match(/(p|P)[0-9]*/g)[0]
-
-#         nnum = Number(nnum.replace(/(p|P)/g, ''))
-#         if (!nnum) {
-#             nnum = 33
-#         }
-
-#         nnum = Math.max(nnum, 33)
-#         nnum = Math.min(nnum, Config.getUserCfg('config', 'B19MaxNum'))
-
-#         let bksong = e.msg.replace(/^.*(p|P)[0-9]*\s*/g, '')
-
-#         if (bksong) {
-#             let tem = get.fuzzysongsnick(bksong)[0]
-#             if (tem) {
-#                 // console.info(tem)
-#                 bksong = get.getill(tem, 'blur')
-#             } else {
-#                 bksong = undefined
-#             }
-#         }
-
-#         let plugin_data = await getNotes.getNotesData(e.user_id)
-
-
-#         if (!Config.getUserCfg('config', 'isGuild'))
-#             e.reply("正在生成图片，请稍等一下哦！\n//·/w\\·\\\\", false, { recallMsg: 5 })
-
-#         try {
-#             await get.buildingRecord(e, new PhigrosUser(save.session))
-
-#             save = await send.getsave_result(e)
-
-#             if (!save) {
-#                 return true
-#             }
-
-#         } catch (err) {
-#             send.send_with_At(e, err)
-#             logger.error(err)
-#         }
-
-#         let save_b19 = await save.getBestWithLimit(nnum, [{ type: 'acc', value: [100, 100] }])
-#         let stats = await save.getStats()
-
-
-#         let dan = await get.getDan(e.user_id)
-#         let money = save.gameProgress.money
-#         let gameuser = {
-#             avatar: get.idgetavatar(save.gameuser.avatar) || 'Introduction',
-#             ChallengeMode: Math.floor(save.saveInfo.summary.challengeModeRank / 100),
-#             ChallengeModeRank: save.saveInfo.summary.challengeModeRank % 100,
-#             rks: save_b19.com_rks,
-#             data: `${money[4] ? `${money[4]}PiB ` : ''}${money[3] ? `${money[3]}TiB ` : ''}${money[2] ? `${money[2]}GiB ` : ''}${money[1] ? `${money[1]}MiB ` : ''}${money[0] ? `${money[0]}KiB ` : ''}`,
-#             selfIntro: save.gameuser.selfIntro,
-#             backgroundUrl: await fCompute.getBackground(save.gameuser.background),
-#             PlayerId: fCompute.convertRichText(save.saveInfo.PlayerId),
-#             dan: dan,
-#         }
-
-#         let data = {
-#             phi: save_b19.phi,
-#             b19_list: save_b19.b19_list,
-#             PlayerId: gameuser.PlayerId,
-#             Rks: save_b19.com_rks.toFixed(4),
-#             Date: save.saveInfo.summary.updatedAt,
-#             ChallengeMode: Math.floor(save.saveInfo.summary.challengeModeRank / 100),
-#             ChallengeModeRank: save.saveInfo.summary.challengeModeRank % 100,
-#             dan: await get.getDan(e.user_id),
-#             background: bksong || getInfo.getill(getInfo.illlist[Number((Math.random() * (getInfo.illlist.length - 1)).toFixed(0))], 'blur'),
-#             theme: plugin_data?.plugin_data?.theme || 'star',
-#             gameuser,
-#             nnum,
-#             stats,
-#             spInfo: "All Perfect Only Mode",
-#         }
-
-#         let res = [await altas.b19(e, data)]
-#         if (Math.abs(save_b19.com_rks - save.saveInfo.summary.rankingScore) > 0.1) {
-#             res.push(`计算rks: ${save_b19.com_rks}\n存档rks: ${save.saveInfo.summary.rankingScore}`)
-#         }
-#         send.send_with_At(e, res)
-#     }
-
-#     /**arc版查分图 */
-#     async arcgrosB19(e) {
-
-#         if (await getBanGroup.get(e, 'arcgrosB19')) {
-#             send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-#             return false
-#         }
-
-#         let save = await send.getsave_result(e)
-#         if (!save) {
-#             return true
-#         }
+# FIXME: 这个和b19就多了个spInfo，后续合并一下优化代码
+@p30.handle()
+async def _(session: Uninfo, params: Arparma):
+    if await getBanGroup.get(p30, session, "p30"):
+        await send.sendWithAt(p30, "这里被管理员禁止使用这个功能了呐QAQ！")
+        return
+    save = await send.getsaveResult(p30, session)
+    if not save:
+        return
+    err = await save.checkNoInfo()
+    if err:
+        await send.sendWithAt(
+            p30, "以下曲目无信息，可能导致b19显示错误\n" + "\n".join(err)
+        )
+    nnum = params.query("nnum") or 33
+    nnum = max(nnum, 33)
+    nnum = min(nnum, PluginConfig.get("B19MaxNum"))
+    # NOTE: 因响应器限制，暂时无法实现匹配中间消息(bksong)(取消息不可预料)
+    plugin_data = await getNotes.getNotesData(session.user.id)
+    if not PluginConfig.get("isGuild"):
+        await send.sendWithAt(
+            p30, "正在生成图片，请稍等一下哦！\n//·/w\\·\\\\", recallTime=5
+        )
+    try:
+        await getdata.buildingRecord(p30, session, PhigrosUser(save.sessionToken))
+    except Exception as e:
+        logger.error("p30更新存档失败", "phi-plugin", session=session, e=e)
+        await send.sendWithAt(p30, "p30生成失败了...")
+        return
+    save_b19 = await save.getBestWithLimit(nnum, [{"type": "acc", "value": [100, 100]}])
+    stats = await save.getStats()
+    money = save.gameProgress.money
+    gameuser = {
+        "avatar": await getdata.idgetsong(save.gameuser.avatar) or "Introduction",
+        "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
+        "ChallengeModeRank": save.saveInfo.summary.challengeModeRank % 100,
+        "rks": save_b19["com_rks"],
+        "data": "".join(
+            [
+                f"{v}{u} "
+                for v, u in zip(money, ["KiB", "MiB", "GiB", "TiB", "PiB"])
+                if v
+            ]
+        ),
+        "PlayerId": fCompute.convertRichText(save.saveInfo.PlayerId),
+    }
+    data = {
+        "phi": save_b19["phi"],
+        "b19_list": save_b19["b19_list"],
+        "Date": save.saveInfo.summary.updatedAt,
+        "background": await getInfo.getill(random.choice(getInfo.illlist)),
+        "theme": plugin_data.plugin_data.theme,
+        "gameuser": gameuser,
+        "stats": stats,
+        "spInfo": "All Perfect Only Mode",
+    }
+    res: list = [await picmodle.b19(data)]
+    if abs(save_b19.get("com_rks", 0) - save.saveInfo.summary.rankingScore) > 0.1:  # type: ignore
+        res.append(
+            f"计算rks: {save_b19['com_rks']}\n"
+            f"存档rks:{save.saveInfo.summary.rankingScore}"
+        )
+    await send.sendWithAt(p30, res)
 
 
-#         let err = save.checkNoInfo()
+# NOTE: arc版查分图
+@arcgrosB19.handle()
+async def _(session: Uninfo, params: Arparma):
+    if await getBanGroup.get(arcgrosB19, session, "arcgrosB19"):
+        await send.sendWithAt(arcgrosB19, "这里被管理员禁止使用这个功能了呐QAQ！")
+        return
+    save = await send.getsaveResult(arcgrosB19, session)
+    if not save:
+        return
+    if err := await save.checkNoInfo():
+        await send.sendWithAt(
+            arcgrosB19, "以下曲目无信息，可能导致b19显示错误\n" + "\n".join(err)
+        )
+    nnum = params.query("nnum") or "b32"
 
-#         if (err.length) {
-#             send.send_with_At(e, "以下曲目无信息，可能导致b19显示错误\n" + err.join('\n'))
-#         }
-
-
-#         let nnum = e.msg.match(/(b|B)[0-9]*/g)
-#         nnum = nnum ? Number(nnum[0].replace(/(b|B)/g, '')) - 1 : 32
-#         if (!nnum) { nnum = 32 }
-
-#         nnum = Math.max(nnum, 30)
-#         nnum = Math.min(nnum, Config.getUserCfg('config', 'B19MaxNum'))
-
-#         let save_b19 = await save.getB19(nnum)
-
-#         let money = save.gameProgress.money
-#         let gameuser = {
-#             avatar: get.idgetavatar(save.gameuser.avatar) || 'Introduction',
-#             ChallengeMode: Math.floor(save.saveInfo.summary.challengeModeRank / 100),
-#             ChallengeModeRank: save.saveInfo.summary.challengeModeRank % 100,
-#             rks: save.saveInfo.summary.rankingScore,
-#             data: `${money[4] ? `${money[4]}PiB ` : ''}${money[3] ? `${money[3]}TiB ` : ''}${money[2] ? `${money[2]}GiB ` : ''}${money[1] ? `${money[1]}MiB ` : ''}${money[0] ? `${money[0]}KiB ` : ''}`,
-#             selfIntro: save.gameuser.selfIntro,
-#             backgroundUrl: await fCompute.getBackground(save.gameuser.background),
-#             PlayerId: save.saveInfo.PlayerId,
-#         }
-
-#         let plugin_data = await getNotes.getNotesData(e.user_id)
-
-#         let data = {
-#             phi: save_b19.phi,
-#             b19_list: save_b19.b19_list,
-#             gameuser,
-#             PlayerId: fCompute.convertRichText(save.saveInfo.PlayerId),
-#             Rks: Number(save.saveInfo.summary.rankingScore).toFixed(4),
-#             Date: save.saveInfo.summary.updatedAt,
-#             ChallengeMode: Math.floor(save.saveInfo.summary.challengeModeRank / 100),
-#             ChallengeModeRank: save.saveInfo.summary.challengeModeRank % 100,
-#             dan: await get.getDan(e.user_id),
-#             background: getInfo.getill(getInfo.illlist[Number((Math.random() * (getInfo.illlist.length - 1)).toFixed(0))], 'blur'),
-#             theme: plugin_data?.plugin_data?.theme || 'star',
-#             nnum: nnum,
-#         }
-
-#         send.send_with_At(e, await altas.arcgros_b19(e, data))
-#     }
-
-#     /**限制最低acc后的rks */
-#     async lmtAcc(e) {
-#         if (await getBanGroup.get(e, 'lmtAcc')) {
-#             send.send_with_At(e, '这里被管理员禁止使用这个功能了呐QAQ！')
-#             return false
-#         }
-
-#         let save = await send.getsave_result(e)
-#         if (!save) {
-#             return false
-#         }
-
-#         let err = save.checkNoInfo()
-
-#         if (err.length) {
-#             send.send_with_At(e, "以下曲目无信息，可能导致b19显示错误\n" + err.join('\n'))
-#         }
+    # 提取数字
+    if isinstance(nnum, str):
+        match = re.search(r"\d+", nnum)  # 匹配字符串中的第一个数字序列
+        nnum = int(match.group()) if match else 32
+    else:
+        nnum = int(nnum)  # 确保为整数
+    nnum = max(nnum, 30)
+    nnum = min(nnum, PluginConfig.get("B19MaxNum"))
+    plugin_data = await getNotes.getNotesData(session.user.id)
+    save_b19 = await save.getB19(nnum)
+    money = save.gameProgress.money
+    gameuser = {
+        "avatar": await getdata.idgetsong(save.gameuser.avatar) or "Introduction",
+        "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
+        "ChallengeModeRank": save.saveInfo.summary.challengeModeRank % 100,
+        "rks": save_b19["com_rks"],
+        "data": "".join(
+            [
+                f"{v}{u} "
+                for v, u in zip(money, ["KiB", "MiB", "GiB", "TiB", "PiB"])
+                if v
+            ]
+        ),
+        "backgroundUrl": await fCompute.getBackground(save.gameuser.background),
+        "PlayerId": fCompute.convertRichText(save.saveInfo.PlayerId),
+    }
+    data = {
+        "phi": save_b19["phi"],
+        "b19_list": save_b19["b19_list"],
+        "Date": save.saveInfo.summary.updatedAt,
+        "background": await getInfo.getill(random.choice(getInfo.illlist)),
+        "theme": plugin_data.plugin_data.theme,
+        "gameuser": gameuser,
+        "spInfo": "All Perfect Only Mode",
+        "fCompute": fCompute
+    }
+    await send.sendWithAt(arcgrosB19, await picmodle.arcgros_b19(data))
 
 
-#         let acc = Number(e.msg.replace(/^.*lmtacc\s*/g, ''))
-
-#         if (!acc || acc < 0 || acc > 100) {
-#             send.send_with_At(e, `我听不懂 ${e.msg.replace(/^.*lmtacc\s*/g, '')} 是多少喵！请指定一个0-100的数字喵！\n格式：/${Config.getUserCfg('config', 'cmdhead')} lmtAcc <0-100>`)
-#             return false
-#         }
-
-
-#         let nnum = 33
-
-#         let plugin_data = await get.getpluginData(e.user_id)
-
-
-#         if (!Config.getUserCfg('config', 'isGuild'))
-#             e.reply("正在生成图片，请稍等一下哦！\n//·/w\\·\\\\", false, { recallMsg: 5 })
-
-#         let save_b19 = await save.getBestWithLimit(nnum, [{ type: 'acc', value: [acc, 100] }])
-#         let stats = await save.getStats()
-
-
-#         let dan = await get.getDan(e.user_id)
-#         let money = save.gameProgress.money
-#         let gameuser = {
-#             avatar: get.idgetavatar(save.gameuser.avatar) || 'Introduction',
-#             ChallengeMode: Math.floor(save.saveInfo.summary.challengeModeRank / 100),
-#             ChallengeModeRank: save.saveInfo.summary.challengeModeRank % 100,
-#             rks: save_b19.com_rks,
-#             data: `${money[4] ? `${money[4]}PiB ` : ''}${money[3] ? `${money[3]}TiB ` : ''}${money[2] ? `${money[2]}GiB ` : ''}${money[1] ? `${money[1]}MiB ` : ''}${money[0] ? `${money[0]}KiB ` : ''}`,
-#             selfIntro: save.gameuser.selfIntro,
-#             backgroundUrl: await fCompute.getBackground(save.gameuser.background),
-#             PlayerId: fCompute.convertRichText(save.saveInfo.PlayerId),
-#             dan: dan,
-#         }
-
-#         let data = {
-#             phi: save_b19.phi,
-#             b19_list: save_b19.b19_list,
-#             PlayerId: gameuser.PlayerId,
-#             Rks: save_b19.com_rks.toFixed(4),
-#             Date: save.saveInfo.summary.updatedAt,
-#             ChallengeMode: Math.floor(save.saveInfo.summary.challengeModeRank / 100),
-#             ChallengeModeRank: save.saveInfo.summary.challengeModeRank % 100,
-#             dan: await get.getDan(e.user_id),
-#             background: getInfo.getill(getInfo.illlist[Number((Math.random() * (getInfo.illlist.length - 1)).toFixed(0))], 'blur'),
-#             theme: plugin_data?.plugin_data?.theme || 'star',
-#             gameuser,
-#             nnum,
-#             stats,
-#             spInfo: `ACC is limited to ${acc}%`,
-#         }
-
-#         let res = [await altas.b19(e, data)]
-#         if (Math.abs(save_b19.com_rks - save.saveInfo.summary.rankingScore) > 0.1) {
-#             res.push(`计算rks: ${save_b19.com_rks}\n存档rks: ${save.saveInfo.summary.rankingScore}`)
-#         }
-#         send.send_with_At(e, res)
-
-#     }
+# NOTE: limit只对acc满分生效是正常的，符合原版js逻辑
+# NOTE: 限制最低acc后的rks
+@lmtAcc.handle()
+async def _(session: Uninfo, params: Arparma):
+    if await getBanGroup.get(lmtAcc, session, "lmtAcc"):
+        await send.sendWithAt(lmtAcc, "这里被管理员禁止使用这个功能了呐QAQ！")
+        return
+    acc = params.query("acc") or None
+    if acc is None or not isinstance(acc, float) or acc < 0 or acc > 100:
+        await send.sendWithAt(
+            lmtAcc,
+            f"我听不懂 {acc} 是多少喵！请指定一个0-100的数字喵！\n"
+            f"格式：{cmdhead} lmtAcc <0-100>",
+        )
+        return
+    save = await send.getsaveResult(lmtAcc, session)
+    if not save:
+        return
+    if err := await save.checkNoInfo():
+        await send.sendWithAt(
+            arcgrosB19, "以下曲目无信息，可能导致b19显示错误\n" + "\n".join(err)
+        )
+    nnum = 33
+    plugin_data = await getdata.getpluginData(session.user.id)
+    if not PluginConfig.get("isGuild"):
+        await send.sendWithAt(
+            lmtAcc, "正在生成图片，请稍等一下哦！\n//·/w\\·\\\\", recallTime=5
+        )
+    save_b19 = await save.getBestWithLimit(nnum, [{"type": "acc", "value": [acc, 100]}])
+    stats = await save.getStats()
+    money = save.gameProgress.money
+    gameuser = {
+        "avatar": await getdata.idgetsong(save.gameuser.avatar) or "Introduction",
+        "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
+        "ChallengeModeRank": save.saveInfo.summary.challengeModeRank % 100,
+        "rks": save.saveInfo.summary.rankingScore,
+        "data": "".join(
+            [
+                f"{v}{u} "
+                for v, u in zip(money, ["KiB", "MiB", "GiB", "TiB", "PiB"])
+                if v
+            ]
+        ),
+        "PlayerId": fCompute.convertRichText(save.saveInfo.PlayerId),
+    }
+    data = {
+        "phi": save_b19["phi"],
+        "b19_list": save_b19["b19_list"],
+        "Date": save.saveInfo.summary.updatedAt,
+        "background": await getInfo.getill(random.choice(getInfo.illlist)),
+        "theme": plugin_data.get("plugin_data", {}).get("theme", "star"),
+        "gameuser": gameuser,
+        "stats": stats,
+        "spInfo": f"ACC is limited to {acc}%",
+    }
+    res: list = [await picmodle.b19(to_dict(data))]
+    if abs(save_b19.get("com_rks", 0) - save.saveInfo.summary.rankingScore) > 0.1:  # type: ignore
+        res.append(
+            f"计算rks: {save_b19['com_rks']}\n"
+            f"存档rks:{save.saveInfo.summary.rankingScore}"
+        )
+    await send.sendWithAt(lmtAcc, res)
 
 
 #     async singlescore(e) {

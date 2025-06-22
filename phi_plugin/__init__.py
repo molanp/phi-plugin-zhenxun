@@ -40,7 +40,7 @@ driver = get_driver()
 
 @driver.on_startup
 async def handle_connect():
-    default_config_path = PATH / "default_config"
+    default_config_path = PATH / "config"
     if default_config_path.exists():
         configPath.mkdir(parents=True, exist_ok=True)
         for item in default_config_path.iterdir():

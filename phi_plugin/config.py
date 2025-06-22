@@ -21,25 +21,6 @@ CONFIG = (
             help="Vika API Token, 用户的开发者Token，",
         ),
         RegisterConfig(
-            key="onLinePhiIllUrl",
-            value="https://gitee.com/Steveeee-e/phi-plugin-ill/raw/main",
-            help=(
-                "在线曲绘来源。仅在未下载曲绘时有效，不影响下载曲绘指令。"
-                "在线曲绘将重复下载曲绘资源，建议使用 /下载曲绘 将曲绘缓存到本地"
-            ),
-            # github
-            # https://github.com/Catrong/phi-plugin-ill/blob/main
-            # gitee
-            # https://gitee.com/Steveeee-e/phi-plugin-ill/raw/main
-            # github mirror zip
-            # https://github.bibk.top/Catrong/phi-plugin-ill/archive/refs/heads/main.zip
-        ),
-        RegisterConfig(
-            key="downIllUrl",
-            value="https://github.bibk.top/Catrong/phi-plugin-ill/archive/refs/heads/main.zip",
-            help="下载曲绘地址",
-        ),
-        RegisterConfig(
             key="B19MaxNum",
             value=22,
             help="用户可以获取B19图片成绩的最大数量，建议不要太大",
@@ -170,9 +151,13 @@ class PluginConfig:
     @staticmethod
     def get(key: str, default=None) -> Any:
         """获取配置项的值"""
-        return Config.get_config("phi_plugin", key.upper(), default)
+        return Config.get_config("phi-plugin", key.upper(), default)
 
     @staticmethod
     def set(key: str, value):
         """设置配置项的值"""
-        Config.set_config("phi_plugin", key.upper(), value, True)
+        Config.set_config("phi-plugin", key.upper(), value, True)
+
+
+onLinePhiIllUrl = "https://gitee.com/Steveeee-e/phi-plugin-ill/raw/main"
+"""在线曲绘地址"""

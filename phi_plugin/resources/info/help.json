@@ -266,21 +266,6 @@
                 "desc": "删除某一歌曲的别名<br>eg: /delnick 福报"
             },
             {
-                "title": "/repu",
-                "eg": "/repu",
-                "desc": "重启puppeteer，仅支持最新版喵崽"
-            },
-            {
-                "title": "/下载曲绘<br>/down ill",
-                "eg": "/下载曲绘",
-                "desc": "下载曲绘到本地，首次安装与渲染错误请优先执行"
-            },
-            {
-                "title": "/更新<br>/gx",
-                "eg": "/[强制]更新",
-                "desc": "更新本插件"
-            },
-            {
                 "title": "/get",
                 "eg": "/get <名次>",
                 "desc": "获取排行榜上某一名次的sessionToken"

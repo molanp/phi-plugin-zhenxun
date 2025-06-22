@@ -40,9 +40,6 @@ imgPath = pluginResources / "html" / "otherimg"
 # 用户图片路径
 ortherIllPath = pluginResources / "otherill"
 
-# 原画资源
-originalIllPath = pluginResources / "original_ill"
-
 # 音频资源
 guessMicPath = pluginResources / "splited_music"
 

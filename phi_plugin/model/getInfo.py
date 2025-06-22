@@ -6,22 +6,14 @@ from pydantic import BaseModel
 
 from zhenxun.services.log import logger
 
-from ..config import PluginConfig
+from ..config import PluginConfig, onLinePhiIllUrl
 from ..utils import to_dict
 from .cls.Chart import Chart
 from .cls.SongsInfo import SongsInfo, SongsInfoObject
 from .constNum import MAX_DIFFICULTY, Level
 from .fCompute import fCompute
 from .getFile import readFile
-from .path import (
-    DlcInfoPath,
-    configPath,
-    imgPath,
-    infoPath,
-    oldInfoPath,
-    originalIllPath,
-    ortherIllPath,
-)
+from .path import DlcInfoPath, configPath, imgPath, infoPath, oldInfoPath, ortherIllPath
 
 
 class levelDetail(BaseModel):
@@ -102,10 +94,6 @@ class getInfo:
     async def init(cls):
         if cls.inited:
             return cls
-        if not (originalIllPath / "插眼").exists():
-            logger.warning(
-                "未下载曲绘文件，建议使用 /phi downill 命令进行下载", "phi-plugin"
-            )
         for file in DlcInfoPath.iterdir():
             if file.suffix == ".json":
                 cls.DLC_Info[file.stem] = await readFile.FileReader(file)
@@ -334,7 +322,7 @@ class getInfo:
         :param bool original: 仅使用原版
         """
         result: dict[str, dict[str, Any]]
-        match 0 if original else PluginConfig.get("otherinfo"):
+        match 0 if original else PluginConfig.get("otherinfo", 0):
             case 0:
                 result = {**to_dict(cls.ori_info), **to_dict(cls.sp_info)}
             case 1:
@@ -346,7 +334,7 @@ class getInfo:
             case 2:
                 result = await readFile.FileReader(configPath / "otherinfo.yaml")
             case _:
-                raise ValueError("Invalid otherinfo")
+                raise ValueError(f"Invalid otherinfo: {original}")
         return await SongsInfo().init(result[song]) if song in result else None
 
     @classmethod
@@ -356,7 +344,7 @@ class getInfo:
 
         :param original: 仅使用原版
         """
-        match 0 if original else PluginConfig.get("otherinfo"):
+        match 0 if original else PluginConfig.get("otherinfo", 0):
             case 0:
                 return {**cls.ori_info, **cls.sp_info}
             case 1:
@@ -368,7 +356,7 @@ class getInfo:
             case 2:
                 return await readFile.FileReader(configPath / "otherinfo.yaml")
             case _:
-                raise ValueError("Invalid otherinfo")
+                raise ValueError(f"Invalid otherinfo: {original}")
 
     @classmethod
     async def songsnick(cls, mic) -> list[str] | Literal[False]:
@@ -497,68 +485,33 @@ class getInfo:
             if cls.ori_info.get(song):
                 SongId = await cls.SongGetId(song)
                 assert SongId is not None
-                if (originalIllPath / re.sub(r"\.0$", ".png", SongId)).exists():
-                    ans = originalIllPath / re.sub(r"\.0$", ".png", SongId)
-                elif (
-                    originalIllPath / "ill" / re.sub(r"\.0$", ".png", SongId)
-                ).exists():
-                    if kind == "common":
-                        ans = originalIllPath / "ill" / re.sub(r"\.0$", ".png", SongId)
-                    elif kind == "blur":
-                        ans = (
-                            originalIllPath
-                            / "illBlur"
-                            / re.sub(r"\.0$", ".png", SongId)
-                        )
-                    elif kind == "low":
-                        ans = (
-                            originalIllPath / "illLow" / re.sub(r"\.0$", ".png", SongId)
-                        )
-                elif kind == "common":
-                    ans = (
-                        PluginConfig.get("onLinePhiIllUrl")
-                        + "/ill/"
-                        + re.sub(r"\.0$", ".png", SongId)
-                    )
+                if kind == "common":
+                    ans = f"{onLinePhiIllUrl}/ill/" + re.sub(r"\.0$", ".png", SongId)
                 elif kind == "blur":
-                    ans = (
-                        PluginConfig.get("onLinePhiIllUrl")
-                        + "/illBlur/"
-                        + re.sub(r"\.0$", ".png", SongId)
+                    ans = f"{onLinePhiIllUrl}/illBlur/" + re.sub(
+                        r"\.0$", ".png", SongId
                     )
                 elif kind == "low":
-                    ans = (
-                        PluginConfig.get("onLinePhiIllUrl")
-                        + "/illLow/"
-                        + re.sub(r"\.0$", ".png", SongId)
-                    )
-            elif (originalIllPath / "SP" / f"{song}.png").exists():
-                ans = originalIllPath / "SP" / f"{song}.png"
+                    ans = f"{onLinePhiIllUrl}/illLow/" + re.sub(r"\.0$", ".png", SongId)
             else:
-                ans = PluginConfig.get("onLinePhiIllUrl") + "/SP/" + f"{song}.png"
+                ans = f"{onLinePhiIllUrl}/SP/" + f"{song}.png"
         if not ans:
-            logger.warning(f"{song} 背景不存在", "phi_plugin")
+            logger.warning(f"歌曲 {song} 背景不存在(kind: {kind})", "phi-plugin")
             ans = imgPath / "phigros.png"
         return ans
 
     @staticmethod
-    def getTableImg(dif: str) -> str | Path:
-        if (originalIllPath / "table" / f"{dif}.png").exists():
-            return originalIllPath / "table" / f"{dif}.png"
-        else:
-            return PluginConfig.get("onLinePhiIllUrl") + "/table/" + f"{dif}.png"
+    def getTableImg(dif: str) -> str:
+        return f"{onLinePhiIllUrl}/table/" + f"{dif}.png"
 
     @staticmethod
-    def getChapIll(name: str) -> str | Path:
+    def getChapIll(name: str) -> str:
         """
         返回章节封面地址
 
         :param str name: 标准章节名
         """
-        if (originalIllPath / "chap" / f"{name}.png").exists():
-            return originalIllPath / "chap" / f"{name}.png"
-        else:
-            return PluginConfig.get("onLinePhiIllUrl") + "/chap/" + f"{name}.png"
+        return f"{onLinePhiIllUrl}/chap/" + f"{name}.png"
 
     @classmethod
     async def idgetavatar(cls, id: str):
