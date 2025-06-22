@@ -8,35 +8,37 @@ from .puppeteer import Puppeteer
 
 class picmodle:
     @classmethod
-    async def atlas(cls, info) -> Image:
+    async def atlas(cls, info: dict) -> Image:
         """曲目图鉴"""
         return await cls.common(
             "atlas",
             {
                 **info,
                 "length": (
-                    info.get("length").replace(":", "'") + "''" if info.length else "-"
+                    info["length"].replace(":", "'") + "''"
+                    if info.get("length")
+                    else "-"
                 ),
             },
         )
 
     @classmethod
-    async def b19(cls, data) -> Image:
+    async def b19(cls, data: dict) -> Image:
         """b19"""
         return await cls.common("b19", data)
 
     @classmethod
-    async def arcgros_b19(cls, data) -> Image:
+    async def arcgros_b19(cls, data: dict) -> Image:
         """arcgros b19"""
         return await cls.common("arcgrosB19", data)
 
     @classmethod
-    async def update(cls, data) -> Image:
+    async def update(cls, data: dict) -> Image:
         """更新"""
         return await cls.common("update", data)
 
     @classmethod
-    async def tasks(cls, data) -> Image:
+    async def tasks(cls, data: dict) -> Image:
         """任务"""
         return await cls.common("tasks", data)
 
@@ -127,7 +129,7 @@ class picmodle:
             "chap",
             "rankingList",
             "clg",
-            "jrrp"
+            "jrrp",
         ],
         data: dict,
     ) -> Image:

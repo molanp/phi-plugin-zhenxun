@@ -3,7 +3,7 @@ import re
 from zhenxun.services.log import logger
 
 from ..config import PluginConfig
-from ..vika import Vika
+from ..vika import Vika as __Vika
 
 cfg = {
     "viewId": "viwpdf3HFtnvG",
@@ -12,9 +12,9 @@ cfg = {
 }
 
 
-class _VikaData:
+class _Vika:
     def __init__(self, token: str):
-        self.vika = Vika(token=token, field_key="id")
+        self.vika = __Vika(token=token, field_key="id")
         self.PhigrosDan = self.vika.datasheet("dstkfifML5zGiURp6h")
 
     async def GetUserDanBySstk(self, session_token: str) -> list[dict] | None:
@@ -44,7 +44,7 @@ class _VikaData:
     async def GetUserDanByName(self, nickname: str) -> list[dict] | None:
         """通过 nickname 获取用户的民间段位数据"""
         try:
-            response = await self.PhigrosDan.records.query( # type: ignore
+            response = await self.PhigrosDan.records.query(  # type: ignore
                 {**cfg, "filterByFormula": f"{{fldzkniADAUck}} = '{nickname}'"}
             )
             if response.success:
@@ -88,4 +88,4 @@ def make_response(response) -> list[dict] | None:
     return sorted(result, key=lambda x: -x["dan_num"]) if result else None
 
 
-VikaData = _VikaData(PluginConfig.get("VikaToken"))
+Vika = _Vika(PluginConfig.get("VikaToken"))

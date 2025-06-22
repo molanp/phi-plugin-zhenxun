@@ -289,16 +289,16 @@ class Save:
         #             continue
         pass
 
-    def checkNoInfo(self) -> list[str]:
+    async def checkNoInfo(self) -> list[str]:
         """
         检查 gameRecord 中的歌曲 ID 是否有效。
         返回无效 ID 列表。
         """
 
         err = []
-        err.extend(
-            song_id for song_id in self.gameRecord if not getInfo.idgetsong(song_id)
-        )
+        for song_id in self.gameRecord:
+            if not await getInfo.idgetsong(song_id):
+                err.append(song_id)
         return err
 
     def getRecord(self) -> list[LevelRecordInfo]:
@@ -398,12 +398,12 @@ class Save:
         :return:
         ```
         {
-            "phi": list[LevelRecordInfo],
+            "phi": list[LevelRecordInfo | False],
             "b19_list": list[LevelRecordInfo],
             "com_rks": float,
         }
         """
-        if self.B19List:
+        if hasattr(self, "B19List"):
             return self.B19List
         # 计算得到的rks，仅作为测试使用
         sum_rks: float = 0
@@ -411,19 +411,22 @@ class Save:
         philist = self.findAccRecord(100)
         # p3
         phi = [philist.pop(0) for _ in range(min(3, len(philist)))]
-        # logger.info(phi, "pgi-plugin")
+        # logger.info(phi, "phi-plugin")
+        if len(phi) < 3:
+            # 在末尾补到3位
+            phi += [False] * (3 - len(phi))
         # 处理数据
         for i in range(3):
-            if i >= len(phi):
-                phi[i] = False  # type: ignore
+            record = phi[i]
+            if isinstance(record, bool):
                 continue
 
-            record = phi[i]
             if record.rks:
-                phi[i] = copy.deepcopy(record)
-                sum_rks += float(phi[i].rks)  # 计算 rks
-                phi[i].illustration = await getInfo.getill(phi[i].song)
-                phi[i].suggest = "无法推分"
+                temp = copy.deepcopy(record)  # 防止污染原数据
+                sum_rks += temp.rks  # 计算 rks
+                temp.illustration = await getInfo.getill(temp.song)
+                temp.suggest = "无法推分"
+                phi[i] = temp
         # 所有成绩
         rkslist = self.getRecord()
         # 真实 rks
@@ -451,7 +454,7 @@ class Save:
                 )
                 if (
                     "无" in suggest
-                    and (not phi or (record.rks > phi[-1].rks))
+                    and (not phi or (record.rks > getattr(phi[-1], "rks", 0)))
                     and record.rks < 100
                 ):
                     suggest = "100.00%"
@@ -466,12 +469,12 @@ class Save:
             b19_list.append(record)
         com_rks = sum_rks / 30
         self.B19List = {
-            "phi": phi,
+            "phi": phi,  # type: ignore
             "b19_list": b19_list,
         }
         self.b19_rks = b19_list[min(len(b19_list) - 1, 26)].rks
         return {
-            "phi": phi,
+            "phi": phi,  # type: ignore
             "b19_list": b19_list,
             "com_rks": com_rks,
         }
@@ -643,7 +646,7 @@ class Save:
         stats[3].title = Level[3]
 
         for id in Record:
-            if not getInfo.idgetsong(id):
+            if not await getInfo.idgetsong(id):
                 continue
             record = Record[id]
             for lv in [0, 1, 2, 3]:

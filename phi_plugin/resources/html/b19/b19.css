@@ -601,11 +601,11 @@ body p {
   border-bottom-right-radius: 4px;
 }
 
-.Nosignal .border_corner,
+/* .Nosignal .border_corner,
 .Nosignal .line,
 .Nosignal .sqrt {
-  /* filter: drop-shadow(0 0 5px #fff); */
-}
+  filter: drop-shadow(0 0 5px #fff);
+} */
 
 .Nosignal .timeout,
 .Nosignal .client {

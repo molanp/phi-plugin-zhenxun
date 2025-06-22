@@ -282,12 +282,13 @@ class getdata:
                         and getInfo.songsid.get(id) == task[i]["song"]
                     ):
                         level = Level.index(task[i]["request"]["rank"])
-                        if not now.gameRecord[id][level]:
+                        temp = now.gameRecord[id][level]
+                        if not temp:
                             continue
                         match task[i]["request"]["type"]:
                             case "acc":
                                 if (
-                                    now.gameRecord[id][level].acc
+                                    temp.acc
                                     >= task[i]["request"]["value"]
                                 ):
                                     pluginData.plugin_data.task[i]["finished"] = True
@@ -295,7 +296,7 @@ class getdata:
                                     add_money += task[i]["reward"]
                             case "score":
                                 if (
-                                    now.gameRecord[id][level].score
+                                    temp.score
                                     >= task[i]["request"]["value"]
                                 ):
                                     pluginData.plugin_data.task[i]["finished"] = True

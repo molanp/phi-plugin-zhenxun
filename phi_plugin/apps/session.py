@@ -144,6 +144,7 @@ async def _(bot, session: Uninfo, params: Arparma):
                         await getQRcode.getQRcode(qrcode),
                     ],
                     False,
+                    recallTime
                 )
             else:
                 qrCodeMsg = await send.sendWithAt(
@@ -151,12 +152,8 @@ async def _(bot, session: Uninfo, params: Arparma):
                     "请点击链接进行登录嗷！请勿使用他人的链接。请注意，"
                     "登录TapTap可能造成账号及财产损失，请在信任Bot来源的情况下扫码登录。\n"
                     f"链接剩余时间:{QRCodetimeout}\n{qrcode}",
+                    recallTime=recallTime
                 )
-            WithdrawManager.append(
-                bot,
-                qrCodeMsg.msg_ids[0]["message_id"],
-                recallTime,
-            )
         else:
             request = await getQRcode.getRequest()
             if PluginConfig.get("TapTapLoginQRcode"):
@@ -167,6 +164,7 @@ async def _(bot, session: Uninfo, params: Arparma):
                         "请注意，登录TapTap可能造成账号及财产损失，请在信任Bot来源的情况下扫码登录。",
                         await getQRcode.getQRcode(request["data"]["qrcode_url"]),
                     ],
+                    recallTime=60
                 )
             else:
                 qrCodeMsg = await send.sendWithAt(
@@ -174,12 +172,8 @@ async def _(bot, session: Uninfo, params: Arparma):
                     "请点击链接进行登录嗷！请勿使用他人的链接。"
                     "请注意，登录TapTap可能造成账号及财产损失，请在信任Bot来源的情况下扫码登录。\n"
                     f"{request['data']['qrcode_url']}",
+                    recallTime=60
                 )
-            WithdrawManager.append(
-                bot,
-                qrCodeMsg.msg_ids[0]["message_id"],
-                60,
-            )
         recall_id = WithdrawManager._index - 1
         QRCodetimeout = request["data"]["expires_in"]
         # 判断adapter是否为QQBot
@@ -206,8 +200,7 @@ async def _(bot, session: Uninfo, params: Arparma):
                 f"\n错误信息：{type(e)}: {e}",
             )
     if not PluginConfig.get("isGuild"):
-        receipt = await send.sendWithAt(bind, "正在绑定，请稍等一下哦！\n >_<")
-        WithdrawManager.append(bot, receipt.msg_ids[0]["message_id"], 5)
+        await send.sendWithAt(bind, "正在绑定，请稍等一下哦！\n >_<", recallTime=5)
     if PluginConfig.get("openPhiPluginApi"):
         try:
             result = await makeRequest.bind(
@@ -233,12 +226,12 @@ async def _(bot, session: Uninfo, params: Arparma):
             )
             logger.error("API错误", "phi-plugin", e=e)
         return
-    receipt = await send.sendWithAt(
+    await send.sendWithAt(
         bind,
         "请注意保护好自己的sessionToken呐！如果需要获取已绑定的sessionToken可以私聊发送"
         f"{cmdhead} sessionToken 哦！",
+        recallTime=10
     )
-    WithdrawManager.append(bot, receipt.msg_ids[0]["message_id"], 10)
     # with contextlib.suppress(Exception):
     updateData = await getUpdateSave.getNewSaveFromLocal(bind, session, sessionToken)
     history = await getSave.getHistory(session.user.id)
@@ -274,8 +267,7 @@ async def _(bot, session: Uninfo):
         )
         return
     if not PluginConfig.get("isGuild"):
-        receipt = await send.sendWithAt(bind, "正在生成，请稍等一下哦！\n >_<")
-        WithdrawManager.append(bot, receipt.msg_ids[0]["message_id"], 5)
+        await send.sendWithAt(bind, "正在生成，请稍等一下哦！\n >_<", recallTime=5)
     try:
         updateData = await getUpdateSave.getNewSaveFromLocal(
             update, session, sessionToken
@@ -386,12 +378,7 @@ async def waitResponse(bot, QRCodetimeout, request, recall_id, qrCodeMsg):
         if result.get("success"):
             break
         if result["data"].get("error") == "authorization_waiting" and not flag:
-            receipt = await send.sendWithAt(bind, "二维码已扫描，请确认登录")
-            WithdrawManager.append(
-                bot,
-                receipt.msg_ids[0]["message_id"],
-                10,
-            )
+            await send.sendWithAt(bind, "二维码已扫描，请确认登录", recallTime=10)
             WithdrawManager.remove(recall_id)
             WithdrawManager.append(
                 bot,
@@ -455,12 +442,6 @@ async def build(matcher, session: Uninfo, updateData: dict, history: saveHistory
                     )
                 tot_update[time_vis[score_date]]["update_num"] += 1
                 tot_update[time_vis[score_date]]["song"].append(score_info)
-    newnum = (
-        tot_update[
-            time_vis.get(fCompute.date_to_string(now.saveInfo.modifiedAt.iso), 0)
-        ].get("update_num")
-        or 0
-    )
     tot_update = sorted(tot_update, key=lambda x: Date(x["date"]), reverse=True)
     # 实际显示的数量
     show = 0
@@ -571,9 +552,7 @@ async def build(matcher, session: Uninfo, updateData: dict, history: saveHistory
         "ChallengeModeRank": now.saveInfo.summary.challengeModeRank % 100,
         "background": await getdata.getill(random.choice(getInfo.illlist)),
         "box_line": box_line,
-        "update_ans": f"更新了{newnum}份成绩" if newnum else "未收集到新成绩",
         "Notes": pluginData.plugin_data.money,
-        "show": show,
         "tips": random.choice(getInfo.Tips),
         "task_data": task_data,
         "task_time": task_time,

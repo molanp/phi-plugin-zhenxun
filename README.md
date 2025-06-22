@@ -20,17 +20,15 @@
 
 当前同步的 js 版本
 
-[21a89ba3cb3751a7194670219080c090f7d33438](https://github.com/Catrong/phi-plugin/commit/21a89ba3cb3751a7194670219080c090f7d33438)
+[ff04b2c257dba61c42f33bd6aff72152e4673af7](https://github.com/Catrong/phi-plugin/commit/ff04b2c257dba61c42f33bd6aff72152e4673af7)
 
-[已落后的变更](https://github.com/Catrong/phi-plugin/compare/21a89ba3cb3751a7194670219080c090f7d33438...main)
+[已落后的变更](https://github.com/Catrong/phi-plugin/compare/ff04b2c257dba61c42f33bd6aff72152e4673af7...main)
 
 </details>
 
 # 插件正在火热开发中...
 
-~~当前依赖已全部移植完成，正在逐步移植功能~~
-
-由于 js 版本原插件代码逻辑过于逆天，现在正在全部推倒重来，参考 koishi 版本重写编写
+当前依赖已全部移植完成，正在逐步移植功能
 
 ### 介绍
 
@@ -126,6 +124,16 @@
 | dan       | 段位认证相关                 | /dan /danupdate                                             |
 
 </details>
+
+---
+
+### 部分功能预览
+
+| **Best30 效果图**<br><picture><source srcset="https://github.com/user-attachments/assets/470946e9-60ae-49ab-b901-0158039061b3" type="image/avif" width="80%" /><img src="https://github.com/user-attachments/assets/470946e9-60ae-49ab-b901-0158039061b3" width="80%" /></picture> | **单曲成绩效果图**<br><picture><source srcset="" type="image/avif" width="40%" /><img src="" width="40%"></picture><br><br>**单曲成绩效果图（Legacy）**<br><picture><source srcset="" type="image/avif" width="40%" /><img src="" width="40%"></picture><br><br>**单曲图鉴效果图**<br><picture><source srcset="" type="image/avif" width="40%" /><img src="" width="40%"></picture> |
+| :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+|                                        **范围成绩效果图**<br><picture><source srcset="" type="image/avif" /><img src=""></picture><br> <br><br>**个人信息效果图**<br><picture><source srcset="" type="image/avif" /><img src=""></picture>                                         |                                                                                                                          **个人信息效果图（Legacy）**<br><picture><source srcset="" type="image/avif" width="60%" /><img src="" width="60%"></picture><br>                                                                                                                          |
+
+---
 
 ## 💕 感谢
 

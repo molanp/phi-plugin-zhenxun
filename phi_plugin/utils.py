@@ -86,10 +86,10 @@ def Date(date_input: datetime | str | float | None) -> datetime:
 def Rating(score: int | None, fc: bool):
     if score is None:
         return "NEW"
-    elif fc:
-        return "FC"
     elif score >= 1000000:
         return "phi"
+    elif fc:
+        return "FC"
     elif score < 700000:
         return "F"
     elif score < 820000:

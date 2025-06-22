@@ -1,10 +1,12 @@
 from typing import Any
 
+from nonebot.matcher import current_bot
 from nonebot_plugin_alconna import Image, Text, UniMessage
 from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.services.log import logger
 from zhenxun.utils.message import MessageUtils
+from zhenxun.utils.withdraw_manage import WithdrawManager
 
 from ..config import PluginConfig
 from ..utils import to_dict
@@ -15,17 +17,26 @@ from .getUpdateSave import getUpdateSave
 
 class send:
     @classmethod
-    async def sendWithAt(cls, matcher, msg: Any, quote=True):
+    async def sendWithAt(
+        cls, matcher, msg: Any, quote=True, recallTime=0
+    ):
         """
         :param e: 响应器对象
         :param msg: UniMessage支持的消息内容
         :param quote: 是否引用回复
         """
-        return await matcher.send(UniMessage(msg), at_sender=True, reply_to=quote)
+        recepit = await matcher.send(UniMessage(msg), at_sender=True, reply_to=quote) # type: ignore
+        if recallTime > 0:  # 删除消息
+            WithdrawManager.append(
+                current_bot.get(),
+                recepit.msg_ids[0]["message_id"],
+                recallTime,
+            )
+        return recepit
 
     @classmethod
     async def getsaveResult(
-        cls, matcher, session: Uninfo, ver, send=True
+        cls, matcher, session: Uninfo, ver: int | None = None, send=True
     ) -> None | Save:
         """
         检查存档部分
