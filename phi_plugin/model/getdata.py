@@ -1,6 +1,6 @@
 import math
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, overload
 
 from nonebot_plugin_uninfo import Uninfo
 
@@ -25,7 +25,6 @@ from .send import send
 
 
 class getdata:
-
     @staticmethod
     async def fuzzysongsnick(mic: str, Distance: float = 0.85):
         """
@@ -38,9 +37,16 @@ class getdata:
         return await getInfo.fuzzysongsnick(mic, Distance)
 
     @staticmethod
+    @overload
+    async def info(song: str, original: bool = False) -> SongsInfoObject | None: ...
+
+    @staticmethod
+    @overload
     async def info(
-        song: str | None = None, original: bool = False
-    ) -> SongsInfoObject | dict[str, SongsInfoObject] | None:
+        song: None = None, original: bool = False
+    ) -> dict[str, SongsInfoObject]: ...
+    @staticmethod
+    async def info(song: str | None = None, original: bool = False) -> Any:
         """
         :param song: 原曲曲名
         :param original: 是否仅使用原版曲库
@@ -287,18 +293,12 @@ class getdata:
                             continue
                         match task[i]["request"]["type"]:
                             case "acc":
-                                if (
-                                    temp.acc
-                                    >= task[i]["request"]["value"]
-                                ):
+                                if temp.acc >= task[i]["request"]["value"]:
                                     pluginData.plugin_data.task[i]["finished"] = True
                                     pluginData.plugin_data.money += task[i]["reward"]
                                     add_money += task[i]["reward"]
                             case "score":
-                                if (
-                                    temp.score
-                                    >= task[i]["request"]["value"]
-                                ):
+                                if temp.score >= task[i]["request"]["value"]:
                                     pluginData.plugin_data.task[i]["finished"] = True
                                     pluginData.plugin_data.money += task[i]["reward"]
                                     add_money += task[i]["reward"]

@@ -135,12 +135,15 @@ class getSave:
         history = await cls.getHistory(user_id)
 
         dan = history.dan if history else None
-
-        if dan and not isinstance(dan, list):
-            dan = [dan]
-        if all is True:
+        # NOTE: 逻辑为 return dan ? (all ? dan : dan[0]) : undefined
+        if dan is None:
+            return None
+        if all:
             return dan
-        return dan[0] if dan else None
+        else:
+            return (
+                dan[0] if (hasattr(dan, "__getitem__") and len(dan) > 0) else None
+            )
 
     @classmethod
     async def delSave(cls, user_id: str):

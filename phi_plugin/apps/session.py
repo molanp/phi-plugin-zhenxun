@@ -239,7 +239,7 @@ async def _(bot, session: Uninfo, params: Arparma):
 
 
 @update.handle()
-async def _(bot, session: Uninfo):
+async def _(session: Uninfo):
     if await getBanGroup.get(update, session, "update"):
         await send.sendWithAt(update, "这里被管理员禁止使用这个功能了呐QAQ！")
         return

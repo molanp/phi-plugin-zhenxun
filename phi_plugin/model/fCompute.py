@@ -2,7 +2,7 @@ from datetime import datetime
 from pathlib import Path
 import random
 import re
-from typing import Literal
+from typing import Literal, TypedDict
 
 from nonebot_plugin_alconna import File, UniMessage
 from nonebot_plugin_uninfo import Uninfo
@@ -13,6 +13,23 @@ from zhenxun.utils.rules import ensure_group
 
 from ..utils import Date
 from .constNum import MAX_DIFFICULTY
+
+
+class match_request_return_2(TypedDict):
+    NEW: bool
+    F: bool
+    C: bool
+    B: bool
+    A: bool
+    S: bool
+    V: bool
+    FC: bool
+    PHI: bool
+
+class match_request_return(TypedDict):
+    range: list[float]
+    isask: list[bool]
+    scoreAsk: match_request_return_2
 
 
 class fCompute:
@@ -283,17 +300,31 @@ class fCompute:
         return r
 
     @staticmethod
-    def match_request(msg: str, max_range: float | None = None) -> dict:
+    def match_request(msg: str, max_range: float | None = None) -> match_request_return:
         """
         匹配消息中对成绩的筛选条件
 
         :param msg: 用户输入的原始消息
         :param max_range: 最大难度范围
         :return: 包含筛选条件的字典 {range, isask, scoreAsk}
+        ```
+        {
+            "range": [min_range, max_range],
+            "isask": [bool, bool, bool, bool], // [EZ, HD, IN, AT]
+            "scoreAsk": {
+                "NEW": bool,
+                "F": bool,
+                "C": bool,
+                "B": bool,
+                "A": bool,
+                "S": bool,
+                "V": bool,
+                "FC": bool,
+                "PHI": bool,
+            },
+        }
         """
-        from .fCompute import fCompute  # 避免循环导入问题（如有）
-
-        result = {
+        result: match_request_return = {
             "range": [0, max_range or MAX_DIFFICULTY],
             "isask": [True, True, True, True],  # [EZ, HD, IN, AT]
             "scoreAsk": {

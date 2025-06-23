@@ -78,11 +78,6 @@
                 "desc": "计算筛去小于输入的acc值的成绩后的玩家RKS值 <br>eg: /lmtacc 98.5"
             },
             {
-                "title": "/bestN",
-                "eg": "/best <1-99>",
-                "desc": "获取文字版 B<N> 成绩，私聊获取完整版，建议私聊使用<br>eg: /best 19"
-            },
-            {
                 "title": "/suggest [定数] [难度] [评级]",
                 "eg": "/suggest",
                 "desc": "获取推分（使游戏内显示数值+0.01）建议<br>eg: /suggest 15 F"

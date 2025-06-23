@@ -594,7 +594,7 @@ class Save:
             "com_rks": com_rks,
         }
 
-    def getSuggest(self, id: str, lv: int, count: int, difficulty: int) -> str:
+    def getSuggest(self, id: str | None, lv: int, count: int, difficulty: float) -> str:
         """
         :param id: id
         :param lv: lv
@@ -602,6 +602,8 @@ class Save:
         :param difficulty: difficulty
         :return: 推分建议
         """
+        if not id:
+            return ""
         if not self.b19_rks:
             record = self.getRecord()
             self.b19_rks = record[26].rks if len(record) > 26 else 0

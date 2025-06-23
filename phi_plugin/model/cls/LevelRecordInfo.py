@@ -9,25 +9,25 @@ from ..getInfo import getInfo
 
 
 class LevelRecordInfo(BaseModel):
-    fc: bool
+    fc: bool = False
     """是否 Full Combo"""
-    score: int
+    score: int = 0
     """得分"""
-    acc: float
+    acc: float = 0
     """准确率"""
-    id: str
+    id: str = ""
     """曲目id"""
-    rank: str
+    rank: str = ""
     """Level"""
-    Rating: str
+    Rating: str = ""
     """评分等级"""
-    song: str
+    song: str = ""
     """曲名"""
-    illustration: str | Path
+    illustration: str | Path = ""
     """曲绘链接"""
-    difficulty: float
+    difficulty: float = 0.0
     """难度"""
-    rks: float
+    rks: float = 0.0
     """等效RKS"""
     suggest: str = ""
     """推分建议"""
