@@ -18,7 +18,7 @@
 <details>
 <summary>当前同步版本号</summary>
 
-当前同步的 js 版本
+当前同步的版本
 
 [ff04b2c257dba61c42f33bd6aff72152e4673af7](https://github.com/Catrong/phi-plugin/commit/ff04b2c257dba61c42f33bd6aff72152e4673af7)
 
