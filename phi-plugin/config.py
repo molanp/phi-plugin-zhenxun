@@ -149,9 +149,9 @@ CONFIG = (
 
 class PluginConfig:
     @staticmethod
-    def get(key: str) -> Any:
+    def get(key: str, default: None | Any = None) -> Any:
         """获取配置项的值"""
-        return Config.get_config("phi-plugin", key.upper())
+        return Config.get_config("phi-plugin", key.upper(), default)
 
     @staticmethod
     def set(key: str, value):

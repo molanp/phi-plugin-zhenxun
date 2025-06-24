@@ -33,7 +33,7 @@ from ..utils import to_dict
 ChallengeModeName = ["白", "绿", "蓝", "红", "金", "彩"]
 
 Level: list = ["EZ", "HD", "IN", "AT", None]  # 存档的难度映射
-cmdhead = re.escape(PluginConfig.get("cmdhead"))
+cmdhead = re.escape(PluginConfig.get("cmdhead", "/phi"))
 
 b19 = on_alconna(
     Alconna(

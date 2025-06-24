@@ -1,6 +1,7 @@
 import base64
 import struct
-
+# BUG: data读取偏移指针溢出
+# BUG: 需要对每个函数加上indexerror容错
 
 class ByteReader:
     def __init__(self, data, position=0):
@@ -80,7 +81,7 @@ class ByteReader:
             for _ in range(num):
                 self.skipVarInt()
         else:
-            if self.data[self.position] < 0:
+            if self.position >= len(self.data) or self.data[self.position] < 0:
                 self.position += 2
             else:
                 self.position += 1

@@ -32,7 +32,7 @@ from ..model.send import send
 from ..models import qrCode
 from ..utils import Date, to_dict
 
-cmdhead = re.escape(PluginConfig.get("cmdhead"))
+cmdhead = re.escape(PluginConfig.get("cmdhead", "/phi"))
 apiMsg = (
     "\n请注意，您尚未设置API Token！\n指令格式：\n"
     f"{cmdhead} setApiToken <apiToken>\n更多帮助：{cmdhead} apihelp"
@@ -144,7 +144,7 @@ async def _(bot, session: Uninfo, params: Arparma):
                         await getQRcode.getQRcode(qrcode),
                     ],
                     False,
-                    recallTime
+                    recallTime,
                 )
             else:
                 qrCodeMsg = await send.sendWithAt(
@@ -152,7 +152,7 @@ async def _(bot, session: Uninfo, params: Arparma):
                     "请点击链接进行登录嗷！请勿使用他人的链接。请注意，"
                     "登录TapTap可能造成账号及财产损失，请在信任Bot来源的情况下扫码登录。\n"
                     f"链接剩余时间:{QRCodetimeout}\n{qrcode}",
-                    recallTime=recallTime
+                    recallTime=recallTime,
                 )
         else:
             request = await getQRcode.getRequest()
@@ -164,7 +164,7 @@ async def _(bot, session: Uninfo, params: Arparma):
                         "请注意，登录TapTap可能造成账号及财产损失，请在信任Bot来源的情况下扫码登录。",
                         await getQRcode.getQRcode(request["data"]["qrcode_url"]),
                     ],
-                    recallTime=60
+                    recallTime=60,
                 )
             else:
                 qrCodeMsg = await send.sendWithAt(
@@ -172,7 +172,7 @@ async def _(bot, session: Uninfo, params: Arparma):
                     "请点击链接进行登录嗷！请勿使用他人的链接。"
                     "请注意，登录TapTap可能造成账号及财产损失，请在信任Bot来源的情况下扫码登录。\n"
                     f"{request['data']['qrcode_url']}",
-                    recallTime=60
+                    recallTime=60,
                 )
         recall_id = WithdrawManager._index - 1
         QRCodetimeout = request["data"]["expires_in"]
@@ -230,7 +230,7 @@ async def _(bot, session: Uninfo, params: Arparma):
         bind,
         "请注意保护好自己的sessionToken呐！如果需要获取已绑定的sessionToken可以私聊发送"
         f"{cmdhead} sessionToken 哦！",
-        recallTime=10
+        recallTime=10,
     )
     # with contextlib.suppress(Exception):
     updateData = await getUpdateSave.getNewSaveFromLocal(bind, session, sessionToken)
