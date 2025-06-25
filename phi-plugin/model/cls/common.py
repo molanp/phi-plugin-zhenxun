@@ -271,6 +271,7 @@ class Save:
                         logger.error(
                             f"acc > 100 封禁tk {self.sessionToken}", "phi-plugin"
                         )
+                        logger.warning(str(record))
                         await getRksRank.delUserRks(self.sessionToken)
                         raise ValueError(
                             "您的存档 acc 异常，该 token 已禁用"

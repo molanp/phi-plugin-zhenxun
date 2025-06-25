@@ -1,5 +1,3 @@
-from typing import Any
-
 from zhenxun.services.log import logger
 
 from .ByteReader import ByteReader
@@ -13,7 +11,7 @@ class GameRecord:
     name: str = "gameRecord"
     version: int = 1
 
-    def __init__(self, data: bytes | str) -> None:
+    def __init__(self, data: bytes) -> None:
         """
         初始化
 
@@ -23,34 +21,36 @@ class GameRecord:
         self.version: int = 1
         self.Record: dict[str, list[LevelRecord]] = {}
         self.data = ByteReader(data)
-
-    async def init(self, song_data: list[Any]) -> None:
-        """
-        初始化记录
-
-        :param song_data: 歌曲数据
-        """
         try:
             self.songsnum = self.data.getVarInt()
 
             while self.data.remaining() > 0:
                 key = self.data.getString()
+                if not key or r"\u0" in key or "�" in key:
+                    # HACK: 一部分数据会乱码，原因未知
+                    continue
                 self.data.skipVarInt()
                 length = self.data.getByte()
                 fc = self.data.getByte()
-                song: list[LevelRecord] = [LevelRecord() for _ in range(4)]
+                song = {}
                 for level in range(4):
                     if Util.getBit(length, level):
-                        song[level].score = self.data.getInt()
-                        song[level].acc = self.data.getFloat()
-                        song[level].fc = (
-                            True
-                            if (song[level].score == 1000000 and song[level].acc == 100)
-                            else Util.getBit(fc, level)
-                        )
-
-                self.Record[key] = song
-
+                        score = self.data.getInt()
+                        acc = self.data.getFloat()
+                        if 0 <= score <= 1000000 and 0 <= acc <= 100:
+                            song[level] = LevelRecord()
+                            song[level].score = score
+                            song[level].acc = acc
+                            song[level].fc = (
+                                True
+                                if (
+                                    song[level].score == 1000000
+                                    and song[level].acc == 100
+                                )
+                                else Util.getBit(fc, level)
+                            )
+                if song:
+                    self.Record[key] = list(song.values())
         except Exception as e:
             logger.error("[GameRecord]初始化记录失败", "phi-plugin", e=e)
             raise ValueError("[GameRecord]初始化记录失败") from e

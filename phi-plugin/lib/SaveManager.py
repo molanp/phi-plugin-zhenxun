@@ -4,7 +4,7 @@ from zhenxun.services.log import logger
 from zhenxun.utils.http_utils import AsyncHttpx
 
 from ..utils import to_dict
-from .AES import Decrypt, Encrypt
+from .AES import Decrypt
 from .Summary import Summary
 
 
@@ -86,7 +86,7 @@ class SaveManager:
         return results
 
     @staticmethod
-    async def decrypt(data: bytes | str) -> str:
+    async def decrypt(data: bytes) -> bytes:
         """
         解密数据
 
@@ -98,17 +98,3 @@ class SaveManager:
         """
         return await Decrypt(data)
 
-    @staticmethod
-    async def encrypt(data: bytes | str, key: str | bytes, iv: str | bytes) -> str:
-        """
-        加密数据
-
-        Args:
-            data: 原始数据
-            key: 加密密钥
-            iv: 初始化向量
-
-        Returns:
-            加密后的数据
-        """
-        return await Encrypt(data, key, iv)

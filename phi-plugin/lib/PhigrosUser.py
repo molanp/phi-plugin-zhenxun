@@ -144,7 +144,6 @@ class PhigrosUser:
                     raise ValueError("版本号已更新")
 
                 record = GameRecord(await SaveManager.decrypt(file.getAllByte()))
-                await record.init([])
                 self.gameRecord = record.Record
                 return True
 

@@ -1,10 +1,12 @@
 import base64
 import struct
+
 # BUG: data读取偏移指针溢出
 # BUG: 需要对每个函数加上indexerror容错
 
+
 class ByteReader:
-    def __init__(self, data, position=0):
+    def __init__(self, data: str | bytes, position=0):
         # 如果是str，假定是hex字符串；如果是bytes或bytearray，直接用
         if isinstance(data, str):
             self.data = bytearray.fromhex(data)
@@ -26,7 +28,7 @@ class ByteReader:
         self.position += 1
 
     def getAllByte(self):
-        return base64.b64encode(self.data[self.position :]).decode()
+        return base64.b64encode(self.data[self.position :])
 
     def getShort(self):
         self.position += 2
@@ -68,20 +70,28 @@ class ByteReader:
     def getVarInt(self):
         if self.data[self.position] > 127:
             self.position += 2
-            return (0b01111111 & self.data[self.position - 2]) ^ (
+            val = (0b01111111 & self.data[self.position - 2]) ^ (
                 self.data[self.position - 1] << 7
             )
+            if val > 800:
+                # HACK: 没办法，找不到溢出原因只能这样
+                print(f"错误数据，尝试跳过: {self.position}, val={val} | {hex(self.data[self.position])}")
+                self.skipVarInt()
+                return self.getVarInt()
+
         else:
             val = self.data[self.position]
             self.position += 1
-            return val
+
+        return val
 
     def skipVarInt(self, num=None):
         if num:
-            for _ in range(num):
+            while num > 0:
                 self.skipVarInt()
+                num -= 1
         else:
-            if self.position >= len(self.data) or self.data[self.position] < 0:
+            if self.data[self.position] > 127:
                 self.position += 2
             else:
                 self.position += 1
@@ -93,16 +103,12 @@ class ByteReader:
 
     def getString(self):
         length = self.getVarInt()
+        if self.position + length > len(self.data):
+            self.position = len(self.data)
+            return ""
         self.position += length
         raw = self.data[self.position - length : self.position]
-        try:
-            return raw.decode("utf-8")
-        except UnicodeDecodeError:
-            try:
-                return raw.decode("latin1")
-            except Exception:
-                # 如果还是不行，返回十六进制字符串
-                return raw.hex()
+        return raw.decode("utf-8", errors="replace")
 
     def putString(self, s):
         b = s.encode("utf-8")
