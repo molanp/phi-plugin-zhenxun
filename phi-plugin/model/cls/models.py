@@ -240,6 +240,13 @@ class RanklistResponseData(BaseModel):
     """当前用户扩展数据"""
 
 
+class RanklistRksResponseData(BaseModel):
+    """RKS 排行榜响应数据"""
+
+    rksRank: int
+    totNum: int
+
+
 class ScoreDetail(BaseModel):
     """歌曲得分详情"""
 

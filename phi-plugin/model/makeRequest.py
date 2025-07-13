@@ -8,6 +8,7 @@ from .cls.models import (
     GetCloudSongResponse,
     OriSave,
     RanklistResponseData,
+    RanklistRksResponseData,
     SaveInfo,
     ScoreDetail,
     SongRecordHistory,
@@ -119,6 +120,17 @@ class makeRequest:
         return RanklistResponseData(
             **(await makeFetch(burl("/get/ranklist/rank"), params))["data"]
         )
+
+    @staticmethod
+    async def getRanklistRks(params: dict) -> RanklistRksResponseData:
+        """
+        获取rks大于目标值的用户数量
+
+        :param params: 请求参数,需包含以下内容
+
+            - request_rks: 请求的排名
+        """
+        return (await makeFetch(burl("/get/ranklist/rksRank"), params))["data"]
 
     @staticmethod
     async def getHistory(params: dict) -> saveHistoryModel:

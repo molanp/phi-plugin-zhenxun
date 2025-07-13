@@ -26,9 +26,6 @@ class GameRecord:
 
             while self.data.remaining() > 0:
                 key = self.data.getString()
-                if not key or r"\u0" in key or "�" in key:
-                    # HACK: 一部分数据会乱码，原因未知
-                    continue
                 self.data.skipVarInt()
                 length = self.data.getByte()
                 fc = self.data.getByte()

@@ -143,7 +143,7 @@ export class phisong extends plugin {
                     data = {
                         ...infoData,
                         comment: {
-                            command: `当前共有${commentData.length}条评论，第${Math.min(page, maxPage)}页，共${maxPage}页，发送/${Config.getUserCfg('config', 'cmdhead')} cmt <曲名> <定级?>(换行)<内容> 进行评论，查询时加上 -p <页码> 选择页数`,
+                            command: `当前共有${commentData.length}条评论，第${Math.min(page, maxPage)}页，共${maxPage}页，发送/${Config.getUserCfg('config', 'cmdhead')} cmt <曲名> <定级?>(换行)<内容> 进行评论，-p <页码> 选择页数`,
                             list: commentData.slice((commentsAPage * (page - 1)), commentsAPage * page - 1)
                         }
                     };
@@ -724,7 +724,7 @@ export class phisong extends plugin {
         /**
          * @type {allLevelKind}
          */
-        let rankKind = msg.match(/ (EZ|HD|IN|AT|LEGACY)\n/i)?.[1] || ''
+        let rankKind = msg.match(/ (EZ|HD|IN|AT|LEGACY)\s*\n/i)?.[1] || ''
         rankKind = rankKind.toUpperCase()
         let rankNum = 0;
         switch (rankKind) {
@@ -748,7 +748,7 @@ export class phisong extends plugin {
                 rankNum = -1;
         }
 
-        let nickname = msg.replace(/ (EZ|HD|IN|AT|LEGACY)\n[\s\S]*/i, '')
+        let nickname = msg.replace(/ (EZ|HD|IN|AT|LEGACY)[\s\S]*?$/i, '')
 
         let song = getInfo.fuzzysongsnick(nickname)?.[0]
 

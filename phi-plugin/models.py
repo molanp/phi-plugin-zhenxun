@@ -183,18 +183,32 @@ class RksRank(Model):
         return await cls.filter().order_by("-rks").values()
 
     @classmethod
-    async def getUserRank(cls, sessionToken: str) -> int | None:
+    async def getUserRank(cls, sessionToken: str) -> int:
         """
-        获取用户排名
-
+        获取用户排名（基于RKS分数降序）
         :param sessionToken: 用户SessionToken
-        :return: 用户排名
+        :return: 用户排名（从1开始），不存在或分数为0返回-1
         """
-        data = await cls.get_or_none(sessionToken=sessionToken)
-        return data.id if data else None
+        target = await cls.get_or_none(sessionToken=sessionToken)
+        if not target or target.rks <= 0:
+            return -1
+
+        higher_count = await cls.filter(rks__gt=target.rks).count()
+        return higher_count + 1
+    
+    @classmethod
+    async def getRankByRks(cls, rks: float) -> int:
+        """
+        获取用户rks的排名（基于RKS分数降序）
+
+        :param rks: RKS
+        :return: 用户排名（从1开始），不存在或分数为0返回None
+        """
+        higher_count = await cls.filter(rks__gt=rks).count()
+        return higher_count + 1
 
     @classmethod
-    async def getRankUsers(cls, min_rank: int, max_rank: int) -> list[dict]:
+    async def getRankUser(cls, min_rank: int, max_rank: int) -> list[dict]:
         """
         获取指定排名范围的用户数据（基于RKS分数降序）
 

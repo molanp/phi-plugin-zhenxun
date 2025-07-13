@@ -31,13 +31,13 @@ def checkLimit(record: LevelRecordInfo, limit: list[dict[str, str | list[float]]
     """
     for lim in limit:
         value = lim.get("value")
-        assert isinstance(value, list), (
-            f"Expected 'value' to be a list, got {type(value)}"
-        )
+        assert isinstance(
+            value, list
+        ), f"Expected 'value' to be a list, got {type(value)}"
         assert len(value) == 2, f"Expected 'value' to have 2 elements, got {len(value)}"
-        assert all(isinstance(x, int | float) for x in value), (
-            f"Expected all elements of 'value' to be numbers, got {value}"
-        )
+        assert all(
+            isinstance(x, int | float) for x in value
+        ), f"Expected all elements of 'value' to be numbers, got {value}"
 
         match lim.get("type"):
             case "acc":
@@ -268,14 +268,21 @@ class Save:
 
                 if not ignore:
                     if record["acc"] > 100 or record["acc"] < 0:
+                        # Starduster.Quree EZ难度 远古存档BUG特判
+                        if (
+                            id == "Starduster.Quree.0"
+                            and level == 0
+                            and record["acc"] <= 102.57
+                            and record["acc"] >= 0
+                        ):
+                            continue
                         logger.error(
                             f"acc > 100 封禁tk {self.sessionToken}", "phi-plugin"
                         )
-                        logger.warning(str(record))
                         await getRksRank.delUserRks(self.sessionToken)
                         raise ValueError(
                             "您的存档 acc 异常，该 token 已禁用"
-                            f"，如有异议请联系机器人管理员。\n{self.sessionToken}"
+                            f"，如有异议请联系机器人管理员。\n{self.sessionToken}\n{id} {level} {record['acc']}"
                         )
                     if record["score"] > 1000000 or record["score"] < 0:
                         logger.error(
@@ -284,7 +291,7 @@ class Save:
                         await getRksRank.delUserRks(self.sessionToken)
                         raise ValueError(
                             "您的存档 score 异常，该 token 已禁用，"
-                            f"如有异议请联系机器人管理员。\n{self.sessionToken}"
+                            f"如有异议请联系机器人管理员。\n{self.sessionToken}\n{id} {level} {record['score']}"
                         )
                 # 保持和 JS 一致，直接赋值到指定下标
                 while len(self.gameRecord[id]) <= level:

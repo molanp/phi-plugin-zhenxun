@@ -20,9 +20,9 @@
 
 当前同步的版本
 
-[ff04b2c257dba61c42f33bd6aff72152e4673af7](https://github.com/Catrong/phi-plugin/commit/ff04b2c257dba61c42f33bd6aff72152e4673af7)
+[ec24998baf0cb83a012b1ca8b87e81bfe2c53490](https://github.com/Catrong/phi-plugin/commit/ec24998baf0cb83a012b1ca8b87e81bfe2c53490)
 
-[已落后的变更](https://github.com/Catrong/phi-plugin/compare/ff04b2c257dba61c42f33bd6aff72152e4673af7...main)
+[已落后的变更](https://github.com/Catrong/phi-plugin/compare/ec24998baf0cb83a012b1ca8b87e81bfe2c53490...main)
 
 </details>
 

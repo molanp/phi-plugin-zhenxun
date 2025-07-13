@@ -68,17 +68,12 @@ class ByteReader:
         self.position += 4
 
     def getVarInt(self):
+        # BUG: 这里判断数据进制有错误， 比如03 68被解析成368而不是872
         if self.data[self.position] > 127:
             self.position += 2
-            val = (0b01111111 & self.data[self.position - 2]) ^ (
-                self.data[self.position - 1] << 7
+            val = ((self.data[self.position - 1] & 0xFF) << 7) | (
+                self.data[self.position - 2] & 0x7F
             )
-            if val > 800:
-                # HACK: 没办法，找不到溢出原因只能这样
-                print(f"错误数据，尝试跳过: {self.position}, val={val} | {hex(self.data[self.position])}")
-                self.skipVarInt()
-                return self.getVarInt()
-
         else:
             val = self.data[self.position]
             self.position += 1
@@ -90,11 +85,12 @@ class ByteReader:
             while num > 0:
                 self.skipVarInt()
                 num -= 1
+            return
+        # BUG: 这里判断数据进制有错误， 比如03 68被解析成368而不是872
+        if self.data[self.position] > 127:
+            self.position += 2
         else:
-            if self.data[self.position] > 127:
-                self.position += 2
-            else:
-                self.position += 1
+            self.position += 1
 
     def getBytes(self):
         length = self.getByte()

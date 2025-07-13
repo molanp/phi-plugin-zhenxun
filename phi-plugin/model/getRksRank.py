@@ -23,9 +23,14 @@ class getRksRank:
         return await RksRank.getUserRank(sessionToken)
 
     @classmethod
-    async def getRankUsers(cls, min, max):
-        """获取排名"""
-        return await RksRank.getRankUsers(min, max)
+    async def getRankUser(cls, min, max):
+        """获取排名对应的用户"""
+        return await RksRank.getRankUser(min, max)
+
+    @classmethod
+    async def getRankByRks(cls, rks: float):
+        """获取指定rks的排名"""
+        return await RksRank.getRankByRks(rks)
 
     @classmethod
     async def getAllRank(cls):
