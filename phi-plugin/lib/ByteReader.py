@@ -1,9 +1,6 @@
 import base64
 import struct
 
-# BUG: data读取偏移指针溢出
-# BUG: 需要对每个函数加上indexerror容错
-
 
 class ByteReader:
     def __init__(self, data: str | bytes, position=0):
@@ -68,7 +65,6 @@ class ByteReader:
         self.position += 4
 
     def getVarInt(self):
-        # BUG: 这里判断数据进制有错误， 比如03 68被解析成368而不是872
         if self.data[self.position] > 127:
             self.position += 2
             val = ((self.data[self.position - 1] & 0xFF) << 7) | (
@@ -86,11 +82,7 @@ class ByteReader:
                 self.skipVarInt()
                 num -= 1
             return
-        # BUG: 这里判断数据进制有错误， 比如03 68被解析成368而不是872
-        if self.data[self.position] > 127:
-            self.position += 2
-        else:
-            self.position += 1
+        self.position += 2 if self.data[self.position] > 127 else 1
 
     def getBytes(self):
         length = self.getByte()
@@ -118,7 +110,7 @@ class ByteReader:
 
     def insertBytes(self, bytes_):
         result = bytearray(len(self.data) + len(bytes_))
-        result[0 : self.position] = self.data[0 : self.position]
+        result[: self.position] = self.data[: self.position]
         result[self.position : self.position + len(bytes_)] = bytes_
         result[self.position + len(bytes_) :] = self.data[self.position :]
         self.data = result
@@ -128,7 +120,7 @@ class ByteReader:
             self.data[self.position : self.position + length] = bytes_
             return
         result = bytearray(len(self.data) + len(bytes_) - length)
-        result[0 : self.position] = self.data[0 : self.position]
+        result[: self.position] = self.data[: self.position]
         result[self.position : self.position + len(bytes_)] = bytes_
         result[self.position + len(bytes_) :] = self.data[self.position + length :]
         self.data = result

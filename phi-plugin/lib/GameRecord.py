@@ -1,8 +1,7 @@
+import struct
 from zhenxun.services.log import logger
 
-from .ByteReader import ByteReader
 from .LevelRecord import LevelRecord
-from .Util import Util
 
 
 class GameRecord:
@@ -20,34 +19,53 @@ class GameRecord:
         self.name: str = "gameRecord"
         self.version: int = 1
         self.Record: dict[str, list[LevelRecord]] = {}
-        self.data = ByteReader(data)
+        levels = {
+            "EZ": 1,
+            "HD": 2,
+            "IN": 4,
+            "AT": 8,
+        }
         try:
-            self.songsnum = self.data.getVarInt()
+            data = data[1:]
+            pos = int(data[0] < 0) + 1
+            while pos < len(data):
+                name_length = data[pos]
+                pos += 1
+                if name_length == 1:
+                    continue
+                name = data[pos : (pos + name_length)]
+                name = name.decode("utf-8")
 
-            while self.data.remaining() > 0:
-                key = self.data.getString()
-                self.data.skipVarInt()
-                length = self.data.getByte()
-                fc = self.data.getByte()
+                pos += name_length
+                score_length = data[pos]
+                pos += 1
+
+                score = data[pos : (pos + score_length)]
+                pos += score_length
+
+                has_score = score[0]
+                full_combo = score[1]
+                score_pos = 2
+
                 song = {}
-                for level in range(4):
-                    if Util.getBit(length, level):
-                        score = self.data.getInt()
-                        acc = self.data.getFloat()
-                        if 0 <= score <= 1000000 and 0 <= acc <= 100:
-                            song[level] = LevelRecord()
-                            song[level].score = score
-                            song[level].acc = acc
-                            song[level].fc = (
-                                True
-                                if (
-                                    song[level].score == 1000000
-                                    and song[level].acc == 100
-                                )
-                                else Util.getBit(fc, level)
-                            )
+
+                for level, digit in levels.items():
+                    if (has_score & digit) == digit:
+                        song[level] = LevelRecord(
+                            **{
+                                "score": int.from_bytes(
+                                    score[score_pos : (score_pos + 4)],
+                                    byteorder="little",
+                                    signed=True,
+                                ),
+                                "acc": struct.unpack(
+                                    "<f", score[(score_pos + 4) : (score_pos + 8)]
+                                )[0],
+                                "fc": (full_combo & digit) == digit,
+                            }
+                        )
                 if song:
-                    self.Record[key] = list(song.values())
+                    self.Record[name] = list(song.values())
         except Exception as e:
             logger.error("[GameRecord]初始化记录失败", "phi-plugin", e=e)
             raise ValueError("[GameRecord]初始化记录失败") from e
