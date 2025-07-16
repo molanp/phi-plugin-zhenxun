@@ -64,6 +64,7 @@ class GameRecord:
                                 "fc": (full_combo & digit) == digit,
                             }
                         )
+                        score_pos += 8
                 if song:
                     self.Record[name] = list(song.values())
         except Exception as e:
