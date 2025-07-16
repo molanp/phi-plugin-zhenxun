@@ -405,7 +405,7 @@ async def _(session: Uninfo, params: Arparma):
                             songId,
                             i,
                             4,
-                            songsinfo.chart[Level[i]].difficulty,  # type: ignore # NOTE: 这里类型一定是flloat
+                            songsinfo.chart[Level[i]].difficulty,
                         ),
                     }
                 else:

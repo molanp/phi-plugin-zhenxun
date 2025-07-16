@@ -7,7 +7,7 @@ class Chart(BaseModel):
     rank: str = ""
     """Level"""
     charter: str = ""
-    difficulty: float | str = 0
+    difficulty: float = 0
     """定数"""
     tap: int = 0
     drag: int = 0

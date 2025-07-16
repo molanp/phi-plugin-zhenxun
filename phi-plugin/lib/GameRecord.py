@@ -1,4 +1,5 @@
 import struct
+
 from zhenxun.services.log import logger
 
 from .LevelRecord import LevelRecord

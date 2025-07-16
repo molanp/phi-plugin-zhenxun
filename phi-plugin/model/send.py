@@ -119,7 +119,7 @@ class send:
                     msg,
                     "80000000",
                     "匿名消息",
-                )  # type: ignore
+                )
             )
         except Exception as err:
             logger.error("消息转发失败", "phi-plugin", e=err)
