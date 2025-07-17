@@ -26,7 +26,7 @@ class send:
         :param quote: 是否引用回复
         """
         recepit = await matcher.send(UniMessage(msg), at_sender=True, reply_to=quote) # type: ignore
-        if recallTime > 0:  # 删除消息
+        if recallTime > 0:
             WithdrawManager.append(
                 current_bot.get(),
                 recepit.msg_ids[0]["message_id"],

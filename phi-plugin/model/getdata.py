@@ -46,7 +46,9 @@ class getdata:
         song: None = None, original: bool = False
     ) -> dict[str, SongsInfoObject]: ...
     @staticmethod
-    async def info(song: str | None = None, original: bool = False) -> Any:
+    async def info(
+        song: str | None = None, original: bool = False
+    ) -> dict[str, SongsInfoObject] | SongsInfoObject | None:
         """
         :param song: 原曲曲名
         :param original: 是否仅使用原版曲库
@@ -203,7 +205,7 @@ class getdata:
         return await getInfo.setnick(mic, nick)
 
     @staticmethod
-    async def GetSongsInfoAtlas(name: str, data: Any):
+    async def GetSongsInfoAtlas(name: str, data: dict | None = None):
         """
         获取歌曲图鉴，曲名为原名
 
