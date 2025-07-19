@@ -18,11 +18,11 @@
 <details>
 <summary>当前同步版本号</summary>
 
-当前同步的版本
+当前同步的版本 3.14.2
 
-[ec24998baf0cb83a012b1ca8b87e81bfe2c53490](https://github.com/Catrong/phi-plugin/commit/ec24998baf0cb83a012b1ca8b87e81bfe2c53490)
+[edd3a9571b0119e67a367ba30ce7ba7a4ddf80cd](https://github.com/Catrong/phi-plugin/commit/edd3a9571b0119e67a367ba30ce7ba7a4ddf80cd)
 
-[已落后的变更](https://github.com/Catrong/phi-plugin/compare/ec24998baf0cb83a012b1ca8b87e81bfe2c53490...main)
+[已落后的变更](https://github.com/Catrong/phi-plugin/compare/edd3a9571b0119e67a367ba30ce7ba7a4ddf80cd...main)
 
 </details>
 
