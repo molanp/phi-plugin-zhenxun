@@ -1,13 +1,13 @@
 import asyncio
 import contextlib
 import random
-import re
+from typing import Any
 
 from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.services.log import logger
 
-from ...config import PluginConfig
+from ...config import PluginConfig, cmdhead
 from ...model.cls.SongsInfo import SongsInfoObject
 from ...model.getdata import getdata
 from ...model.getInfo import getInfo
@@ -20,8 +20,6 @@ songweights: dict[str, dict[str, float]] = {}
 random.shuffle(songsname)
 
 gamelist: dict[str, str] = {}
-
-cmdhead = PluginConfig.get("cmdhead", "/phi")
 
 
 def getRandomSong(session: Uninfo):
@@ -123,7 +121,7 @@ def gave_a_tip(
 
 class guessIll:
     @staticmethod
-    async def start(matcher, session: Uninfo, gameList: dict[str, dict[str, str]]):
+    async def start(matcher, session: Uninfo, gameList: dict[str, dict[str, Any]]):
         """猜曲绘"""
         group_id = session.scene.id
         if gamelist.get(group_id):
@@ -265,34 +263,34 @@ class guessIll:
 
     @staticmethod
     async def guess(
-        matcher, session: Uninfo, msg: str, gameList: dict[str, dict[str, str]]
+        matcher, session: Uninfo, msg: str, gameList: dict[str, dict[str, Any]]
     ):
         """玩家猜测"""
         group_id = session.scene.id
         if gamelist.get(group_id):
-            ans = re.sub(r"[#/](我)?猜\s*", "", msg)
-            song = await getdata.fuzzysongsnick(ans, 0.95)
+            song = await getdata.fuzzysongsnick(msg, 0.95)
             if song and song[0]:
                 for i in song:
                     if gamelist[group_id] == i:
                         t = gamelist[group_id]
                         del gamelist[group_id]
                         del gameList[group_id]
-                        await send.sendWithAt(matcher, "恭喜你，答对啦喵！ヾ(≧▽≦*)o")
+                        await send.sendWithAt(
+                            matcher, "恭喜你，答对啦喵！ヾ(≧▽≦*)o", True
+                        )
                         await send.sendWithAt(
                             matcher, await getdata.GetSongsInfoAtlas(t)
                         )
+                        return
                 if len(song) > 1 and song[1]:
-                    await send.sendWithAt(
-                        matcher, f"不是 {ans} 哦喵！≧ ﹏ ≦", recallTime=5
-                    )
+                    await send.sendWithAt(matcher, f"不是 {msg} 哦喵！≧ ﹏ ≦", True, 5)
                 else:
                     await send.sendWithAt(
-                        matcher, f"是 {song[0]} 哦喵！≧ ﹏ ≦", recallTime=5
+                        matcher, f"不是 {song[0]} 哦喵！≧ ﹏ ≦", True, 5
                     )
 
     @staticmethod
-    async def ans(matcher, session: Uninfo, gameList: dict[str, dict[str, str]]):
+    async def ans(matcher, session: Uninfo, gameList: dict[str, dict[str, Any]]):
         group_id = session.scene.id
         if gamelist.get(group_id):
             t = gamelist[group_id]
@@ -318,4 +316,3 @@ class guessIll:
         for song in songsname:
             songweights[group_id][song] = 1
         await send.sendWithAt(matcher, "洗牌成功了www")
-

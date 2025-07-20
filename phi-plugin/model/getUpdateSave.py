@@ -5,7 +5,7 @@ from nonebot_plugin_uninfo import Uninfo
 from zhenxun.services.log import logger
 from zhenxun.utils.platform import PlatformUtils
 
-from ..config import PluginConfig
+from ..config import cmdhead
 from ..lib.PhigrosUser import PhigrosUser
 from ..utils import to_dict
 from .cls.common import Save
@@ -78,7 +78,7 @@ class getUpdateSave:
                 matcher,
                 "检测到新的sessionToken，将自动更换绑定。"
                 "如果需要删除统计记录请"
-                f"⌈{PluginConfig.get('cmdhead')} unbind⌋ 进行解绑哦！",
+                f"⌈{cmdhead} unbind⌋ 进行解绑哦！",
             )
             await getSave.add_user_token(session.user.id, User.sessionToken)
             old = await getSave.getSave(session.user.id)

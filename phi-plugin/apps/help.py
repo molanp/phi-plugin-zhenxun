@@ -4,7 +4,7 @@ import re
 from nonebot_plugin_alconna import Alconna, on_alconna
 from nonebot_plugin_uninfo import Uninfo
 
-from ..config import PluginConfig
+from ..config import PluginConfig, cmdhead
 from ..model.fCompute import fCompute
 from ..model.getBanGroup import getBanGroup
 from ..model.getdata import getdata
@@ -14,25 +14,25 @@ from ..model.path import infoPath
 from ..model.picmodle import picmodle
 from ..model.send import send
 
-cmdhead = re.escape(PluginConfig.get("cmdhead", "/phi"))
+recmdhead = re.escape(cmdhead)
 
 help = on_alconna(
     Alconna(
-        rf"re:{cmdhead}\s*(命令|帮助|菜单|help|说明|功能|指令|使用说明)",
+        rf"re:{recmdhead}\s*(命令|帮助|菜单|help|说明|功能|指令|使用说明)",
     ),
     priority=5,
     block=True,
 )
 tkhelp = on_alconna(
     Alconna(
-        rf"re:{cmdhead}\s*tok(?:en)?(命令|帮助|菜单|help|说明|功能|指令|使用说明)",
+        rf"re:{recmdhead}\s*tok(?:en)?(命令|帮助|菜单|help|说明|功能|指令|使用说明)",
     ),
     priority=5,
     block=True,
 )
 apihelp = on_alconna(
     Alconna(
-        rf"re:{cmdhead}\s*api(命令|帮助|菜单|help|说明|功能|指令|使用说明)",
+        rf"re:{recmdhead}\s*api(命令|帮助|菜单|help|说明|功能|指令|使用说明)",
     ),
     priority=5,
     block=True,

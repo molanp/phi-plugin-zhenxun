@@ -8,7 +8,7 @@ from zhenxun.services.log import logger
 from zhenxun.utils.message import MessageUtils
 from zhenxun.utils.withdraw_manage import WithdrawManager
 
-from ..config import PluginConfig
+from ..config import PluginConfig, cmdhead
 from ..utils import to_dict
 from .cls.common import Save
 from .getSave import getSave
@@ -18,7 +18,7 @@ from .getUpdateSave import getUpdateSave
 class send:
     @classmethod
     async def sendWithAt(
-        cls, matcher, msg: Any, quote=True, recallTime=0
+        cls, matcher, msg: Any, quote=False, recallTime=0
     ):
         """
         :param e: 响应器对象
@@ -61,10 +61,10 @@ class send:
                                     matcher,
                                     "请先绑定sessionToken哦！\n"
                                     "如果不知道自己的sessionToken可以尝试扫码绑定嗷！\n"
-                                    f"获取二维码：{PluginConfig.get('cmdhead')}"
+                                    f"获取二维码：{cmdhead}"
                                     " bind qrcode\n"
-                                    f"帮助：{PluginConfig.get('cmdhead')} tk help\n"
-                                    f"格式：{PluginConfig.get('cmdhead')} bind"
+                                    f"帮助：{cmdhead} tk help\n"
+                                    f"格式：{cmdhead} bind"
                                     " <sessionToken>",
                                 )
                             return None
@@ -83,9 +83,9 @@ class send:
                     matcher,
                     "请先绑定sessionToken哦！\n"
                     "如果不知道自己的sessionToken可以尝试扫码绑定嗷！\n"
-                    f"获取二维码：{PluginConfig.get('cmdhead')} bind qrcode\n"
-                    f"帮助：{PluginConfig.get('cmdhead')} tk help\n"
-                    f"格式：{PluginConfig.get('cmdhead')} bind <sessionToken>",
+                    f"获取二维码：{cmdhead} bind qrcode\n"
+                    f"帮助：{cmdhead} tk help\n"
+                    f"格式：{cmdhead} bind <sessionToken>",
                 )
             return None
 
@@ -99,7 +99,7 @@ class send:
             if send:
                 await cls.sendWithAt(
                     matcher,
-                    f"请先更新数据哦！\n格式：{PluginConfig.get('cmdhead')} update",
+                    f"请先更新数据哦！\n格式：{cmdhead} update",
                 )
             return None
 

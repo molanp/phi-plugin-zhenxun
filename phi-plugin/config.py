@@ -161,3 +161,10 @@ class PluginConfig:
 
 onLinePhiIllUrl = "https://gitee.com/Steveeee-e/phi-plugin-ill/raw/main"
 """在线曲绘地址"""
+
+try:
+    cmdhead = PluginConfig.get("cmdhead", "/phi")
+    """命令前缀"""
+except Exception:
+    cmdhead = "/phi"
+    """命令前缀"""

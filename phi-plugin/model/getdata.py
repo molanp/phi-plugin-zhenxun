@@ -7,7 +7,7 @@ from nonebot_plugin_uninfo import Uninfo
 from zhenxun.services.log import logger
 from zhenxun.utils.platform import PlatformUtils
 
-from ..config import PluginConfig
+from ..config import cmdhead
 from ..lib.PhigrosUser import PhigrosUser
 from ..utils import to_dict
 from .cls.common import Save
@@ -263,7 +263,7 @@ class getdata:
             await send.sendWithAt(
                 matcher,
                 "检测到新的sessionToken，将自动更换绑定。如果需要删除统计"
-                f"记录请 ⌈{PluginConfig.get('cmdhead')}"
+                f"记录请 ⌈{cmdhead}"
                 "unbind⌋ 进行解绑哦！",
             )
         # await now.init()

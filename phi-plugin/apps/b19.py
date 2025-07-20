@@ -16,7 +16,7 @@ from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.services.log import logger
 
-from ..config import PluginConfig
+from ..config import PluginConfig, cmdhead
 from ..lib.PhigrosUser import PhigrosUser
 from ..model.cls.LevelRecordInfo import LevelRecordInfo
 from ..model.constNum import LevelNum
@@ -33,11 +33,11 @@ from ..utils import to_dict
 ChallengeModeName = ["白", "绿", "蓝", "红", "金", "彩"]
 
 Level: list = ["EZ", "HD", "IN", "AT", None]  # 存档的难度映射
-cmdhead = re.escape(PluginConfig.get("cmdhead", "/phi"))
+recmdhead = re.escape(cmdhead)
 
 b19 = on_alconna(
     Alconna(
-        rf"re:{cmdhead}\s*(b|rks|pgr|PGR|B|RKS)",
+        rf"re:{recmdhead}\s*(b|rks|pgr|PGR|B|RKS)",
         Args["nnum", int, 33],
         meta=CommandMeta(compact=True),
     ),
@@ -47,7 +47,9 @@ b19 = on_alconna(
 
 p30 = on_alconna(
     Alconna(
-        rf"re:{cmdhead}\s*(p|P)", Args["nnum", int, 33], meta=CommandMeta(compact=True)
+        rf"re:{recmdhead}\s*(p|P)",
+        Args["nnum", int, 33],
+        meta=CommandMeta(compact=True),
     ),
     block=True,
     priority=5,
@@ -55,7 +57,7 @@ p30 = on_alconna(
 
 arcgrosB19 = on_alconna(
     Alconna(
-        rf"re:{cmdhead}\s*(a|arc|啊|阿|批|屁|劈)",
+        rf"re:{recmdhead}\s*(a|arc|啊|阿|批|屁|劈)",
         Args["nnum", str, "b32"],
         meta=CommandMeta(compact=True),
     ),
@@ -65,7 +67,7 @@ arcgrosB19 = on_alconna(
 
 lmtAcc = on_alconna(
     Alconna(
-        rf"re:{cmdhead}\s*lmtacc",
+        rf"re:{recmdhead}\s*lmtacc",
         Args["acc", float, None],
         meta=CommandMeta(compact=True),
     ),
@@ -75,7 +77,7 @@ lmtAcc = on_alconna(
 
 singlescore = on_alconna(
     Alconna(
-        rf"re:{cmdhead}\s*(score|单曲成绩)",
+        rf"re:{recmdhead}\s*(score|单曲成绩)",
         Args["picversion", Literal[1, 2], 1],
         Args["song", str, None],
         meta=CommandMeta(compact=True),
@@ -86,7 +88,7 @@ singlescore = on_alconna(
 
 suggest = on_alconna(
     Alconna(
-        rf"re:{cmdhead}\s*(suggest|推分(建议)?)",
+        rf"re:{recmdhead}\s*(suggest|推分(建议)?)",
         Args["input", MultiVar(str)],
         meta=CommandMeta(compact=True),
     ),
@@ -96,7 +98,7 @@ suggest = on_alconna(
 
 chap__ = on_alconna(
     Alconna(
-        rf"re:{cmdhead}\s*chap",
+        rf"re:{recmdhead}\s*chap",
         Args["song", MultiVar(str), ("help",)],
         meta=CommandMeta(compact=True),
     ),
@@ -108,7 +110,7 @@ chap__ = on_alconna(
 @b19.handle()
 async def _(session: Uninfo, params: Arparma):
     if await getBanGroup.get(b19, session, "b19"):
-        await send.sendWithAt(b19, "这里被管理员禁止使用这个功能了呐QAQ！")
+        await send.sendWithAt(b19, "这里被管理员禁止使用这个功能了呐QAQ！", True)
         return
     save = await send.getsaveResult(b19, session)
     if not save:
@@ -158,14 +160,14 @@ async def _(session: Uninfo, params: Arparma):
             f"请注意，当前版本可能更改了计算规则\n计算rks: {save_b19['com_rks']}\n"
             f"存档rks:{save.saveInfo.summary.rankingScore}"
         )
-    await send.sendWithAt(b19, res)
+    await send.sendWithAt(b19, res, True)
 
 
 # FIXME: 这个和b19就多了个spInfo，后续合并一下优化代码
 @p30.handle()
 async def _(session: Uninfo, params: Arparma):
     if await getBanGroup.get(p30, session, "p30"):
-        await send.sendWithAt(p30, "这里被管理员禁止使用这个功能了呐QAQ！")
+        await send.sendWithAt(p30, "这里被管理员禁止使用这个功能了呐QAQ！", True)
         return
     save = await send.getsaveResult(p30, session)
     if not save:
@@ -188,7 +190,7 @@ async def _(session: Uninfo, params: Arparma):
         await getdata.buildingRecord(p30, session, PhigrosUser(save.sessionToken))
     except Exception as e:
         logger.error("p30更新存档失败", "phi-plugin", session=session, e=e)
-        await send.sendWithAt(p30, "p30生成失败了...")
+        await send.sendWithAt(p30, "p30生成失败了...", True)
         return
     save_b19 = await save.getBestWithLimit(nnum, [{"type": "acc", "value": [100, 100]}])
     stats = await save.getStats()
@@ -223,14 +225,14 @@ async def _(session: Uninfo, params: Arparma):
             f"计算rks: {save_b19['com_rks']}\n"
             f"存档rks:{save.saveInfo.summary.rankingScore}"
         )
-    await send.sendWithAt(p30, res)
+    await send.sendWithAt(p30, res, True)
 
 
 # NOTE: arc版查分图
 @arcgrosB19.handle()
 async def _(session: Uninfo, params: Arparma):
     if await getBanGroup.get(arcgrosB19, session, "arcgrosB19"):
-        await send.sendWithAt(arcgrosB19, "这里被管理员禁止使用这个功能了呐QAQ！")
+        await send.sendWithAt(arcgrosB19, "这里被管理员禁止使用这个功能了呐QAQ！", True)
         return
     save = await send.getsaveResult(arcgrosB19, session)
     if not save:
@@ -277,7 +279,7 @@ async def _(session: Uninfo, params: Arparma):
         "spInfo": "All Perfect Only Mode",
         "fCompute": fCompute,
     }
-    await send.sendWithAt(arcgrosB19, await picmodle.arcgros_b19(data))
+    await send.sendWithAt(arcgrosB19, await picmodle.arcgros_b19(data), True)
 
 
 # NOTE: limit只对acc满分生效是正常的，符合原版js逻辑
@@ -285,7 +287,7 @@ async def _(session: Uninfo, params: Arparma):
 @lmtAcc.handle()
 async def _(session: Uninfo, params: Arparma):
     if await getBanGroup.get(lmtAcc, session, "lmtAcc"):
-        await send.sendWithAt(lmtAcc, "这里被管理员禁止使用这个功能了呐QAQ！")
+        await send.sendWithAt(lmtAcc, "这里被管理员禁止使用这个功能了呐QAQ！", True)
         return
     acc = params.query("acc") or None
     if acc is None or not isinstance(acc, float) or acc < 0 or acc > 100:
@@ -341,13 +343,15 @@ async def _(session: Uninfo, params: Arparma):
             f"计算rks: {save_b19['com_rks']}\n"
             f"存档rks:{save.saveInfo.summary.rankingScore}"
         )
-    await send.sendWithAt(lmtAcc, res)
+    await send.sendWithAt(lmtAcc, res, True)
 
 
 @singlescore.handle()
 async def _(session: Uninfo, params: Arparma):
     if await getBanGroup.get(singlescore, session, "singlescore"):
-        await send.sendWithAt(singlescore, "这里被管理员禁止使用这个功能了呐QAQ！")
+        await send.sendWithAt(
+            singlescore, "这里被管理员禁止使用这个功能了呐QAQ！", True
+        )
         return
     picversion = params.query("picversion")
     song = params.query("song")
@@ -433,14 +437,14 @@ async def _(session: Uninfo, params: Arparma):
                     }
                 else:
                     data[Level[i]] = {"Rating": "NEW"}
-            await send.sendWithAt(singlescore, await picmodle.score(data, 1))
+            await send.sendWithAt(singlescore, await picmodle.score(data, 1), True)
 
 
 # NOTE: 推分建议，建议的是RKS+0.01的所需值
 @suggest.handle()
 async def _(session: Uninfo, param: Arparma):
     if await getBanGroup.get(suggest, session, "suggest"):
-        await send.sendWithAt(suggest, "这里被管理员禁止使用这个功能了呐QAQ！")
+        await send.sendWithAt(suggest, "这里被管理员禁止使用这个功能了呐QAQ！", True)
         return
     save = await send.getsaveResult(suggest, session)
     if not save:
@@ -515,13 +519,14 @@ async def _(session: Uninfo, param: Arparma):
                 "dan": await getdata.getDan(session.user.id),
             }
         ),
+        True,
     )
 
 
 @chap__.handle()
 async def _(session: Uninfo, params: Arparma):
     if await getBanGroup.get(chap__, session, "chap"):
-        await send.sendWithAt(chap__, "这里被管理员禁止使用这个功能了呐QAQ！")
+        await send.sendWithAt(chap__, "这里被管理员禁止使用这个功能了呐QAQ！", True)
         return
     msg = " ".join(params.query("song") or [])
     if msg.upper() == "HELP" or not msg:
@@ -533,6 +538,7 @@ async def _(session: Uninfo, params: Arparma):
         await send.sendWithAt(
             chap__,
             f"未找到{msg}章节QAQ！可以使用 {cmdhead} chap help 来查询支持的名称嗷！",
+            True,
         )
         return
     save = await send.getsaveResult(chap__, session)
@@ -612,6 +618,7 @@ async def _(session: Uninfo, params: Arparma):
                 "chapIll": getInfo.getChapIll("AllSong" if msg == "ALL" else chap),
             }
         ),
+        True,
     )
 
 

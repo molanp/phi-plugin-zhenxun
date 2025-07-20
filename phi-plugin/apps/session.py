@@ -13,7 +13,7 @@ from zhenxun.utils.platform import PlatformUtils
 from zhenxun.utils.rules import ensure_group
 from zhenxun.utils.withdraw_manage import WithdrawManager
 
-from ..config import PluginConfig
+from ..config import PluginConfig, cmdhead
 from ..lib.getQRcode import getQRcode
 from ..model.cls.common import Save
 from ..model.cls.saveHistory import saveHistory
@@ -32,34 +32,34 @@ from ..model.send import send
 from ..models import qrCode
 from ..utils import Date, to_dict
 
-cmdhead = re.escape(PluginConfig.get("cmdhead", "/phi"))
+recmdhead = re.escape(cmdhead)
 apiMsg = (
     "\n请注意，您尚未设置API Token！\n指令格式：\n"
     f"{cmdhead} setApiToken <apiToken>\n更多帮助：{cmdhead} apihelp"
 )
 
 bind = on_alconna(
-    Alconna(rf"re:{cmdhead}\s*(绑定|bind)", Args["sessionToken?", str | int, "None"]),
+    Alconna(rf"re:{recmdhead}\s*(绑定|bind)", Args["sessionToken?", str | int, "None"]),
     block=True,
     priority=5,
 )
 update = on_alconna(
-    Alconna(rf"re:{cmdhead}\s*(更新|update)"),
+    Alconna(rf"re:{recmdhead}\s*(更新|update)"),
     block=True,
     priority=5,
 )
 unbind = on_alconna(
-    Alconna(rf"re:{cmdhead}\s*(解绑|unbind)"),
+    Alconna(rf"re:{recmdhead}\s*(解绑|unbind)"),
     block=True,
     priority=5,
 )
 clean = on_alconna(
-    Alconna(rf"re:{cmdhead}\s*clean"),
+    Alconna(rf"re:{recmdhead}\s*clean"),
     block=True,
     priority=5,
 )
 getSstk = on_alconna(
-    Alconna(rf"re:{cmdhead}\s*sessionToken"),
+    Alconna(rf"re:{recmdhead}\s*sessionToken"),
     block=True,
     priority=5,
 )
