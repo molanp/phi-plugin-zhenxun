@@ -10,7 +10,7 @@
 [![Stars](https://img.shields.io/github/stars/molanp/zhenxun_plugin_phi-plugin?style=flat-square&color=yellow&label=Star)](../../stargazers)
 
 ![version](https://img.shields.io/badge/插件版本-0.1.0_beta-9cf?style=flat-square)
-![version](https://img.shields.io/badge/Phigros-3.14.0-9cf?style=flat-square)  
+![version](https://img.shields.io/badge/Phigros-3.14.2-9cf?style=flat-square)  
 [![zhenxun_bot](https://img.shields.io/badge/zhenxun_bot-latest-9cf?style=flat-square&logo=dependabot)](https://github.com/zhenxun-org/zhenxun_bot)
 
 </div>
