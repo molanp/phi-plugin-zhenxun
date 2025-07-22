@@ -50,8 +50,8 @@ async def handle_connect():
             else:
                 shutil.copy2(item, destination)
         shutil.rmtree(default_config_path)
-        logger.info("配置文件初始化成功", "phi-plugin")
     await getInfo.init()
+    logger.info("初始化成功", "phi-plugin")
 
 
 for module in (Path(__file__).parent.resolve() / "apps").glob("**/*.py"):

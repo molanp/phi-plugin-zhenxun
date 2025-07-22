@@ -26,11 +26,31 @@
 
 </details>
 
-# 寻求合作者共同开发
+## 寻求合作者共同开发
 
 当前依赖已全部移植完成，正在逐步移植功能
 
 代码太难了，好多bug我解决不了，来个大佬救救我吧
+
+## 任务列表
+- [ ] 移植 `apiSetting`
+- [x] 移植 `b19`
+- [ ] 移植 `Dan`
+- [ ] 移植 `guessGame`
+  - [x] 移植 `guessIll`
+  - [ ] 移植 `guessLetter`
+  - [x] 移植 `guessTips`
+- [x] 移植 `help`
+- [x] 移植 `jrrp`
+- [ ] 移植 `manage`
+- [ ] 移植 `money`
+- [ ] 移植 `phisong`
+- [ ] 移植 `RankList`
+- [x] 移植 `session`
+- [ ] 移植 `setting`
+- [ ] 移植 `user`
+- [ ] 整理代码逻辑
+- [ ] 优化代码性能
 
 ### 介绍
 

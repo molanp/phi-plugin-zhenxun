@@ -6,7 +6,13 @@ Phigros出字母猜曲名游戏
 玩家可以翻开所有曲目响应的字母获得更多线索
 """
 
+import random
+import time
+
+from nonebot_plugin_uninfo import Uninfo
 from pypinyin import Style, pinyin
+
+from zhenxun.services.log import logger
 
 # NOTE
 """
@@ -15,118 +21,141 @@ a = pinyin(characters, { pattern: 'first', toneType: 'none', type: 'string' })
 等价于
 a = "".join([item[0] for item in pinyin(characters, style=Style.FIRST_LETTER)])
 """
-# 输出拼音结果
-# import { pinyin } from 'pinyin-pro'
+from typing import Any, TypedDict
 
-# import Config from '../../components/Config.js'
-# import get from '../../model/getdata.js'
-# import send from '../../model/send.js'
-# import getInfo from '../../model/getInfo.js'
-# import getPic from '../../model/getPic.js'
+from ...config import PluginConfig, cmdhead
+from ...model.getdata import getdata
+from ...model.getInfo import getInfo
+from ...model.getPic import pic
+from ...model.send import send
+from ...utils import Date
 
-# let songsname = getInfo.songlist
-# let songweights = {} //存储每首歌曲被抽取的权重
-# for (let i in get.info()) {
-#     songsname.push(i)
-# }
+songsname = getInfo.songlist
+songweights = {}
+"""每首歌曲被抽取的权重"""
+# 曲目初始洗牌
+random.shuffle(songsname)
 
-# //曲目初始洗牌
-# shuffleArray(songsname)
+gamelist = {}
+"""标准答案曲名"""
+blurlist = {}
+"""模糊后的曲名"""
+alphalist = {}
+"""翻开的字母"""
+winnerlist = {}
+"""猜对者的群昵称"""
+lastGuessedTime = {}
+"""群聊猜字母全局冷却时间"""
+lastRevealedTime = {}
+"""群聊翻字母全局冷却时间"""
+lastTipTime = {}
+"""群聊提示全局冷却时间"""
+gameSelectList = {}
+"""群聊游戏选择的游戏范围"""
 
-# let gamelist = {}//存储标准答案曲名
-# let blurlist = {}//存储模糊后的曲名
-# let alphalist = {}//存储翻开的字母
-# let winnerlist = {} //存储猜对者的群名称
-# let lastGuessedTime = {} //存储群聊猜字母全局冷却时间
-# let lastRevealedTime = {} //存储群聊翻字母全局冷却时间
-# let lastTipTime = {} //存储群聊提示全局冷却时间
-# let gameSelectList = {} //群聊游戏选择的游戏范围
-# /**
-#  * 存储群聊游戏计时器
-#  * @type {Object.<string, {startTime: number, newTime: number}>}
-#  */
-# let timeCount = {}
-# let isfuzzymatch = true
+
+class timeCountStruct(TypedDict):
+    """群聊游戏计时器结构"""
+
+    startTime: int
+    newTime: int
+
+
+timeCount: dict[str, timeCountStruct] = {}
+"""群聊游戏计时器"""
+isfuzzymatch = True
+"""是否模糊匹配"""
+
+
+def getRandomSong(session: Uninfo):
+    """定义随机抽取曲目的函数"""
+    group_id = session.scene.id
+
+    # 计算曲目的总权重
+    total_weight = sum(songweights[group_id].values())
+
+    random_weight = random.uniform(0, total_weight)
+
+    accumulated_weight = 0
+    for song, weight in songweights[group_id].items():
+        accumulated_weight += weight
+        if accumulated_weight >= random_weight:
+            # 权重每次衰减60%
+            songweights[group_id][song] *= 0.4
+            return song
+
+    # 如果由于浮点数精度问题未能正确选择歌曲，则随机返回一首
+    return random.choice(songsname)
+
+
+class guessLetter:
+    @staticmethod
+    async def start(
+        matcher, session: Uninfo, msg: str | None, gameList: dict[str, dict[str, Any]]
+    ):
+        """发起出字母猜歌"""
+        group_id = session.scene.id
+        # TODO 处理其他游戏曲库
+        totNameList = []
+        gameSelectList[group_id] = []
+        if not msg:
+            totNameList = await getInfo.all_info()
+            gameSelectList[group_id].append("phigros")
+        else:
+            for i in getInfo.DLC_Info.keys():
+                if i in msg:
+                    totNameList.extend(getInfo.DLC_Info[i])
+                    gameSelectList[group_id].append(i)
+        if gamelist.get(group_id):
+            await send.sendWithAt(
+                matcher,
+                "喂喂喂，已经有群友发起出字母猜歌啦，不要再重复发起了，赶快输入"
+                f"'{cmdhead}第X个XXXX'来猜曲名或者'{cmdhead}出X'来揭开字母吧！"
+                f"结束请发 {cmdhead} ans 嗷！",
+                True,
+            )
+            return
+        if len(songsname) < PluginConfig.get("LetterNum"):
+            await send.sendWithAt(
+                matcher, "曲库中曲目的数量小于开字母的条数哦！更改曲库后需要重启哦！"
+            )
+            return
+        alphalist[group_id] = ""
+        lastGuessedTime[group_id] = 0
+        lastRevealedTime[group_id] = 0
+        if not songweights.get(group_id):
+            songweights[group_id] = {}
+            # 将每一首曲目的权重初始化为1
+            for song in songsname:
+                songweights[group_id][song] = 1
+        # 预开猜对者数组
+        winnerlist[group_id] = {}
+        # 存储单局抽到的曲目下标
+        chose = []
+        nowTime = Date(time.time())
+        for i in range(PluginConfig.get("LetterNum")):
+            # 根据曲目权重随机返回一首曲目名称
+            randsong = getRandomSong(session)
+            # 防止抽到重复的曲目
+            cnnt = 0
+            songinfo = await getInfo.info(randsong)
+            while randsong in chose or (songinfo and songinfo.can_t_be_letter):
+                cnnt += 1
+                if cnnt >= 50:
+                    logger.error("抽取曲目失败，请检查曲库设置", "phi-letter")
+                    await send.sendWithAt(
+                        matcher, "抽取曲目失败，请检查曲库设置"
+                    )
+                    return
+                randsong = getRandomSong(session)
+            chose.append(songinfo)
+            gamelist[group_id] = gamelist.get(group_id, {})
+            blurlist[group_id] = blurlist.get(group_id, {})
 
 # export default new class guessLetter {
 #     /**发起出字母猜歌 **/
 #     async start(e, gameList) {
-#         const { group_id } = e // 使用对象解构提取group_id
-#         let { msg } = e // 提取消息
-#         msg = msg.replace(/[#/](.*?)(ltr|开字母)(\s*)/, "")
-
-#         /**TODO 处理其他游戏曲库 */
-#         let totNameList = []
-#         // console.info(getInfo.DLC_Info)
-#         gameSelectList[group_id] = []
-#         if (!msg) {
-#             totNameList = totNameList.concat(getInfo.all_info())
-#             gameSelectList[group_id].push('phigros')
-#         } else {
-#             for (let i in getInfo.DLC_Info) {
-#                 if (msg.includes(i)) {
-#                     totNameList = totNameList.concat(getInfo.DLC_Info[i])
-#                     gameSelectList[group_id].push(i)
-#                 }
-#             }
-#         }
-#         // console.info(totNameList)
-
-#         if (gamelist[group_id]) {
-#             e.reply(`喂喂喂，已经有群友发起出字母猜歌啦，不要再重复发起了，赶快输入'/第X个XXXX'来猜曲名或者'/出X'来揭开字母吧！结束请发 /${Config.getUserCfg('config', 'cmdhead')} ans 嗷！`, true)
-#             return true
-#         }
-
-#         if (songsname.length < Config.getUserCfg('config', 'LetterNum')) {
-#             e.reply("曲库中曲目的数量小于开字母的条数哦！更改曲库后需要重启哦！")
-#             return true
-#         }
-
-#         alphalist[group_id] = alphalist[group_id] || {}
-#         lastGuessedTime[group_id] = lastGuessedTime[group_id] || {}
-#         lastRevealedTime[group_id] = lastRevealedTime[group_id] || {}
-
-#         alphalist[group_id] = ''
-#         lastGuessedTime[group_id] = 0
-#         lastRevealedTime[group_id] = 0
-
-#         if (!songweights[group_id]) {
-#             songweights[group_id] = {}
-
-#             // 将每一首曲目的权重初始化为1
-#             songsname.forEach(song => {
-#                 songweights[group_id][song] = 1
-#             })
-#         }
-
-
-#         // 预开猜对者数组
-#         winnerlist[group_id] = {}
-
-#         // 存储单局抽到的曲目下标
-#         let chose = []
-
-#         let nowTime = Date.now()
-
 #         for (let i = 1; i <= Config.getUserCfg('config', 'LetterNum'); i++) {
-#             // 根据曲目权重随机返回一首曲目名称
-#             let randsong = getRandomSong(e, totNameList)
-
-#             // 防止抽到重复的曲目
-#             let cnnt = 0
-#             while (chose.includes(randsong) || get.info(randsong)?.can_t_be_letter) {
-#                 ++cnnt
-#                 if (cnnt >= 50) {
-#                     logger.error(`[phi-plugin][letter]抽取曲目失败，请检查曲库设置`)
-#                     e.reply(`抽取曲目失败，请检查曲库设置`)
-#                     return
-#                 }
-#                 randsong = getRandomSong(e, totNameList)
-#             }
-
-#             const songs_info = get.info(randsong)
-#             chose.push(randsong)
-
 #             gamelist[group_id] = gamelist[group_id] || {}
 #             blurlist[group_id] = blurlist[group_id] || {}
 
@@ -647,30 +676,6 @@ a = "".join([item[0] for item in pinyin(characters, style=Style.FIRST_LETTER)])
 #     return precision === 0 ? Math.floor(randomNumber) : randomNumber.toFixed(precision)
 # }
 
-# //定义随机抽取曲目的函数
-# function getRandomSong(e) {
-#     //对象解构提取groupid
-#     const { group_id } = e
-
-#     //计算曲目的总权重
-#     const totalWeight = Object.values(songweights[group_id]).reduce((total, weight) => total + weight, 0)
-
-#     //生成一个0到总权重之间带有16位小数的随机数
-#     const randomWeight = randfloat(0, totalWeight, 16)
-
-#     let accumulatedWeight = 0
-#     for (const [song, weight] of Object.entries(songweights[group_id])) {
-#         accumulatedWeight += weight
-#         if (accumulatedWeight >= randomWeight) {
-#             songweights[group_id][song] *= 0.7 //权重每次衰减30%
-#             return song
-#         }
-#     }
-
-#     //如果由于浮点数精度问题未能正确选择歌曲，则随机返回一首
-#     if (songsname) { return songsname[randint(0, songsname.length - 1)] }
-#     return songsname[randint(0, songsname.length - 1)]
-# }
 
 # function timeout(ms) {
 #     return new Promise((resolve, reject) => {
@@ -724,17 +729,6 @@ a = "".join([item[0] for item in pinyin(characters, style=Style.FIRST_LETTER)])
 #     }, { total: 0, currentUnit: 1 })
 
 #     return total.total + total.currentUnit
-# }
-
-# //将数组顺序打乱
-# function shuffleArray(arr) {
-#     for (let i = arr.length - 1; i > 0; i--) {
-#         const j = randint(0, i)
-#         const temp = arr[i]
-#         arr[i] = arr[j]
-#         arr[j] = temp //交换位置
-#     }
-#     return arr
 # }
 
 # //随机取字符

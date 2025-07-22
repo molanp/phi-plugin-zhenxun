@@ -161,7 +161,7 @@ class guessIll:
         y_ = random.randint(0, 1080 - h_)
         blur_ = random.randint(9, 14)
         data = {
-            "illustration": getInfo.getill(songs_info.song),
+            "illustration": await getInfo.getill(songs_info.song),
             "width": w_,
             "height": h_,
             "x": x_,
