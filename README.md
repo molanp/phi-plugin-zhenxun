@@ -7,10 +7,10 @@
     </picture>
   </h1>
 
-[![Stars](https://img.shields.io/github/stars/molanp/zhenxun_plugin_phi-plugin?style=flat-square&color=yellow&label=Star)](../../stargazers)
+[![Stars](https://img.shields.io/github/stars/molanp/zhenxun_plugin_phi-plugin?style=flat-square&color=yellow&label=Star)](https://github.com/molanp/zhenxun_plugin_phi-plugin/stargazers)
 
 ![version](https://img.shields.io/badge/插件版本-0.1.0_beta-9cf?style=flat-square)
-![version](https://img.shields.io/badge/Phigros-3.14.2-9cf?style=flat-square)  
+![phigros-version](https://img.shields.io/badge/Phigros-3.14.2-9cf?style=flat-square)  
 [![zhenxun_bot](https://img.shields.io/badge/zhenxun_bot-latest-9cf?style=flat-square&logo=dependabot)](https://github.com/zhenxun-org/zhenxun_bot)
 
 </div>
@@ -20,19 +20,17 @@
 
 当前同步的版本
 
-[f3d2a53852b1a0696d98a1db3acf53ded62b6634](https://github.com/Catrong/phi-plugin/commit/f3d2a53852b1a0696d98a1db3acf53ded62b6634)
+[b182b56ed1fd1d1b71e6e7102a9618cedc03877e](https://github.com/Catrong/phi-plugin/commit/b182b56ed1fd1d1b71e6e7102a9618cedc03877e)
 
-[已落后的变更](https://github.com/Catrong/phi-plugin/compare/f3d2a53852b1a0696d98a1db3acf53ded62b6634...main)
+[已落后的变更](https://github.com/Catrong/phi-plugin/compare/b182b56ed1fd1d1b71e6e7102a9618cedc03877e...main)
 
 </details>
 
-## 寻求合作者共同开发
-
-当前依赖已全部移植完成，正在逐步移植功能
-
-代码太难了，好多bug我解决不了，来个大佬救救我吧
+## 长期寻求合作者共同开发
 
 ## 任务列表
+
+- [x] 移植依赖
 - [ ] 移植 `apiSetting`
 - [x] 移植 `b19`
 - [ ] 移植 `Dan`
@@ -58,7 +56,7 @@
 
 具体功能可在安装插件后 通过 `/phi help` 查看详细指令
 
-> **以下 `/phi` 为插件默认前缀，可以在配置文件(`data/config.yaml`)中修改**
+> **以下 `/phi` 为插件默认前缀，可以在配置文件(`/data/config.yaml`)中修改**
 >
 > 用户输入时，前缀和命令中间的空格**不是必需的**
 >
