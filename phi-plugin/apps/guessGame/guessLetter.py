@@ -6,6 +6,8 @@ Phigros出字母猜曲名游戏
 玩家可以翻开所有曲目响应的字母获得更多线索
 """
 
+import asyncio
+from datetime import datetime
 import random
 import time
 
@@ -36,19 +38,19 @@ songweights = {}
 # 曲目初始洗牌
 random.shuffle(songsname)
 
-gamelist = {}
+gamelist: dict[str, dict[int, str]] = {}
 """标准答案曲名"""
-blurlist = {}
+blurlist: dict[str, dict[int, str]] = {}
 """模糊后的曲名"""
-alphalist = {}
+alphalist: dict[str, str] = {}
 """翻开的字母"""
-winnerlist = {}
+winnerlist: dict[str, dict[int, str]] = {}
 """猜对者的群昵称"""
-lastGuessedTime = {}
+lastGuessedTime: dict[str, int] = {}
 """群聊猜字母全局冷却时间"""
-lastRevealedTime = {}
+lastRevealedTime: dict[str, int] = {}
 """群聊翻字母全局冷却时间"""
-lastTipTime = {}
+lastTipTime: dict[str, int] = {}
 """群聊提示全局冷却时间"""
 gameSelectList = {}
 """群聊游戏选择的游戏范围"""
@@ -57,8 +59,8 @@ gameSelectList = {}
 class timeCountStruct(TypedDict):
     """群聊游戏计时器结构"""
 
-    startTime: int
-    newTime: int
+    startTime: datetime
+    newTime: datetime
 
 
 timeCount: dict[str, timeCountStruct] = {}
@@ -86,6 +88,49 @@ def getRandomSong(session: Uninfo):
 
     # 如果由于浮点数精度问题未能正确选择歌曲，则随机返回一首
     return random.choice(songsname)
+
+
+def encrypt_song_name(name: str) -> str:
+    """加密曲目名称函数"""
+    num = 0  # NOTE: 当前配置为不显示任何字符
+    numset = [
+        (lambda: random.randint(0, len(name) - 1))()
+        for _ in range(num)
+        if name[random.randint(0, len(name) - 1)] != " "
+    ]
+
+    encrypted = []
+    for index, char in enumerate(name):
+        if index in numset:
+            encrypted.append(char)
+        elif char in (" ", " "):
+            encrypted.append(" ")
+        else:
+            encrypted.append("*")
+
+    return "".join(encrypted)
+
+
+def gameover(group_id, gameList):
+    """结束本群游戏，返回答案"""
+    t = gamelist[group_id]
+    winner = winnerlist[group_id]
+    del alphalist[group_id]
+    del gamelist[group_id]
+    del gameList[group_id]
+    del blurlist[group_id]
+    del winnerlist[group_id]
+    del timeCount[group_id]
+
+    output = ["开字母已结束，答案如下："]
+    for m in t.keys():
+        correct_name = t[m]
+        winner_card = winner.get(m)
+        output.append(f"\n【{m}】{correct_name}")
+        if winner_card:
+            output.append(f" @{winner_card}")
+
+    return output
 
 
 class guessLetter:
@@ -139,72 +184,48 @@ class guessLetter:
             # 防止抽到重复的曲目
             cnnt = 0
             songinfo = await getInfo.info(randsong)
-            while randsong in chose or (songinfo and songinfo.can_t_be_letter):
+            assert songinfo is not None
+            while randsong in chose or songinfo.can_t_be_letter:
                 cnnt += 1
                 if cnnt >= 50:
                     logger.error("抽取曲目失败，请检查曲库设置", "phi-letter")
-                    await send.sendWithAt(
-                        matcher, "抽取曲目失败，请检查曲库设置"
-                    )
+                    await send.sendWithAt(matcher, "抽取曲目失败，请检查曲库设置")
                     return
                 randsong = getRandomSong(session)
             chose.append(songinfo)
             gamelist[group_id] = gamelist.get(group_id, {})
             blurlist[group_id] = blurlist.get(group_id, {})
+            gamelist[group_id][i] = songinfo.song
+            blurlist[group_id][i] = encrypt_song_name(songinfo.song)
+            gameList[group_id] = {"gameType": "guessLetter"}
+            timeCount[group_id] = {
+                "startTime": nowTime,
+                "newTime": nowTime + PluginConfig.get("LetterTimeLength"),
+            }
+        # 输出提示信息
+        await send.sendWithAt(
+            matcher,
+            f"开字母开启成功！回复'nX.XXXX'命令猜歌，例如：n1.Reimei;"
+            f"发送'open X'来揭开字母(不区分大小写，不需要指令头)，"
+            f"如'open A';发送'{cmdhead} ans'结束并查看答案哦！",
+        )
+        # 延时1s
+        await asyncio.sleep(1)
+        output = "开字母进行中：\n"
+        for i in blurlist[group_id].keys():
+            output += f"【{i}】{blurlist[group_id][i]}\n"
+        await send.sendWithAt(matcher, output, True)
+        # 如果过长时间没人回答则结束
+        await asyncio.sleep(
+            (timeCount[group_id]["newTime"] - Date(time.time())).total_seconds()
+        )
+        if group_id not in gameList or nowTime != timeCount[group_id]["startTime"]:
+            return
+        await send.sendWithAt(matcher, "呜，怎么还没有人答对啊QAQ！只能说答案了喵……")
+        await send.sendWithAt(matcher, gameover(group_id, gameList))
+
 
 # export default new class guessLetter {
-#     /**发起出字母猜歌 **/
-#     async start(e, gameList) {
-#         for (let i = 1; i <= Config.getUserCfg('config', 'LetterNum'); i++) {
-#             gamelist[group_id] = gamelist[group_id] || {}
-#             blurlist[group_id] = blurlist[group_id] || {}
-
-#             gamelist[group_id][i] = songs_info.song
-#             blurlist[group_id][i] = encrypt_song_name(songs_info.song)
-#             gameList[group_id] = { gameType: "guessLetter" }
-#             timeCount[group_id] = {
-#                 startTime: nowTime,
-#                 newTime: Date.now() + (1000 * Config.getUserCfg('config', 'LetterTimeLength'))
-#             }
-
-#         }
-
-#         // 输出提示信息
-#         e.reply(`开字母开启成功！回复'/nX.XXXX'命令猜歌，例如：/n1.Reimei;发送'/open X'来揭开字母(不区分大小写，不需要指令头)，如'/open A';发送'/${Config.getUserCfg('config', 'cmdhead')} ans'结束并查看答案哦！`)
-
-#         // 延时1s
-#         await timeout(1 * 1000)
-
-#         let output = '开字母进行中：\n'
-#         // /**添加游戏范围 */
-#         // output += `游戏范围：`
-#         // for(let i in gameSelectList[group_id]) {
-#         //     output += `${gameSelectList[group_id][i]} `
-#         // }
-#         // output += `\n`
-#         for (const i of Object.keys(blurlist[group_id])) {
-#             const blur_name = blurlist[group_id][i]
-#             output += `【${i}】${blur_name}\n`
-#         }
-#         await e.reply(output, true)
-
-#         /**如果过长时间没人回答则结束 */
-#         while (timeCount[group_id]?.newTime && Date.now() < timeCount[group_id].newTime) {
-#             await timeout(1000)
-#         }
-
-#         if (!gamelist[group_id] || nowTime != timeCount[group_id].startTime) {
-#             return false
-#         }
-
-#         if (gamelist[group_id]) {
-#             await e.reply('呜，怎么还没有人答对啊QAQ！只能说答案了喵……')
-
-#             e.reply(gameover(group_id, gameList))
-#             return true
-#         }
-#         return true
-#     }
 
 #     /** 翻开字母 **/
 #     async reveal(e, gameList) {
@@ -677,36 +698,6 @@ class guessLetter:
 # }
 
 
-# function timeout(ms) {
-#     return new Promise((resolve, reject) => {
-#         setTimeout(resolve, ms, 'done');
-#     });
-# }
-
-# // 定义加密曲目名称滴函数
-# function encrypt_song_name(name) {
-#     const num = 0
-#     const numset = Array.from({ length: num }, () => {
-#         let numToShow = randint(0, name.length - 1)
-#         while (name[numToShow] == ' ') {
-#             numToShow = randint(0, name.length - 1)
-#         }
-#         return numToShow
-#     })
-
-#     let encryptedName = Array.from(name, (char, index) => {
-#         if (numset.includes(index)) {
-#             return char
-#         } else if (char === ' ' || char === ' ') {
-#             return ' '
-#         } else {
-#             return '*'
-#         }
-#     }).join('')
-
-#     return encryptedName
-# }
-
 # //将中文数字转为阿拉伯数字
 # function NumberToArabic(digit) {
 #     //只处理到千，再高也根本用不上的www(十位数都用不上的说)
@@ -746,32 +737,4 @@ class guessLetter:
 
 #     // 返回随机字符
 #     return str.charAt(temlist[randomIndex]);
-# }
-
-# /**结束本群游戏，返回答案 */
-# function gameover(group_id, gameList) {
-
-#     const t = gamelist[group_id]
-#     const winner = winnerlist[group_id]
-
-#     delete alphalist[group_id]
-#     delete gamelist[group_id]
-#     delete gameList[group_id]
-#     delete blurlist[group_id]
-#     delete winnerlist[group_id]
-#     delete timeCount[group_id]
-
-#     const output = ['开字母已结束，答案如下：']
-
-
-#     for (const m of Object.keys(t)) {
-#         const correct_name = t[m]
-#         const winner_card = winner[m]
-#         output.push(`\n【${m}】${correct_name}`)
-
-#         if (winner_card) {
-#             output.push(` @${winner_card}`)
-#         }
-#     }
-#     return output
 # }
