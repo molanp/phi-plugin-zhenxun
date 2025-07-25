@@ -12,7 +12,6 @@ from ...model.getInfo import getInfo
 from ...model.getPic import pic
 from ...model.picmodle import picmodle
 from ...model.send import send
-from ...utils import Date
 
 
 class guessTips:
@@ -67,8 +66,8 @@ class guessTips:
             "gameType": "guessTips",
             "id": id_,
             "song": song,
-            "startTime": Date(time.time()),
-            "tipTime": Date(time.time()),
+            "startTime": time.time(),
+            "tipTime": time.time(),
             "tips": tip,
             "tipNum": 1,  # 已发送提示的数量
             "ill": {
@@ -127,7 +126,7 @@ class guessTips:
     async def getTip(matcher, session: Uninfo, gameList: dict[str, dict[str, Any]]):
         if not gameList.get(session.scene.id):
             return
-        nowTime = Date(time.time())
+        nowTime = time.time()
         gameData = gameList[session.scene.id]
         if nowTime - gameData["tipTime"] < PluginConfig.get("GuessTipsTipCD"):
             await send.sendWithAt(

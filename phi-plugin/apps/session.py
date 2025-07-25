@@ -368,7 +368,7 @@ def comWidth(num: int):
     return num * 125 + 20 * num - 20
 
 
-async def waitResponse(bot, QRCodetimeout, request, recall_id, qrCodeMsg):
+async def waitResponse(bot, QRCodetimeout: int, request, recall_id, qrCodeMsg):
     start_time = time.time()
     # 是否发送过已扫描提示
     flag = False

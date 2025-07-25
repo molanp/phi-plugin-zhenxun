@@ -7,8 +7,8 @@ Phigros出字母猜曲名游戏
 """
 
 import asyncio
-from datetime import datetime
 import random
+import re
 import time
 
 from nonebot_plugin_uninfo import Uninfo
@@ -30,7 +30,6 @@ from ...model.getdata import getdata
 from ...model.getInfo import getInfo
 from ...model.getPic import pic
 from ...model.send import send
-from ...utils import Date
 
 songsname = getInfo.songlist
 songweights = {}
@@ -38,7 +37,7 @@ songweights = {}
 # 曲目初始洗牌
 random.shuffle(songsname)
 
-gamelist: dict[str, dict[int, str]] = {}
+gamelist: dict[str, list[str]] = {}
 """标准答案曲名"""
 blurlist: dict[str, dict[int, str]] = {}
 """模糊后的曲名"""
@@ -46,11 +45,11 @@ alphalist: dict[str, str] = {}
 """翻开的字母"""
 winnerlist: dict[str, dict[int, str]] = {}
 """猜对者的群昵称"""
-lastGuessedTime: dict[str, int] = {}
+lastGuessedTime: dict[str, float] = {}
 """群聊猜字母全局冷却时间"""
-lastRevealedTime: dict[str, int] = {}
+lastRevealedTime: dict[str, float] = {}
 """群聊翻字母全局冷却时间"""
-lastTipTime: dict[str, int] = {}
+lastTipTime: dict[str, float] = {}
 """群聊提示全局冷却时间"""
 gameSelectList = {}
 """群聊游戏选择的游戏范围"""
@@ -59,8 +58,8 @@ gameSelectList = {}
 class timeCountStruct(TypedDict):
     """群聊游戏计时器结构"""
 
-    startTime: datetime
-    newTime: datetime
+    startTime: float
+    newTime: float
 
 
 timeCount: dict[str, timeCountStruct] = {}
@@ -123,11 +122,9 @@ def gameover(group_id, gameList):
     del timeCount[group_id]
 
     output = ["开字母已结束，答案如下："]
-    for m in t.keys():
-        correct_name = t[m]
-        winner_card = winner.get(m)
-        output.append(f"\n【{m}】{correct_name}")
-        if winner_card:
+    for i, correct_name in enumerate(t):
+        output.append(f"\n【{i}】{correct_name}")
+        if winner_card := winner.get(i):
             output.append(f" @{winner_card}")
 
     return output
@@ -177,7 +174,7 @@ class guessLetter:
         winnerlist[group_id] = {}
         # 存储单局抽到的曲目下标
         chose = []
-        nowTime = Date(time.time())
+        nowTime = time.time()
         for i in range(PluginConfig.get("LetterNum")):
             # 根据曲目权重随机返回一首曲目名称
             randsong = getRandomSong(session)
@@ -193,7 +190,7 @@ class guessLetter:
                     return
                 randsong = getRandomSong(session)
             chose.append(songinfo)
-            gamelist[group_id] = gamelist.get(group_id, {})
+            gamelist[group_id] = gamelist.get(group_id, [])
             blurlist[group_id] = blurlist.get(group_id, {})
             gamelist[group_id][i] = songinfo.song
             blurlist[group_id][i] = encrypt_song_name(songinfo.song)
@@ -212,132 +209,120 @@ class guessLetter:
         # 延时1s
         await asyncio.sleep(1)
         output = "开字母进行中：\n"
-        for i in blurlist[group_id].keys():
-            output += f"【{i}】{blurlist[group_id][i]}\n"
+        for i, n in enumerate(blurlist[group_id]):
+            output += f"【{i}】{n}\n"
         await send.sendWithAt(matcher, output, True)
         # 如果过长时间没人回答则结束
-        await asyncio.sleep(
-            (timeCount[group_id]["newTime"] - Date(time.time())).total_seconds()
-        )
+        await asyncio.sleep(timeCount[group_id]["newTime"] - time.time())
         if group_id not in gameList or nowTime != timeCount[group_id]["startTime"]:
             return
         await send.sendWithAt(matcher, "呜，怎么还没有人答对啊QAQ！只能说答案了喵……")
         await send.sendWithAt(matcher, gameover(group_id, gameList))
 
+    @staticmethod
+    async def reveal(
+        matcher, session: Uninfo, msg: str, gameList: dict[str, dict[str, Any]]
+    ):
+        """翻开字母"""
+        group_id = session.scene.id
+        if group_id not in gamelist:
+            await send.sendWithAt(
+                matcher,
+                f"现在还没有进行的开字母捏，赶快输入{cmdhead} ltr开始新的一局吧！",
+            )
+            return
+        timeCount[group_id]["newTime"] = time.time() + PluginConfig.get(
+            "LetterTimeLength"
+        )
+        _time = PluginConfig.get("LetterRevealCd")
+        currentTime = time.time()
+        timetik = currentTime - lastRevealedTime[group_id]
+        timeleft = round(_time - timetik)
+        if timetik < _time:
+            await send.sendWithAt(
+                matcher,
+                f"翻字符的全局冷却时间还有${timeleft}s呐，先耐心等下哇QAQ",
+                True,
+            )
+            return
+        lastRevealedTime[group_id] = currentTime
+        letter = msg.lower()
+        if letter.upper() in alphalist[group_id]:
+            await send.sendWithAt(
+                matcher, f"字符[ {letter} ]已经被打开过了ww,不用需要再重复开啦！", True
+            )
+            return
+        output = []
+        included = False
+        for i, songname in enumerate(gamelist[group_id]):
+            blurname = blurlist[group_id][i]
+            characters = ""
+            letters = ""
+            if re.search(r"[\u4e00-\u9fff]", songname):
+                characters = "".join(re.findall(r"[\u4e00-\u9fff]", songname))
+                letters = "".join(
+                    [item[0] for item in pinyin(characters, style=Style.FIRST_LETTER)]
+                )
+            if letter not in songname.lower() and letter not in letters:
+                continue
+            included = True
+            if i >= len(blurlist[group_id]):
+                continue
+            newBlurname = ""
+            for index, char in enumerate(songname):
+                # 中文字符处理
+                if "\u4e00" <= char <= "\u9fff":
+                    # 获取拼音首字母并比较
+                    char_pinyin = pinyin(char, style=Style.FIRST_LETTER)[0][0]
+                    if char_pinyin.lower() == letter.lower():
+                        newBlurname += char
+                    else:
+                        try:
+                            newBlurname += blurname[index]
+                        except IndexError:
+                            newBlurname += "*"
+                # 英文字符处理
+                elif char.lower() == letter.lower():
+                    newBlurname += char
+                else:
+                    try:
+                        newBlurname += blurname[index]
+                    except IndexError:
+                        newBlurname += "*"
+            if "*" in newBlurname:
+                blurlist[group_id][i] = newBlurname
+        if included:
+            alphalist[group_id] += (
+                f"{letter.upper()} "
+                if re.fullmatch(r"[A-Za-z]+", letter)
+                else f"{letter} "
+            )
+            output.append(f"成功翻开字母[ {letter} ]\n")
+        else:
+            output.append(f"这几首曲目中不包含字母[ {letter} ]\n")
+        output.append(f"当前所有翻开的字母[ {alphalist[group_id]}")
+        isEmpty = group_id not in blurlist
+        for m, song in enumerate(gamelist[group_id]):
+            if not isEmpty and blurlist[group_id].get(m):
+                output.append(f"\n【{m}】{blurlist[group_id][m]}")
+            else:
+                result = f"\n【${m}】${song}"
+                if user := winnerlist[group_id].get(m):
+                    result += f" @{user}"
+                output.append(result)
+        if isEmpty:
+            output.insert(0, "\n所有字母已翻开，答案如下：\n")
+            del alphalist[group_id]
+            del blurlist[group_id]
+            del gamelist[group_id]
+            del gameList[group_id]
+            del winnerlist[group_id]
+
+        await send.sendWithAt(matcher, output, True)
+
 
 # export default new class guessLetter {
 
-#     /** 翻开字母 **/
-#     async reveal(e, gameList) {
-#         const { group_id, msg } = e
-#         timeCount[group_id].newTime = Date.now() + (1000 * Config.getUserCfg('config', 'LetterTimeLength'))
-
-#         if (!gamelist[group_id]) {
-#             e.reply(`现在还没有进行的开字母捏，赶快输入'/${Config.getUserCfg('config', 'cmdhead')} ltr'开始新的一局吧！`, true)
-#             return false
-#         }
-
-#         const time = Config.getUserCfg('config', 'LetterRevealCd')
-#         const currentTime = Date.now()
-#         const timetik = currentTime - lastRevealedTime[group_id]
-#         const timeleft = Math.floor((1000 * time - timetik) / 1000)
-
-#         if (timetik < 1000 * time) {
-#             e.reply(`翻字符的全局冷却时间还有${timeleft}s呐，先耐心等下哇QAQ`, true)
-#             return true
-#         }
-
-#         lastRevealedTime[group_id] = currentTime
-
-#         const newMsg = msg.replace(/[#/](出|开|翻|揭|看|翻开|打开|揭开|open)(\s*)/g, '')
-
-#         if (newMsg) {
-#             const letter = newMsg.toLowerCase()
-#             let output = []
-#             let included = false
-
-#             if (alphalist[group_id].replace(/\[object Object\]/g, '').includes(letter.toUpperCase())) {
-#                 e.reply(`字符[ ${letter} ]已经被打开过了ww,不用需要再重复开啦！`, true)
-#                 return true
-#             }
-
-#             for (let i in gamelist[group_id]) {
-#                 const songname = gamelist[group_id][i]
-#                 const blurname = blurlist[group_id][i]
-#                 let characters = ''
-#                 let letters = ''
-
-#                 if (/[\u4e00-\u9fa5]/.test(songname)) {
-#                     characters = [...songname].filter(char => /[\u4e00-\u9fa5]/.test(char)).join("")
-#                     letters = pinyin(characters, { pattern: 'first', toneType: 'none', type: 'string' })
-#                 }
-
-#                 if (!songname.toLowerCase().includes(letter) && !letters.includes(letter)) {
-#                     continue
-#                 }
-
-#                 included = true
-
-#                 if (!blurlist[group_id][i]) {
-#                     continue
-#                 }
-
-#                 let newBlurname = [...songname].map((char, index) => {
-#                     if (/^[\u4E00-\u9FFF]$/.test(char)) {
-#                         return pinyin(char, { pattern: 'first', toneType: 'none', type: 'string' }) === letter ? char : blurname[index]
-#                     }
-
-#                     return char.toLowerCase() === letter ? char : blurname[index]
-#                 }).join('');
-
-#                 blurlist[group_id][i] = newBlurname
-
-#                 if (!newBlurname.includes('*')) {
-#                     delete blurlist[group_id][i]
-#                 }
-#             }
-
-#             if (included) {
-#                 alphalist[group_id] = alphalist[group_id] || ''
-#                 alphalist[group_id] += /^[A-Za-z]+$/g.test(letter) ? letter.toUpperCase() + ' ' : letter + ' '
-#                 output.push(`成功翻开字母[ ${letter} ]\n`)
-#             } else {
-#                 output.push(`这几首曲目中不包含字母[ ${letter} ]\n`)
-#             }
-
-#             output.push(`当前所有翻开的字母[ ${alphalist[group_id].replace(/\[object Object\]/g, '')}]`)
-
-#             let isEmpty = Object.getOwnPropertyNames(blurlist[group_id]).length === 0
-
-#             output = output.concat(Object.keys(gamelist[group_id]).map(m => {
-#                 if (!isEmpty && blurlist[group_id][m]) {
-#                     return `\n【${m}】${blurlist[group_id][m]}`
-#                 } else {
-#                     let result = `\n【${m}】${gamelist[group_id][m]}`
-
-#                     if (winnerlist[group_id][m]) {
-#                         result += ` @${winnerlist[group_id][m]}`
-#                     }
-
-#                     return result
-#                 }
-#             }));
-
-#             if (isEmpty) {
-#                 output.unshift('\n所有字母已翻开，答案如下：\n')
-#                 delete alphalist[group_id]
-#                 delete blurlist[group_id]
-#                 delete gamelist[group_id]
-#                 delete gameList[group_id]
-#                 delete winnerlist[group_id]
-#             }
-
-#             e.reply(output, true)
-
-#             return true
-#         }
-#         return false
-#     }
 
 #     /** 猜测 **/
 #     async guess(e, gameList) {
