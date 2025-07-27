@@ -11,6 +11,7 @@ import random
 import re
 import time
 
+import cn2an
 from nonebot_plugin_uninfo import Uninfo
 from pypinyin import Style, pinyin
 
@@ -37,7 +38,7 @@ songweights = {}
 # 曲目初始洗牌
 random.shuffle(songsname)
 
-gamelist: dict[str, list[str]] = {}
+gamelist: dict[str, dict[int, str]] = {}
 """标准答案曲名"""
 blurlist: dict[str, dict[int, str]] = {}
 """模糊后的曲名"""
@@ -148,7 +149,7 @@ class guessLetter:
                 if i in msg:
                     totNameList.extend(getInfo.DLC_Info[i])
                     gameSelectList[group_id].append(i)
-        if gamelist.get(group_id):
+        if group_id in gamelist:
             await send.sendWithAt(
                 matcher,
                 "喂喂喂，已经有群友发起出字母猜歌啦，不要再重复发起了，赶快输入"
@@ -185,12 +186,12 @@ class guessLetter:
             while randsong in chose or songinfo.can_t_be_letter:
                 cnnt += 1
                 if cnnt >= 50:
-                    logger.error("抽取曲目失败，请检查曲库设置", "phi-letter")
+                    logger.error("抽取曲目失败，请检查曲库设置", "phi-plugin:letter")
                     await send.sendWithAt(matcher, "抽取曲目失败，请检查曲库设置")
                     return
                 randsong = getRandomSong(session)
             chose.append(songinfo)
-            gamelist[group_id] = gamelist.get(group_id, [])
+            gamelist[group_id] = gamelist.get(group_id, {})
             blurlist[group_id] = blurlist.get(group_id, {})
             gamelist[group_id][i] = songinfo.song
             blurlist[group_id][i] = encrypt_song_name(songinfo.song)
@@ -254,7 +255,7 @@ class guessLetter:
             return
         output = []
         included = False
-        for i, songname in enumerate(gamelist[group_id]):
+        for i, songname in gamelist[group_id].items():
             blurname = blurlist[group_id][i]
             characters = ""
             letters = ""
@@ -320,156 +321,151 @@ class guessLetter:
 
         await send.sendWithAt(matcher, output, True)
 
+    @staticmethod
+    async def guess(
+        matcher, session: Uninfo, msg: str, gameList: dict[str, dict[str, Any]]
+    ):
+        """猜测"""
+        group_id, user_id = session.scene.id, session.user.id
+        sender = getattr(session.member, "nick") or session.user.name or user_id
+        timeCount[group_id]["newTime"] = time.time() + PluginConfig.get(
+            "LetterTimeLength"
+        )
+        # 必须已经开始了一局
+        if group_id in gamelist:
+            _time = PluginConfig.get("LetterGuessCd")
+            currentTime = time.time()
+            timetik = currentTime - lastGuessedTime[group_id]
+            timeleft = round(_time - timetik)
+            # 上一轮猜测的Cd还没过
+            if timetik < _time:
+                await send.sendWithAt(
+                    matcher, f"猜测的冷却时间还有{timeleft}s呐，先耐心等下哇QAQ", True
+                )
+                return
+            # 上一轮Cd结束，更新新一轮的时间戳
+            lastGuessedTime[group_id] = currentTime
+            opened = f"\n所有翻开的字母[ {alphalist[group_id]}]\n"
+            if result := re.match(
+                r"^\s*[第n]\s*(\d+|[一二三四五六七八九十百]+)\s*[个首.]?(.*)$", msg
+            ):
+                output = []
+                num = (
+                    result[1] if isinstance(result[1], int) else cn2an.cn2an(result[1])
+                )
+                assert isinstance(num, int)
+                content = result[2]
+                if num > PluginConfig.get("LetterNum"):
+                    await send.sendWithAt(
+                        matcher, f"没有第${num}个啦！看清楚再回答啊喂！￣へ￣"
+                    )
+                    return
+                songs = (
+                    await getdata.fuzzysongsnick(content, 0.95)
+                    if isfuzzymatch
+                    else await getdata.songsnick(content)
+                )
+                standard_song = gamelist[group_id].get(num)
+                if songs:
+                    for song in songs:
+                        if standard_song and standard_song == song:
+                            # 已经猜完移除掉的曲目不能再猜
+                            if not blurlist[group_id].get(num):
+                                await send.sendWithAt(
+                                    matcher,
+                                    f"曲目[{standard_song}]已经猜过了，要不咱们换一个吧uwu",
+                                )
+                                return
+                            del blurlist[group_id][num]
+                            await send.sendWithAt(
+                                matcher,
+                                f"恭喜你ww，答对啦喵，第{num}首答案是[{standard_song}]!"
+                                "ヾ(≧▽≦*)o ",
+                                True,
+                            )
+                            # 发送曲绘
+                            if song_info := await getdata.info(standard_song):
+                                if song_info.illustration:
+                                    match PluginConfig.get("LetterIllustration"):
+                                        case "水印版":
+                                            await send.sendWithAt(
+                                                matcher,
+                                                await getdata.getillpicmodle(
+                                                    {
+                                                        "illustration": (
+                                                            await getdata.getill(
+                                                                standard_song
+                                                            )
+                                                        ),
+                                                        "illustrator": (
+                                                            song_info.illustrator
+                                                        ),
+                                                    }
+                                                ),
+                                            )
+                                        case "原版":
+                                            await send.sendWithAt(
+                                                matcher, await pic.getIll(standard_song)
+                                            )
+                                        case _:
+                                            pass
+                            # 记录猜对者
+                            winnerlist[group_id][num] = sender
+                            isEmpty = not blurlist[group_id]
+                            """是否全部猜完"""
+                            if not isEmpty:
+                                output.extend(["开字母进行中：", opened])
+                                for i in gamelist[group_id].keys():
+                                    if v := blurlist[group_id].get(i):
+                                        output.append(f"\n【{i}】{v}")
+                                    else:
+                                        output.append(
+                                            f"\n【{i}】{gamelist[group_id][i]}"
+                                        )
+                                        if w := winnerlist[group_id].get(i):
+                                            output.append(f" @{w}")
+                                await send.sendWithAt(matcher, output, True)
+                            else:
+                                del alphalist[group_id]
+                                del blurlist[group_id]
+                                output.append("开字母已结束，答案如下：\n")
+                                for i, song in gamelist[group_id].items():
+                                    output.append(f"\n【{i}】{song}")
+                                    if w := winnerlist[group_id].get(i):
+                                        output.append(f" @{w}")
+                                output.append(opened)
+                                del gamelist[group_id]
+                                del gameList[group_id]
+                                del winnerlist[group_id]
+                                await send.sendWithAt(matcher, output)
+                            return
+                    if len(songs) > 1:
+                        await send.sendWithAt(
+                            matcher,
+                            f"第{num}首不是[{content}]www，要不再想想捏？如果实在不会可以"
+                            f"悄悄发个[{cmdhead} tip]哦≧ ﹏ ≦",
+                            True,
+                        )
+                    else:
+                        await send.sendWithAt(
+                            matcher,
+                            f"第{num}首不是[{songs[0]}]www，要不再想想捏？如果实在不会可以"
+                            f"悄悄发个[{cmdhead} tip]哦≧ ﹏ ≦",
+                            True,
+                        )
+                    return
+                await send.sendWithAt(
+                    matcher, f"没有找到[{content}]的曲目信息呐QAQ", True
+                )
+                return
+            # 格式匹配错误放过命令
+            return
+        # 未进行游戏放过命令
+        return
+
 
 # export default new class guessLetter {
 
-
-#     /** 猜测 **/
-#     async guess(e, gameList) {
-#         const { group_id, msg, user_id, sender } = e //使用对象解构提取group_id,msg,user_id和sender
-#         timeCount[group_id].newTime = Date.now() + (1000 * Config.getUserCfg('config', 'LetterTimeLength'))
-
-#         //必须已经开始了一局
-#         if (gamelist[group_id]) {
-#             const time = Config.getUserCfg('config', 'LetterGuessCd')
-#             const currentTime = Date.now()
-#             const timetik = currentTime - lastGuessedTime[group_id]
-#             const timeleft = Math.floor((1000 * time - timetik) / 1000)
-
-#             //上一轮猜测的Cd还没过
-#             if (timetik < 1000 * time) {
-#                 e.reply(`猜测的冷却时间还有${timeleft}s呐，先耐心等下哇QAQ`, true)
-#                 return true
-#             }
-
-#             //上一轮Cd结束，更新新一轮的时间戳
-#             lastGuessedTime[group_id] = currentTime
-
-#             const opened = `\n所有翻开的字母[ ${alphalist[group_id].replace(/\[object Object\]/g, '')}]\n`
-#             const regex = /^[#/]\s*[第n]\s*(\d+|[一二三四五六七八九十百]+)\s*[个首\.]?(.*)$/
-#             /**
-#              * [0] 完整匹配
-#              * [1] Num
-#              * [2] ans
-#              * [3] index
-#              * [4] input
-#              * [5] groups
-#              */
-#             const result = msg.match(regex)
-
-#             if (result) {
-#                 const output = []
-#                 let num = 0
-
-#                 if (isNaN(result[1])) {
-#                     num = NumberToArabic(result[1])
-#                 } else {
-#                     num = Number(result[1])
-#                 }
-
-#                 const content = result[2]
-
-#                 if (num > Config.getUserCfg('config', 'LetterNum')) {
-#                     e.reply(`没有第${num}个啦！看清楚再回答啊喂！￣へ￣`)
-#                     return true
-#                 }
-
-#                 const songs = !isfuzzymatch ? get.songsnick(content) : get.fuzzysongsnick(content, 0.95)
-#                 const standard_song = gamelist[group_id][num] // 标准答案
-
-#                 if (songs[0]) {
-#                     for (const song of songs) {
-#                         if (standard_song === song) {
-#                             //已经猜完移除掉的曲目不能再猜
-#                             if (!blurlist[group_id][num]) {
-#                                 e.reply(`曲目[${standard_song}]已经猜过了，要不咱们换一个吧uwu`)
-#                                 return true
-#                             }
-
-#                             delete blurlist[group_id][num]
-#                             send.send_with_At(e, `恭喜你ww，答对啦喵，第${num}首答案是[${standard_song}]!ヾ(≧▽≦*)o `, true)
-
-#                             /**发送曲绘 */
-#                             if (get.info(standard_song).illustration) { //如果有曲绘文件
-#                                 switch (Config.getUserCfg('config', 'LetterIllustration')) {
-#                                     case "水印版": {
-#                                         e.reply(await get.getillpicmodle(e, { illustration: get.getill(standard_song), illustrator: get.info(standard_song)["illustrator"] }))
-#                                         break;
-#                                     }
-#                                     case "原版": {
-#                                         e.reply(getPic.getIll(standard_song))
-#                                     }
-#                                     default:
-#                                         break;
-#                                 }
-#                             }
-
-#                             winnerlist[group_id][num] = sender.card //记录猜对者
-#                             const isEmpty = Object.getOwnPropertyNames(blurlist[group_id]).length === 0 //是否全部猜完
-
-#                             if (!isEmpty) {
-#                                 output.push('开字母进行中：')
-#                                 output.push(opened)
-
-#                                 for (const m of Object.keys(gamelist[group_id])) {
-#                                     if (blurlist[group_id][m]) {
-#                                         output.push(`\n【${m}】${blurlist[group_id][m]}`)
-#                                     } else {
-#                                         output.push(`\n【${m}】${gamelist[group_id][m]}`)
-
-#                                         if (winnerlist[group_id][m]) {
-#                                             output.push(` @${winnerlist[group_id][m]}`)
-#                                         }
-#                                     }
-#                                 }
-
-#                                 e.reply(output, true)
-#                                 return true
-#                             } else {
-#                                 delete alphalist[group_id]
-#                                 delete blurlist[group_id]
-
-#                                 output.push('开字母已结束，答案如下：\n')
-
-#                                 for (const m of Object.keys(gamelist[group_id])) {
-#                                     output.push(`\n【${m}】${gamelist[group_id][m]}`)
-
-#                                     if (winnerlist[group_id][m]) {
-#                                         output.push(` @${winnerlist[group_id][m]}`)
-#                                     }
-#                                 }
-
-#                                 output.push(opened)
-#                                 delete gamelist[group_id]
-#                                 delete gameList[group_id]
-#                                 delete winnerlist[group_id]
-
-#                                 e.reply(output)
-#                                 return true
-#                             }
-#                         }
-#                     }
-
-#                     if (songs[1]) {
-#                         e.reply(`第${num}首不是[${content}]www，要不再想想捏？如果实在不会可以悄悄发个[/${Config.getUserCfg('config', 'cmdhead')} tip]哦≧ ﹏ ≦`, true)
-#                     } else {
-#                         e.reply(`第${num}首不是[${songs[0]}]www，要不再想想捏？如果实在不会可以悄悄发个[/${Config.getUserCfg('config', 'cmdhead')} tip]哦≧ ﹏ ≦`, true)
-#                     }
-
-#                     return false
-#                 }
-
-#                 e.reply(`没有找到[${content}]的曲目信息呐QAQ`, true)
-#                 return true
-#             }
-
-#             /**格式匹配错误放过命令 */
-#             return false
-#         }
-
-#         /**未进行游戏放过命令 */
-#         return false
-#     }
 
 #     /** 答案 **/
 #     async ans(e, gameList) {

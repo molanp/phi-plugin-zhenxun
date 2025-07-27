@@ -39,7 +39,6 @@ class getdata:
     @staticmethod
     @overload
     async def info(song: str, original: bool = False) -> SongsInfoObject | None: ...
-
     @staticmethod
     @overload
     async def info(
@@ -48,7 +47,7 @@ class getdata:
     @staticmethod
     async def info(
         song: str | None = None, original: bool = False
-    ) -> dict[str, SongsInfoObject] | SongsInfoObject | None:
+    ) -> SongsInfoObject | None | dict[str, SongsInfoObject]:
         """
         :param song: 原曲曲名
         :param original: 是否仅使用原版曲库

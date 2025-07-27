@@ -31,13 +31,13 @@ def checkLimit(record: LevelRecordInfo, limit: list[dict[str, str | list[float]]
     """
     for lim in limit:
         value = lim.get("value")
-        assert isinstance(
-            value, list
-        ), f"Expected 'value' to be a list, got {type(value)}"
+        assert isinstance(value, list), (
+            f"Expected 'value' to be a list, got {type(value)}"
+        )
         assert len(value) == 2, f"Expected 'value' to have 2 elements, got {len(value)}"
-        assert all(
-            isinstance(x, int | float) for x in value
-        ), f"Expected all elements of 'value' to be numbers, got {value}"
+        assert all(isinstance(x, int | float) for x in value), (
+            f"Expected all elements of 'value' to be numbers, got {value}"
+        )
 
         match lim.get("type"):
             case "acc":
@@ -73,7 +73,7 @@ class SaveInfoSummary(BaseModel):
     """存档版本"""
     challengeModeRank: int
     """课题分"""
-    rankingScore: float
+    rankingScore: float = 0.0
     """rks"""
     gameVersion: int
     """客户端版本号"""
@@ -282,7 +282,8 @@ class Save:
                         await getRksRank.delUserRks(self.sessionToken)
                         raise ValueError(
                             "您的存档 acc 异常，该 token 已禁用"
-                            f"，如有异议请联系机器人管理员。\n{self.sessionToken}\n{id} {level} {record['acc']}"
+                            f"，如有异议请联系机器人管理员。\n{self.sessionToken}\n{id}"
+                            "{level} {record['acc']}"
                         )
                     if record["score"] > 1000000 or record["score"] < 0:
                         logger.error(
@@ -291,7 +292,8 @@ class Save:
                         await getRksRank.delUserRks(self.sessionToken)
                         raise ValueError(
                             "您的存档 score 异常，该 token 已禁用，"
-                            f"如有异议请联系机器人管理员。\n{self.sessionToken}\n{id} {level} {record['score']}"
+                            f"如有异议请联系机器人管理员。\n{self.sessionToken}\n{id}"
+                            " {level} {record['score']}"
                         )
                 # 保持和 JS 一致，直接赋值到指定下标
                 while len(self.gameRecord[id]) <= level:

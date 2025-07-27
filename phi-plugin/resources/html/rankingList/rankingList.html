@@ -128,7 +128,7 @@
     {% for e in me.b30list %}
     <div class="b30Alist">
       <p>{{ e.title }}</p>
-      {% for song in e.list %} {% if song %}
+      {% if e.list %} {% for song in e.list %} {% if song %}
       <div class="ill_box">
         <img src="{{ song.illustration }}" alt="{{ song.illustration }}" />
         <div class="b30_dif IN-BKG">
@@ -147,7 +147,17 @@
       </div>
       {% endif %} {% endfor %}
     </div>
-    {% endfor %}
+    {% endfor %} {% else %}
+    <div class="ill_box">
+      <p>NO INFO</p>
+    </div>
+    <div class="ill_box">
+      <p>NO INFO</p>
+    </div>
+    <div class="ill_box">
+      <p>NO INFO</p>
+    </div>
+    {% endif %}
   </div>
   <div class="createdbox">
     <div class="phi-plugin">

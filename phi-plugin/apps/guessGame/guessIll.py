@@ -116,7 +116,7 @@ def gave_a_tip(
                     """谱师"""
                     known_info["chart"] = f"谱师为 {songs_info.chart[t1].charter}"
     else:
-        logger.error("Error: remaining info is empty", "phi-guessill")
+        logger.error("Error: remaining info is empty", "phi-plugin:guessill")
 
 
 class guessIll:
@@ -143,7 +143,7 @@ class guessIll:
         while songs_info and songs_info.can_t_be_guessill:
             cnnt += 1
             if cnnt > 50:
-                logger.error("抽取曲目失败，请检查曲库设置", "phi-guess")
+                logger.error("抽取曲目失败，请检查曲库设置", "phi-plugin:guess")
                 await send.sendWithAt(
                     matcher, "[phi guess]抽取曲目失败，请检查曲库设置"
                 )

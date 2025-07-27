@@ -1,2 +1,3 @@
 qrcode
 pycryptodome
+cn2an

@@ -192,11 +192,14 @@ class makeRequest:
 
 
 async def makeFetch(url: str, params: dict) -> dict:
+    logger.debug(f"请求API: {url} with params: {params}", "phi-plugin:makeFetch")
     try:
         response = await AsyncHttpx.post(
             url, json=params, headers={"Content-Type": "application/json"}
         )
-        return response.json()
+        json = response.json()
+        logger.debug(f"API响应: {url} with response: {json}", "phi-plugin:makeFetch")
+        return json
     except Exception as e:
         logger.error(f"API请求失败, URL {url}", "phi-plugin", e=e)
         raise ValueError("API请求失败") from e
