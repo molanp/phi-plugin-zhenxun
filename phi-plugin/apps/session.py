@@ -2,9 +2,8 @@ import asyncio
 import random
 import re
 import time
-from typing import Any
 
-from nonebot_plugin_alconna import Alconna, Args, Arparma, on_alconna
+from nonebot_plugin_alconna import Alconna, Args, Match, on_alconna
 from nonebot_plugin_uninfo import Uninfo
 from nonebot_plugin_waiter import prompt
 
@@ -39,7 +38,7 @@ apiMsg = (
 )
 
 bind = on_alconna(
-    Alconna(rf"re:{recmdhead}\s*(绑定|bind)", Args["sessionToken?", str | int, "None"]),
+    Alconna(rf"re:{recmdhead}\s*(绑定|bind)", Args["sessionToken?", str | int, ""]),
     block=True,
     priority=5,
 )
@@ -66,17 +65,17 @@ getSstk = on_alconna(
 
 
 @bind.handle()
-async def _(bot, session: Uninfo, params: Arparma):
+async def _(bot, session: Uninfo, sstk: Match[str]):
     """这里逻辑太复杂了，得谨慎点"""
-    if await getBanGroup.get(bind, session, "bind"):
-        await send.sendWithAt(bind, "这里被管理员禁止使用这个功能了呐QAQ！")
+    if await getBanGroup.get(session, "bind"):
+        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！")
         return
-    param: Any = params.query("sessionToken")
+    param = sstk.result if sstk.available else ""
     sessionToken = re.compile(r"[0-9a-zA-Z]{25}|qrcode", re.IGNORECASE).search(param)
     localPhigrosToken = await getSave.get_user_token(session.user.id)
     sessionToken = sessionToken[0] if sessionToken else localPhigrosToken
     if localPhigrosToken:
-        await send.sendWithAt(bind, "不要重复绑定啊喂!")
+        await send.sendWithAt("不要重复绑定啊喂!")
         return
     if not sessionToken:
         apiId = re.compile(r"[0-9]{10}", re.IGNORECASE).search(param)
@@ -94,33 +93,31 @@ async def _(bot, session: Uninfo, params: Arparma):
                 )
                 if not result.data.have_api_token:
                     resMsg += apiMsg
-                await send.sendWithAt(bind, resMsg)
+                await send.sendWithAt(resMsg)
                 updateData = await getUpdateSave.getNewSaveFromApi(
                     session, sessionToken
                 )
                 history = await getSaveFromApi.getHistory(
                     session, ["data", "rks", "scoreHistory"]
                 )
-                await build(bind, session, updateData, history)
+                await build(session, updateData, history)
                 return
             if result.message == "用户 未找到":
                 await send.sendWithAt(
-                    bind,
                     "喂喂喂！你还没输入sessionToken呐！\n"
                     f"扫码绑定：{cmdhead} bind qrcode\n"
                     f"普通绑定：{cmdhead} bind <sessionToken>",
                 )
             else:
-                await send.sendWithAt(bind, result.message)
+                await send.sendWithAt(result.message)
                 logger.error("API错误", "phi-plugin", session=session)
                 logger.error(result.message, "phi-plugin", session=session)
         elif apiId:
             await send.sendWithAt(
-                bind, "这里没有连接查分平台哦！请使用sessionToken进行绑定！"
+                "这里没有连接查分平台哦！请使用sessionToken进行绑定！"
             )
         else:
             await send.sendWithAt(
-                bind,
                 "喂喂喂！你还没输入sessionToken呐！\n"
                 f"扫码绑定：{cmdhead} bind qrcode\n"
                 f"普通绑定：{cmdhead} bind <sessionToken>",
@@ -135,7 +132,6 @@ async def _(bot, session: Uninfo, params: Arparma):
                 recallTime = 60
             if PluginConfig.get("TapTapLoginQRcode"):
                 qrCodeMsg = await send.sendWithAt(
-                    bind,
                     [
                         "请识别二维码并按照提示进行登录嗷！请勿错扫他人二维码。"
                         "请注意，登录TapTap可能造成账号及财产损失，"
@@ -148,7 +144,6 @@ async def _(bot, session: Uninfo, params: Arparma):
                 )
             else:
                 qrCodeMsg = await send.sendWithAt(
-                    bind,
                     "请点击链接进行登录嗷！请勿使用他人的链接。请注意，"
                     "登录TapTap可能造成账号及财产损失，请在信任Bot来源的情况下扫码登录。\n"
                     f"链接剩余时间:{QRCodetimeout}\n{qrcode}",
@@ -158,7 +153,6 @@ async def _(bot, session: Uninfo, params: Arparma):
             request = await getQRcode.getRequest()
             if PluginConfig.get("TapTapLoginQRcode"):
                 qrCodeMsg = await send.sendWithAt(
-                    bind,
                     [
                         "请识别二维码并按照提示进行登录嗷！请勿错扫他人二维码。"
                         "请注意，登录TapTap可能造成账号及财产损失，请在信任Bot来源的情况下扫码登录。",
@@ -168,7 +162,6 @@ async def _(bot, session: Uninfo, params: Arparma):
                 )
             else:
                 qrCodeMsg = await send.sendWithAt(
-                    bind,
                     "请点击链接进行登录嗷！请勿使用他人的链接。"
                     "请注意，登录TapTap可能造成账号及财产损失，请在信任Bot来源的情况下扫码登录。\n"
                     f"{request['data']['qrcode_url']}",
@@ -188,19 +181,18 @@ async def _(bot, session: Uninfo, params: Arparma):
         )
         await qrCode.del_qecode(session.user.id)
         if not result.get("success"):
-            await send.sendWithAt(bind, "操作超时，请重试QAQ！")
+            await send.sendWithAt("操作超时，请重试QAQ！")
             return
         try:
             sessionToken = await getQRcode.getSessionToken(result)
         except Exception as e:
             logger.error("获取sessionToken失败", "phi-plugin", e=e, session=session)
             await send.sendWithAt(
-                bind,
                 "获取sessionToken失败QAQ！请确认您的Phigros已登录TapTap账号并同步！"
                 f"\n错误信息：{type(e)}: {e}",
             )
     if not PluginConfig.get("isGuild"):
-        await send.sendWithAt(bind, "正在绑定，请稍等一下哦！\n >_<", recallTime=5)
+        await send.sendWithAt("正在绑定，请稍等一下哦！\n >_<", recallTime=5)
     if PluginConfig.get("openPhiPluginApi"):
         try:
             result = await makeRequest.bind(
@@ -212,36 +204,35 @@ async def _(bot, session: Uninfo, params: Arparma):
                 )
                 if not result.data.have_api_token:
                     resMsg += apiMsg
-                await send.sendWithAt(bind, resMsg)
+                await send.sendWithAt(resMsg)
                 updateData = await getUpdateSave.getNewSaveFromApi(
                     session, sessionToken
                 )
                 history = await getSaveFromApi.getHistory(
                     session, ["data", "rks", "scoreHistory"]
                 )
-                await build(bind, session, updateData, history)
+                await build(session, updateData, history)
         except Exception as e:
             await send.sendWithAt(
-                bind, f"{e}\n从API获取存档失败，本次绑定将不上传至查分平台QAQ！"
+                f"{e}\n从API获取存档失败，本次绑定将不上传至查分平台QAQ！"
             )
             logger.error("API错误", "phi-plugin", e=e)
         return
     await send.sendWithAt(
-        bind,
         "请注意保护好自己的sessionToken呐！如果需要获取已绑定的sessionToken可以私聊发送"
         f"{cmdhead} sessionToken 哦！",
         recallTime=10,
     )
     # with contextlib.suppress(Exception):
-    updateData = await getUpdateSave.getNewSaveFromLocal(bind, session, sessionToken)
+    updateData = await getUpdateSave.getNewSaveFromLocal(session, sessionToken)
     history = await getSave.getHistory(session.user.id)
-    await build(bind, session, updateData, history)
+    await build(session, updateData, history)
 
 
 @update.handle()
 async def _(session: Uninfo):
-    if await getBanGroup.get(update, session, "update"):
-        await send.sendWithAt(update, "这里被管理员禁止使用这个功能了呐QAQ！")
+    if await getBanGroup.get(session, "update"):
+        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！")
         return
     if PluginConfig.get("openPhiPluginApi"):
         try:
@@ -249,48 +240,43 @@ async def _(session: Uninfo):
             history = await getSaveFromApi.getHistory(
                 session, ["data", "rks", "scoreHistory"]
             )
-            await build(update, session, updateData, history)
+            await build(session, updateData, history)
             return
         except Exception as e:
             await send.sendWithAt(
-                update,
                 f"{e}\n从API获取存档失败，本次更新将使用本地数据QAQ！",
             )
             logger.error("API错误", "phi-plugin", e=e)
     sessionToken = await getSave.get_user_token(session.user.id)
     if not sessionToken:
         await send.sendWithAt(
-            update,
             "没有找到你的存档哦！请先绑定sessionToken！\n"
             f"帮助：{cmdhead} tk help\n"
             f"格式：{cmdhead} bind <sessionToken>",
         )
         return
     if not PluginConfig.get("isGuild"):
-        await send.sendWithAt(bind, "正在生成，请稍等一下哦！\n >_<", recallTime=5)
+        await send.sendWithAt("正在生成，请稍等一下哦！\n >_<", recallTime=5)
     try:
-        updateData = await getUpdateSave.getNewSaveFromLocal(
-            update, session, sessionToken
-        )
+        updateData = await getUpdateSave.getNewSaveFromLocal(session, sessionToken)
         history = await getSave.getHistory(session.user.id)
-        await build(update, session, updateData, history)
+        await build(session, updateData, history)
     except Exception as e:
         logger.error("更新信息失败", "phi-plugin", e=e)
         await send.sendWithAt(
-            update,
             f"更新失败，请检查你的sessionToken是否正确QAQ！\n错误信息：{type(e)}: {e}",
         )
 
 
 @unbind.handle()
 async def _(session: Uninfo):
-    if await getBanGroup.get(unbind, session, "unbind"):
-        await send.sendWithAt(unbind, "这里被管理员禁止使用这个功能了呐QAQ！")
+    if await getBanGroup.get(session, "unbind"):
+        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！")
         return
     if not await getSave.get_user_token(
         session.user.id
     ) and not await getSaveFromApi.get_user_apiId(session.user.id):
-        await send.sendWithAt(unbind, "没有找到你的存档信息嗷！")
+        await send.sendWithAt("没有找到你的存档信息嗷！")
         return
     ensure = await prompt(
         "解绑会导致历史数据全部清空呐QAQ！真的要这么做吗?(确认/取消)", timeout=30
@@ -303,13 +289,13 @@ async def _(session: Uninfo):
                 await getSaveFromApi.delSave(session)
             await getNotes.delNotesData(session.user.id)
         except Exception as e:
-            await send.sendWithAt(unbind, f"解绑失败QAQ！\n错误信息：{type(e)}: {e}")
+            await send.sendWithAt(f"解绑失败QAQ！\n错误信息：{type(e)}: {e}")
             logger.error("用户解绑失败", "phi-plugin", session=session, e=e)
             flag = False
         if flag:
-            await send.sendWithAt(unbind, "解绑成功")
+            await send.sendWithAt("解绑成功")
     else:
-        await send.sendWithAt(unbind, "已取消操作")
+        await send.sendWithAt("已取消操作")
 
 
 @clean.handle()
@@ -324,25 +310,24 @@ async def _(session: Uninfo):
             await getSave.delSave(session.user.id)
             await getNotes.delNotesData(session.user.id)
         except Exception as e:
-            await send.sendWithAt(clean, f"删除失败QAQ！\n错误信息：{type(e)}: {e}")
+            await send.sendWithAt(f"删除失败QAQ！\n错误信息：{type(e)}: {e}")
             flag = False
         if flag:
-            await send.sendWithAt(clean, "清除数据成功")
+            await send.sendWithAt("清除数据成功")
     else:
-        await send.sendWithAt(unbind, "已取消操作")
+        await send.sendWithAt("已取消操作")
 
 
 @getSstk.handle()
 async def _(session: Uninfo):
     if ensure_group(session):
-        await send.sendWithAt(getSstk, "请私聊使用嗷")
+        await send.sendWithAt("请私聊使用嗷")
         return
-    save = await send.getsaveResult(getSstk, session, -1, False)
+    save = await send.getsaveResult(session, -1, False)
     if save is None:
-        await send.sendWithAt(getSstk, "未绑定存档，请先绑定存档嗷！")
+        await send.sendWithAt("未绑定存档，请先绑定存档嗷！")
         return
     await send.sendWithAt(
-        getSstk,
         f"PlayerId: {fCompute.convertRichText(save.saveInfo.PlayerId, True)}\n"
         f"sessionToken: {save.sessionToken}\nObjectId: {save.saveInfo.objectId}\n"
         f"QQId: {session.user.id}",
@@ -378,7 +363,7 @@ async def waitResponse(bot, QRCodetimeout: int, request, recall_id, qrCodeMsg):
         if result.get("success"):
             break
         if result["data"].get("error") == "authorization_waiting" and not flag:
-            await send.sendWithAt(bind, "二维码已扫描，请确认登录", recallTime=10)
+            await send.sendWithAt("二维码已扫描，请确认登录", recallTime=10)
             WithdrawManager.remove(recall_id)
             WithdrawManager.append(
                 bot,
@@ -390,7 +375,11 @@ async def waitResponse(bot, QRCodetimeout: int, request, recall_id, qrCodeMsg):
     return result
 
 
-async def build(matcher, session: Uninfo, updateData: dict, history: saveHistory):
+async def build(
+    session: Uninfo,
+    updateData: dict,
+    history: saveHistory,
+):
     """
     保存PhigrosUser
 
@@ -567,7 +556,6 @@ async def build(matcher, session: Uninfo, updateData: dict, history: saveHistory
         "rks_range": rks_range,
     }
     await send.sendWithAt(
-        matcher,
         [
             f"PlayerId: {fCompute.convertRichText(now.saveInfo.PlayerId, True)}",
             await getdata.getupdate(data),

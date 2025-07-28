@@ -26,6 +26,7 @@ class match_request_return_2(TypedDict):
     FC: bool
     PHI: bool
 
+
 class match_request_return(TypedDict):
     range: list[float]
     isask: list[bool]
@@ -66,15 +67,13 @@ class fCompute:
             return str(ans)
 
     @staticmethod
-    async def sendFile(e, file: bytes, filename: str):
+    async def sendFile(file: bytes, filename: str):
         """发送文件"""
-        from .send import send
-
         try:
-            await send.sendWithAt(e, UniMessage(File(raw=file, name=filename)))
+            await UniMessage(File(raw=file, name=filename)).send()
         except Exception as err:
-            logger.error(f"文件上传错误: {err}")
-            await send.sendWithAt(e, f"文件上传错误: {err}")
+            logger.error("文件上传错误", "phi-plugin:sendFile", e=err)
+            await UniMessage(f"文件上传错误: {err}").send()
 
     @staticmethod
     async def getBackground(save_background: str) -> Path | str | Literal[False]:

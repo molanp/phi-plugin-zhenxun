@@ -46,7 +46,7 @@ class getUpdateSave:
 
     @classmethod
     async def getNewSaveFromLocal(
-        cls, matcher, session: Uninfo, sessionToken: str | None = None
+        cls, session: Uninfo, sessionToken: str | None = None
     ) -> dict:
         from .send import send
 
@@ -60,22 +60,21 @@ class getUpdateSave:
             await User.buildRecord()
         except Exception as err:
             if not PlatformUtils.is_qbot(session):
-                await send.sendWithAt(matcher, f"更新失败！QAQ\n{err}")
+                await send.sendWithAt(f"更新失败！QAQ\n{err}")
             else:
-                await send.sendWithAt(matcher, "更新失败！QAQ\n请稍后重试")
+                await send.sendWithAt("更新失败！QAQ\n请稍后重试")
             logger.error("信息更新失败", "phi-plugin", e=err)
             raise err
         try:
             await getSave.putSave(session.user.id, to_dict(User))
         except Exception as err:
-            await send.sendWithAt(matcher, f"[getUpdateSave]保存存档失败!\n{err}")
+            await send.sendWithAt(f"[getUpdateSave]保存存档失败!\n{err}")
             logger.error("[getUpdateSave]保存存档失败", "phi-plugin", e=err)
             raise err
         now = await Save().constructor(to_dict(User))
 
         if old and (old.sessionToken and old.sessionToken != User.sessionToken):
             await send.sendWithAt(
-                matcher,
                 "检测到新的sessionToken，将自动更换绑定。"
                 "如果需要删除统计记录请"
                 f"⌈{cmdhead} unbind⌋ 进行解绑哦！",

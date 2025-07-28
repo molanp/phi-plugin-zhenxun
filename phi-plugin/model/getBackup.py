@@ -13,8 +13,7 @@ from zhenxun.services.log import logger
 from ..models import SstkData
 from ..utils import to_dict
 from .cls.saveHistory import saveHistory
-
-# from .fCompute import fCompute
+from .fCompute import fCompute
 from .path import backupPath, pluginDataPath, savePath
 from .progress_bar import ProgressBar
 from .send import send
@@ -33,8 +32,12 @@ def zip(zip_path: Path, files_path: Path):
 
 class getBackup:
     @staticmethod
-    async def backup(matcher, send: "send") -> bool:
-        """备份"""
+    async def backup(back: bool = False) -> bool:
+        """
+        备份
+
+        :param back: 是否发送压缩包
+        """
         zip_name = (
             f"{datetime.now().isoformat().replace(':', '-').replace('.', '-')}.zip"
         )
@@ -50,20 +53,18 @@ class getBackup:
 
             # 1. 备份 savePath 下的存档
             if not savePath.exists():
-                await send.sendWithAt(matcher, "存档目录不存在，请检查路径！")
+                await send.sendWithAt("存档目录不存在，请检查路径！")
                 logger.warning("存档目录不存在，请检查路径！", "phi-plugin")
                 return False
 
             list_dirs = [d for d in savePath.iterdir() if d.is_dir()]
             if len(list_dirs) >= MaxNum:
-                await send.sendWithAt(
-                    matcher, "存档数量过多，请手动备份 /data/saveData/ 目录！"
-                )
+                await send.sendWithAt("存档数量过多，请手动备份 /data/saveData/ 目录！")
                 logger.warning(
                     "存档数量过多，请手动备份 /data/saveData/ 目录！", "phi-plugin"
                 )
             else:
-                await send.sendWithAt(matcher, "开始备份存档，请稍等...")
+                await send.sendWithAt("开始备份存档，请稍等...")
                 logger.info("开始备份存档...", "phi-plugin")
                 bar = ProgressBar("存档备份中", len(list_dirs))
                 for idx, folder in enumerate(list_dirs):
@@ -81,21 +82,21 @@ class getBackup:
 
             # 2. 备份 pluginDataPath 下的插件数据
             if not pluginDataPath.exists():
-                await send.sendWithAt(matcher, "插件数据目录不存在，请检查路径！")
+                await send.sendWithAt("插件数据目录不存在，请检查路径！")
                 logger.warning("插件数据目录不存在，请检查路径！", "phi-plugin")
                 return False
 
             list_files = [f for f in pluginDataPath.iterdir() if f.is_file()]
             if len(list_files) >= MaxNum:
                 await send.sendWithAt(
-                    matcher, "插件数据数量过多，请手动备份 /data/pluginData/ 目录！"
+                    "插件数据数量过多，请手动备份 /data/pluginData/ 目录！"
                 )
                 logger.warning(
                     "插件数据数量过多，请手动备份 /data/pluginData/ 目录！",
                     "phi-plugin",
                 )
             else:
-                await send.sendWithAt(matcher, "开始备份插件数据，请稍等...")
+                await send.sendWithAt("开始备份插件数据，请稍等...")
                 logger.info("开始备份插件数据...", "phi-plugin")
                 bar = ProgressBar("[phi-plugin] 插件数据备份中", len(list_files))
                 for idx, file in enumerate(list_files):
@@ -103,7 +104,7 @@ class getBackup:
                     bar.render(completed=idx + 1)
 
             # 3. 提取 Redis 中 user_token 数据
-            await send.sendWithAt(matcher, "开始备份user_token，请稍等...")
+            await send.sendWithAt("开始备份user_token，请稍等...")
             logger.info("开始备份user_token数据...", "phi-plugin")
 
             # 从数据库中获取所有未封禁用户的 uid -> sessionToken 映射
@@ -117,22 +118,21 @@ class getBackup:
 
             # 4. 打包压缩
             zip_path.parent.mkdir(parents=True, exist_ok=True)
-            await send.sendWithAt(matcher, "开始压缩备份数据，请稍等...")
+            await send.sendWithAt("开始压缩备份数据，请稍等...")
             logger.info("开始压缩备份数据...", "phi-plugin")
 
             await zip(zip_path, temp_dir)
 
             logger.success(f"备份完成 {zip_path}", "phi-plugin")
             await send.sendWithAt(
-                matcher,
                 f"{zip_name.replace('.zip', '')} 成功备份到 {backupPath} 目录下",
             )
 
             # 如果命令包含 'back' 则直接发送压缩包
-            # if "back" in e.get_receive().get_plaintext():
-            #     async with aiofiles.open(zip_path, "rb") as f:
-            #         data = await f.read()
-            #     await fCompute.sendFile(e, data, zip_name)
+            if back:
+                async with aiofiles.open(zip_path, "rb") as f:
+                    data = await f.read()
+                await fCompute.sendFile(data, zip_name)
 
             return True
 

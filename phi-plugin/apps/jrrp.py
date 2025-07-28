@@ -22,8 +22,8 @@ jrrp = on_alconna(Alconna(rf"re:{recmdhead}\s*(jrrp|今日人品)"), priority=5,
 
 @jrrp.handle()
 async def _(session: Uninfo):
-    if await getBanGroup.get(jrrp, session, "jrrp"):
-        await send.sendWithAt(jrrp, "这里被管理员禁止使用这个功能了呐QAQ！", True)
+    if await getBanGroup.get(session, "jrrp"):
+        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！", True)
         return
     jrrp_data: list = await jrrpModel.get_jrrp(session.user.id)
     sentence = await readFile.FileReader(infoPath / "sentences.json")
@@ -65,7 +65,6 @@ async def _(session: Uninfo):
     else:
         luck_rank = 0
     await send.sendWithAt(
-        jrrp,
         await picmodle.common(
             "jrrp",
             {

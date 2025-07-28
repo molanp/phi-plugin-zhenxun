@@ -366,7 +366,7 @@ class getInfo:
         :param str mic: 别名
         :return: 原曲名称列表或 False
         """
-        nickconfig = await readFile.FileReader(configPath / "nickconfig.yaml")
+        nickconfig: dict = await readFile.FileReader(configPath / "nickconfig.yaml")
         all_songs = []
 
         # 如果 mic 是一个有效的歌曲名称，直接添加

@@ -22,10 +22,8 @@ random.shuffle(songsname)
 gamelist: dict[str, str] = {}
 
 
-def getRandomSong(session: Uninfo):
+def getRandomSong(group_id: str):
     """定义随机抽取曲目的函数"""
-    group_id = session.scene.id
-
     # 计算曲目的总权重
     total_weight = sum(songweights[group_id].values())
 
@@ -43,11 +41,11 @@ def getRandomSong(session: Uninfo):
     return random.choice(songsname)
 
 
-async def gameover(matcher, data: dict):
+async def gameover(data: dict):
     """游戏结束，发送相应位置"""
     data["ans"] = data["illustration"]
     data["style"] = 1
-    await send.sendWithAt(matcher, await getdata.getguess(data))
+    await send.sendWithAt(await getdata.getguess(data))
 
 
 def area_increase(size: int, data: dict, fnc: list[int]):
@@ -121,37 +119,35 @@ def gave_a_tip(
 
 class guessIll:
     @staticmethod
-    async def start(matcher, session: Uninfo, gameList: dict[str, dict[str, Any]]):
+    async def start(
+        session: Uninfo,
+        gameList: dict[str, dict[str, Any]],
+    ):
         """猜曲绘"""
         group_id = session.scene.id
-        if gamelist.get(group_id):
-            await send.sendWithAt(matcher, "请不要重复发起哦！")
+        if group_id in gamelist:
+            await send.sendWithAt("请不要重复发起哦！")
             return
-        if len(songsname) == 0:
-            await send.sendWithAt(
-                matcher, "当前曲库暂无有曲绘的曲目哦！更改曲库后需要重启哦！"
-            )
+        if not songsname:
+            await send.sendWithAt("当前曲库暂无有曲绘的曲目哦！更改曲库后需要重启哦！")
             return
-        if not songweights.get(group_id):
-            songweights[group_id] = {}
-            # 将每一首曲目的权重初始化为1
-            for song in songsname:
-                songweights[group_id][song] = 1
-        song = getRandomSong(session)
+        songweights[group_id] = songweights.get(group_id, {})
+        # 将每一首曲目的权重初始化为1
+        for song in songsname:
+            songweights[group_id][song] = 1
+        song = getRandomSong(group_id)
         songs_info = await getInfo.info(song)
         cnnt = 0
         while songs_info and songs_info.can_t_be_guessill:
             cnnt += 1
             if cnnt > 50:
                 logger.error("抽取曲目失败，请检查曲库设置", "phi-plugin:guess")
-                await send.sendWithAt(
-                    matcher, "[phi guess]抽取曲目失败，请检查曲库设置"
-                )
+                await send.sendWithAt("抽取曲目失败，请检查曲库设置")
                 return
-            song = getRandomSong(session)
+            song = getRandomSong(group_id)
             songs_info = await getInfo.info(song)
         if songs_info is None:
-            await send.sendWithAt(matcher, f"无法获取歌曲 {song} 的信息")
+            await send.sendWithAt(f"无法获取歌曲 {song} 的信息")
             return
         gamelist[group_id] = songs_info.song
         gameList[group_id] = {"gameType": "guessIll"}
@@ -180,14 +176,12 @@ class guessIll:
         """
         fnc = [0, 1, 2, 3]
         await send.sendWithAt(
-            matcher,
             "下面开始进行猜曲绘哦！回答可以直接发送哦！每过"
             f"{PluginConfig.get('GuessTipCd')}秒后将会给出进一步提示。发送 {cmdhead}"
             "ans 结束游戏",
             False,
         )
         await send.sendWithAt(
-            matcher,
             await getdata.getguess(data),
             False,
             PluginConfig.get("GuessTipCd") if PluginConfig.get("GuessTipRecall") else 0,
@@ -199,9 +193,9 @@ class guessIll:
                 await asyncio.sleep(1)
                 if gamelist.get(group_id):
                     if gamelist[group_id] != songs_info.song:
-                        await gameover(matcher, data)
+                        await gameover(data)
                 else:
-                    await gameover(matcher, data)
+                    await gameover(data)
             tipmsg = ""
             """这次干了什么"""
             match random.choice(fnc):
@@ -232,13 +226,12 @@ class guessIll:
                 tipmsg += known_info["chart"]
             """回复内容"""
             remsg = [tipmsg, await getdata.getguess(data)]
-            if gamelist.get(group_id):
-                if gamelist[group_id] != songs_info.song:
-                    await gameover(matcher, data)
+            if v := gamelist.get(group_id):
+                if v != songs_info.song:
+                    await gameover(data)
             else:
-                await gameover(matcher, data)
+                await gameover(data)
             await send.sendWithAt(
-                matcher,
                 remsg,
                 False,
                 recallTime=(PluginConfig.get("GuessTipCd") + 1)
@@ -247,27 +240,27 @@ class guessIll:
             )
         for _ in range(time):
             await asyncio.sleep(1)
-            if gamelist.get(group_id):
-                if gamelist[group_id] != songs_info.song:
-                    await gameover(matcher, data)
+            if v := gamelist.get(group_id):
+                if v != songs_info.song:
+                    await gameover(data)
             else:
-                await gameover(matcher, data)
+                await gameover(data)
         t = gamelist[group_id]
         del gamelist[group_id]
         del gameList[group_id]
-        await send.sendWithAt(
-            matcher, "呜，怎么还没有人答对啊QAQ！只能说答案了喵……", False
-        )
-        await send.sendWithAt(matcher, await getdata.GetSongsInfoAtlas(t), False)
-        await gameover(matcher, data)
+        await send.sendWithAt("呜，怎么还没有人答对啊QAQ！只能说答案了喵……", False)
+        await send.sendWithAt(await getdata.GetSongsInfoAtlas(t), False)
+        await gameover(data)
 
     @staticmethod
     async def guess(
-        matcher, session: Uninfo, msg: str, gameList: dict[str, dict[str, Any]]
+        session: Uninfo,
+        msg: str,
+        gameList: dict[str, dict[str, Any]],
     ):
         """玩家猜测"""
         group_id = session.scene.id
-        if gamelist.get(group_id):
+        if group_id in gamelist:
             song = await getdata.fuzzysongsnick(msg, 0.95)
             if song and song[0]:
                 for i in song:
@@ -275,38 +268,30 @@ class guessIll:
                         t = gamelist[group_id]
                         del gamelist[group_id]
                         del gameList[group_id]
-                        await send.sendWithAt(
-                            matcher, "恭喜你，答对啦喵！ヾ(≧▽≦*)o", True
-                        )
-                        await send.sendWithAt(
-                            matcher, await getdata.GetSongsInfoAtlas(t)
-                        )
+                        await send.sendWithAt("恭喜你，答对啦喵！ヾ(≧▽≦*)o", True)
+                        await send.sendWithAt(await getdata.GetSongsInfoAtlas(t))
                         return
                 if len(song) > 1 and song[1]:
-                    await send.sendWithAt(matcher, f"不是 {msg} 哦喵！≧ ﹏ ≦", True, 5)
+                    await send.sendWithAt(f"不是 {msg} 哦喵！≧ ﹏ ≦", True, 5)
                 else:
-                    await send.sendWithAt(
-                        matcher, f"不是 {song[0]} 哦喵！≧ ﹏ ≦", True, 5
-                    )
+                    await send.sendWithAt(f"不是 {song[0]} 哦喵！≧ ﹏ ≦", True, 5)
 
     @staticmethod
-    async def ans(matcher, session: Uninfo, gameList: dict[str, dict[str, Any]]):
+    async def ans(session: Uninfo, gameList: dict[str, dict[str, Any]]):
         group_id = session.scene.id
-        if gamelist.get(group_id):
+        if group_id in gamelist:
             t = gamelist[group_id]
             del gamelist[group_id]
             del gameList[group_id]
-            await send.sendWithAt(matcher, "好吧，下面开始公布答案。")
-            await send.sendWithAt(matcher, await getdata.GetSongsInfoAtlas(t))
+            await send.sendWithAt("好吧，下面开始公布答案。")
+            await send.sendWithAt(await getdata.GetSongsInfoAtlas(t))
 
     @staticmethod
-    async def mix(matcher, session: Uninfo):
+    async def mix(session: Uninfo):
         """洗牌"""
         group_id = session.scene.id
-        if gamelist.get(group_id):
-            await send.sendWithAt(
-                matcher, "当前有正在进行的游戏，请等待游戏结束再执行该指令"
-            )
+        if group_id in gamelist:
+            await send.sendWithAt("当前有正在进行的游戏，请等待游戏结束再执行该指令")
             return
         # 曲目初始洗牌
         random.shuffle(songsname)
@@ -315,4 +300,4 @@ class guessIll:
         # 将每一首曲目的权重初始化为1
         for song in songsname:
             songweights[group_id][song] = 1
-        await send.sendWithAt(matcher, "洗牌成功了www")
+        await send.sendWithAt("洗牌成功了www")

@@ -41,14 +41,13 @@ apihelp = on_alconna(
 
 @help.handle()
 async def _(session: Uninfo):
-    if await getBanGroup.get(help, session, "help"):
-        await send.sendWithAt(help, "这里被管理员禁止使用这个功能了呐QAQ！")
+    if await getBanGroup.get(session, "help"):
+        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！")
         return
 
     pluginData = await getdata.getpluginData(session.user.id)
     helpGroup = await readFile.FileReader(infoPath / "help.json")
     await send.sendWithAt(
-        help,
         await picmodle.help(
             {
                 "helpGroup": helpGroup,
@@ -63,11 +62,10 @@ async def _(session: Uninfo):
 
 @tkhelp.handle()
 async def _(session: Uninfo):
-    if await getBanGroup.get(tkhelp, session, "tkhelp"):
-        await send.sendWithAt(tkhelp, "这里被管理员禁止使用这个功能了呐QAQ！")
+    if await getBanGroup.get(session, "tkhelp"):
+        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！")
         return
     await send.sendWithAt(
-        tkhelp,
         (
             "sessionToken有关帮助：\n【推荐】：扫码登录TapTap获取token\n"
             f"指令：{cmdhead} bind qrcode\n"
@@ -79,16 +77,15 @@ async def _(session: Uninfo):
 
 @apihelp.handle()
 async def _(session: Uninfo):
-    if await getBanGroup.get(tkhelp, session, "apihelp"):
-        await send.sendWithAt(tkhelp, "这里被管理员禁止使用这个功能了呐QAQ！")
+    if await getBanGroup.get(session, "apihelp"):
+        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！")
         return
     if not PluginConfig.get("openPhiPluginApi"):
-        await send.sendWithAt(apihelp, "这里没有连接查分平台哦！")
+        await send.sendWithAt("这里没有连接查分平台哦！")
         return
     pluginData = await getdata.getpluginData(session.user.id)
     apiHelp = await readFile.FileReader(infoPath / "help" / "api.json")
     await send.sendWithAt(
-        help,
         await picmodle.help(
             {
                 "helpGroup": apiHelp,

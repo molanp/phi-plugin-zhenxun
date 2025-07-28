@@ -20,9 +20,9 @@
 
 当前同步的版本
 
-[e12cfd39fd67711ae623225ab199f4b9deca90fd](https://github.com/Catrong/phi-plugin/commit/e12cfd39fd67711ae623225ab199f4b9deca90fd)
+[faccd28f3466f7add05144c71715bd9d5a3efb41](https://github.com/Catrong/phi-plugin/commit/faccd28f3466f7add05144c71715bd9d5a3efb41)
 
-[已落后的变更](https://github.com/Catrong/phi-plugin/compare/e12cfd39fd67711ae623225ab199f4b9deca90fd...main)
+[已落后的变更](https://github.com/Catrong/phi-plugin/compare/faccd28f3466f7add05144c71715bd9d5a3efb41...main)
 
 </details>
 
@@ -34,9 +34,9 @@
 - [ ] 移植 `apiSetting`
 - [x] 移植 `b19`
 - [ ] 移植 `Dan`
-- [ ] 移植 `guessGame`
+- [x] 移植 `guessGame`
   - [x] 移植 `guessIll`
-  - [ ] 移植 `guessLetter`
+  - [x] 移植 `guessLetter`
   - [x] 移植 `guessTips`
 - [x] 移植 `help`
 - [x] 移植 `jrrp`

@@ -16,9 +16,13 @@ from ...model.send import send
 
 class guessTips:
     @staticmethod
-    async def start(matcher, session: Uninfo, gameList: dict[str, dict[str, Any]]):
-        if gameList.get(session.scene.id):
-            await send.sendWithAt(matcher, "请不要重复发起哦！")
+    async def start(
+        session: Uninfo,
+        gameList: dict[str, dict[str, Any]],
+    ):
+        group_id = session.scene.id
+        if group_id in gameList:
+            await send.sendWithAt("请不要重复发起哦！")
             return
         # 提取原名，要求有曲绘
         songList = []
@@ -30,7 +34,7 @@ class guessTips:
         if not songList:
             logger.error("猜曲绘无有效曲目", "phi-plugin")
             await send.sendWithAt(
-                matcher, "当前曲库暂无有曲绘的曲目哦！更改曲库后需要重启哦！", False
+                "当前曲库暂无有曲绘的曲目哦！更改曲库后需要重启哦！", False
             )
             return
         # 选中的歌曲原名
@@ -62,7 +66,7 @@ class guessTips:
         x_ = fCompute.randBetween(0, 2048 - w_)
         y_ = fCompute.randBetween(0, 1080 - h_)
         id_ = fCompute.randBetween(0, 1000000000)
-        gameList[session.scene.id] = {
+        gameList[group_id] = {
             "gameType": "guessTips",
             "id": id_,
             "song": song,
@@ -80,7 +84,6 @@ class guessTips:
             },
         }
         await send.sendWithAt(
-            matcher,
             "下面开始进行猜曲绘哦！可以直接发送曲名进行回答哦！"
             f"每过{PluginConfig.get('GuessTipsTipCD')}秒后可以请求下一条提示，"
             f"共有{PluginConfig.get('GuessTipsTipNum') + 1}条提示嗷！"
@@ -88,29 +91,25 @@ class guessTips:
             f"发送 {cmdhead} ans 也可以提前结束游戏呐！`)",
         )
         reMsg = "".join(
-            f"{i + 1}.{gameList[session.scene.id]['tips'][i]}\n"
+            f"{i + 1}.{gameList[group_id]['tips'][i]}\n"
             for i in range(PluginConfig.get("GuessTipsTipNum"))
         )
-        await send.sendWithAt(matcher, reMsg)
+        await send.sendWithAt(reMsg)
 
-        async def checkresult(session, id_, gameList):
-            if (
-                gameList.get(session.scene.id)
-                and gameList[session.scene.id]["id"] == id_
-            ):
+        async def checkresult(group_id, id_, gameList):
+            if group_id in gameList and gameList[group_id]["id"] == id_:
                 await send.sendWithAt(
-                    matcher,
                     [
-                        f"呜……很遗憾，没有人答对喵！正确答案是：{gameList[session.scene.id]['song']}",
+                        f"呜……很遗憾，没有人答对喵！正确答案是：{gameList[group_id]['song']}",
                         await picmodle.guess(
                             {
-                                **gameList[session.scene.id]["ill"],
+                                **gameList[group_id]["ill"],
                                 "blur": 0,
                                 "style": 1,
                             }
                         )
-                        if gameList[session.scene.id]["tipNum"]
-                        > len(gameList[session.scene.id]["tips"])
+                        if gameList[group_id]["tipNum"]
+                        > len(gameList[group_id]["tips"])
                         else "",
                     ],
                 )
@@ -119,38 +118,36 @@ class guessTips:
             checkresult,
             "date",
             run_date=time.time() + PluginConfig.get("GuessTipsTimeout"),
-            kwargs={"session": session, "id_": id_, "gameList": gameList},
+            kwargs={"group_id": group_id, "id_": id_, "gameList": gameList},
         )
 
     @staticmethod
-    async def getTip(matcher, session: Uninfo, gameList: dict[str, dict[str, Any]]):
-        if not gameList.get(session.scene.id):
+    async def getTip(
+        session: Uninfo,
+        gameList: dict[str, dict[str, Any]],
+    ):
+        group_id = session.scene.id
+        if group_id not in gameList:
             return
         nowTime = time.time()
-        gameData = gameList[session.scene.id]
+        gameData = gameList[group_id]
         if nowTime - gameData["tipTime"] < PluginConfig.get("GuessTipsTipCD"):
             await send.sendWithAt(
-                matcher,
                 f"提示的冷却时间还有{round(nowTime - gameData['tipTime'])}秒哦！",
             )
             return
         if gameData["tipNum"] > len(gameData["tips"]):
             await send.sendWithAt(
-                matcher,
                 "已经没有提示了呐，再仔细想想吧！",
             )
             return
         rev = []
         if gameData["tipNum"] == len(gameData["tips"]):
 
-            async def checkresult(session, id_, gameList):
-                if (
-                    gameList.get(session.scene.id)
-                    and gameList[session.scene.id]["id"] == id_
-                ):
-                    del gameList[session.scene.id]
+            async def checkresult(group_id, id_, gameList):
+                if group_id in gameList and gameList[group_id]["id"] == id_:
+                    del gameList[group_id]
                     await send.sendWithAt(
-                        matcher,
                         [
                             f"呜……很遗憾，没有人答对喵！正确答案是：{gameData['song']}",
                             await picmodle.guess(
@@ -168,41 +165,42 @@ class guessTips:
                 "date",
                 run_date=time.time() + PluginConfig.get("GuessTipsAnsTime"),
                 kwargs={
-                    "session": session,
+                    "group_id": group_id,
                     "id_": gameData["id"],
                     "gameList": gameList,
                 },
             )
             await send.sendWithAt(
-                matcher,
                 f"接下来是曲绘提示哦！如果在{PluginConfig.get('GuessTipsAnsTime')}秒内没有回答正确的话，将会自动公布答案哦！",
             )
             rev.append(await picmodle.guess({**gameData["ill"], "blur": 0, "style": 0}))
         else:
             gameData["tipNum"] += 1
         resMsg = ""
-        for i in range(gameList[session.scene.id]["tipNum"]):
-            resMsg += f"{i + 1}.{gameList[session.scene.id]['tips'][i]}\n"
+        for i in range(gameList[group_id]["tipNum"]):
+            resMsg += f"{i + 1}.{gameList[group_id]['tips'][i]}\n"
         rev.insert(0, resMsg)
-        await send.sendWithAt(matcher, rev)
+        await send.sendWithAt(rev)
 
     @staticmethod
     async def guess(
-        matcher, session: Uninfo, msg: str, gameList: dict[str, dict[str, Any]]
+        session: Uninfo,
+        msg: str,
+        gameList: dict[str, dict[str, Any]],
     ):
-        if not gameList.get(session.scene.id):
-            return
         group_id = session.scene.id
+        if group_id not in gameList:
+            return
+        group_id = group_id
         song = await getInfo.fuzzysongsnick(msg, 0.95)
         if song and song[0]:
             for i in song:
                 if gameList[group_id]["song"] == i:
                     gameData = gameList[group_id]
                     del gameList[group_id]
-                    await send.sendWithAt(matcher, "恭喜你，答对啦喵！ヾ(≧▽≦*)o", True)
+                    await send.sendWithAt("恭喜你，答对啦喵！ヾ(≧▽≦*)o", True)
                     if gameData["tipNum"] == gameData["tips"].length + 1:
                         await send.sendWithAt(
-                            matcher,
                             await picmodle.guess(
                                 {
                                     **gameData["ill"],
@@ -211,23 +209,24 @@ class guessTips:
                                 }
                             ),
                         )
-                    await send.sendWithAt(
-                        matcher, await pic.GetSongsInfoAtlas(gameData["song"])
-                    )
+                    await send.sendWithAt(await pic.GetSongsInfoAtlas(gameData["song"]))
                     return
             if len(song) > 1 and song[1]:
-                await send.sendWithAt(matcher, f"不是 {msg} 哦喵！≧ ﹏ ≦", True, 5)
+                await send.sendWithAt(f"不是 {msg} 哦喵！≧ ﹏ ≦", True, 5)
             else:
-                await send.sendWithAt(matcher, f"不是 {song[0]} 哦喵！≧ ﹏ ≦", True, 5)
+                await send.sendWithAt(f"不是 {song[0]} 哦喵！≧ ﹏ ≦", True, 5)
 
     @staticmethod
-    async def ans(matcher, session: Uninfo, gameList: dict[str, dict[str, Any]]):
-        if not gameList.get(session.scene.id):
+    async def ans(
+        session: Uninfo,
+        gameList: dict[str, dict[str, Any]],
+    ):
+        group_id = session.scene.id
+        if group_id not in gameList:
             return
-        gameData = gameList[session.scene.id]
-        del gameList[session.scene.id]
+        gameData = gameList[group_id]
+        del gameList[group_id]
         await send.sendWithAt(
-            matcher,
             [
                 f"好吧，下面开始公布答案。正确答案是：{gameData['song']}",
                 await picmodle.guess(
@@ -241,4 +240,4 @@ class guessTips:
                 else "",
             ],
         )
-        await send.sendWithAt(matcher, await pic.GetSongsInfoAtlas(gameData["song"]))
+        await send.sendWithAt(await pic.GetSongsInfoAtlas(gameData["song"]))

@@ -246,21 +246,20 @@ class getdata:
             #     )
         except Exception as err:
             if not PlatformUtils.is_qbot(session):
-                await send.sendWithAt(matcher, f"更新失败！QAQ\n{err}")
+                await send.sendWithAt(f"更新失败！QAQ\n{err}")
             else:
-                await send.sendWithAt(matcher, "更新失败！QAQ\n请稍后重试")
+                await send.sendWithAt("更新失败！QAQ\n请稍后重试")
             logger.error("更新失败！QAQ", "phi-plugin", e=err)
             return False
         try:
             await getdata.putsave(session.user.id, to_dict(User))
         except Exception as err:
-            await send.sendWithAt(matcher, f"保存存档失败!\n{err}")
+            await send.sendWithAt(f"保存存档失败!\n{err}")
             logger.error("保存存档失败", "phi-plugin", e=err)
             return False
         now = await Save().constructor(to_dict(User))
         if old and (old.sessionToken and old.sessionToken != User.sessionToken):
             await send.sendWithAt(
-                matcher,
                 "检测到新的sessionToken，将自动更换绑定。如果需要删除统计"
                 f"记录请 ⌈{cmdhead}"
                 "unbind⌋ 进行解绑哦！",

@@ -10,22 +10,17 @@ from zhenxun.utils.withdraw_manage import WithdrawManager
 
 from ..config import PluginConfig, cmdhead
 from ..utils import to_dict
-from .cls.common import Save
-from .getSave import getSave
-from .getUpdateSave import getUpdateSave
 
 
 class send:
     @classmethod
-    async def sendWithAt(
-        cls, matcher, msg: Any, quote=False, recallTime=0
-    ):
+    async def sendWithAt(cls, msg: Any, quote=False, recallTime=0):
         """
-        :param e: 响应器对象
         :param msg: UniMessage支持的消息内容
         :param quote: 是否引用回复
+        :param recallTime: 撤回时间，0为不撤回 单位，秒
         """
-        recepit = await matcher.send(UniMessage(msg), at_sender=True, reply_to=quote) # type: ignore
+        recepit = await UniMessage(msg).send(at_sender=True, reply_to=quote)
         if recallTime > 0:
             WithdrawManager.append(
                 current_bot.get(),
@@ -36,16 +31,19 @@ class send:
 
     @classmethod
     async def getsaveResult(
-        cls, matcher, session: Uninfo, ver: int | None = None, send=True
-    ) -> None | Save:
+        cls, session: Uninfo, ver: int | None = None, send=True
+    ):
         """
         检查存档部分
 
-        :param matcher: 响应器对象
         :param ver int: 存档版本
         :param send bool: 是否发送提示
-        :return: bool 是否成功
+        :return: None | Save
         """
+        from .cls.common import Save
+        from .getSave import getSave
+        from .getUpdateSave import getUpdateSave
+
 
         if PluginConfig.get("openPhiPluginApi"):
             try:
@@ -58,7 +56,6 @@ class send:
                         if not sessionToken:
                             if send:
                                 await cls.sendWithAt(
-                                    matcher,
                                     "请先绑定sessionToken哦！\n"
                                     "如果不知道自己的sessionToken可以尝试扫码绑定嗷！\n"
                                     f"获取二维码：{cmdhead}"
@@ -80,7 +77,6 @@ class send:
         if not sessionToken:
             if send:
                 await cls.sendWithAt(
-                    matcher,
                     "请先绑定sessionToken哦！\n"
                     "如果不知道自己的sessionToken可以尝试扫码绑定嗷！\n"
                     f"获取二维码：{cmdhead} bind qrcode\n"
@@ -89,16 +85,15 @@ class send:
                 )
             return None
 
-        user_save = (
-            await getUpdateSave.getNewSaveFromLocal(matcher, session, sessionToken)
-        )["save"]
+        user_save = (await getUpdateSave.getNewSaveFromLocal(session, sessionToken))[
+            "save"
+        ]
 
         if not user_save or (
             ver and (not user_save.Recordver or user_save.Recordver < ver)
         ):
             if send:
                 await cls.sendWithAt(
-                    matcher,
                     f"请先更新数据哦！\n格式：{cmdhead} update",
                 )
             return None
@@ -122,5 +117,5 @@ class send:
                 )
             )
         except Exception as err:
-            logger.error("消息转发失败", "phi-plugin", e=err)
-            await cls.sendWithAt(matcher, "转发失败QAQ！请尝试在私聊触发命令！")
+            logger.error("消息转发失败", "phi-plugin:pickSend", e=err)
+            await cls.sendWithAt("转发失败QAQ！请尝试在私聊触发命令！")

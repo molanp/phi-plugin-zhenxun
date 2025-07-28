@@ -1,3 +1,5 @@
+from typing import Literal
+
 from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.services.log import logger
@@ -16,7 +18,62 @@ class getBanGroup:
         return await banGroup.getStatus(group_id, func)
 
     @staticmethod
-    async def get(matcher, session: Uninfo, func: str) -> bool:
+    async def get(
+        session: Uninfo,
+        func: Literal[
+            "bind",
+            "unbind",
+            "b19",
+            "p30",
+            "lmtAcc",
+            "arcgrosB19",
+            "update",
+            "info",
+            "list",
+            "singlescore",
+            "lvscore",
+            "bestn",
+            "data",
+            "chap",
+            "suggest",
+            "help",
+            "tkhelp",
+            "apihelp",
+            "auth",
+            "clearApiData",
+            "updateHistory",
+            "setApiToken",
+            "tokenList",
+            "song",
+            "ill",
+            "chart",
+            "addtag",
+            "retag",
+            "search",
+            "alias",
+            "randmic",
+            "randClg",
+            "table",
+            "comment",
+            "recallCommenttokenManage",
+            "rankList",
+            "godList",
+            "comrks",
+            "tips",
+            "newSong",
+            "tipgame",
+            "guessgame",
+            "ltrgame",
+            "sign",
+            "send",
+            "tasks",
+            "retask",
+            "jrrp",
+            "theme",
+            "dan",
+            "danupdate",
+        ],
+    ) -> bool:
         group_id = session.scene.id
         if not group_id:
             return False
@@ -28,21 +85,17 @@ class getBanGroup:
                     makeRequestFnc.makePlatform(session)
                 )
                 if result:
-                    await send.sendWithAt(
-                        matcher, "当前账户被加入黑名单，详情请联系管理员(1)。"
-                    )
+                    await send.sendWithAt("当前账户被加入黑名单，详情请联系管理员(1)。")
                     if sessionToken:
                         await getSave.banSessionToken(sessionToken)
                     return True
             except Exception as err:
                 logger.warning("API获取用户禁用状态失败", "phi-plugin", e=err)
         if sessionToken and await getSave.isBanSessionToken(sessionToken):
-            await send.sendWithAt(
-                matcher, "当前账户被加入黑名单，详情请联系管理员(2)。"
-            )
+            await send.sendWithAt("当前账户被加入黑名单，详情请联系管理员(2)。")
             return True
         match func:
-            case "help" | "tkhelp":
+            case "help" | "tkhelp" | "apihelp":
                 return await getBanGroup.redis(group_id, "help")
             case "bind" | "unbind":
                 return await getBanGroup.redis(group_id, "bind")

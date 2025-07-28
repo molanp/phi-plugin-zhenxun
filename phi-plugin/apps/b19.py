@@ -7,8 +7,8 @@ from typing import Literal
 from nonebot_plugin_alconna import (
     Alconna,
     Args,
-    Arparma,
     CommandMeta,
+    Match,
     MultiVar,
     on_alconna,
 )
@@ -108,27 +108,25 @@ chap__ = on_alconna(
 
 
 @b19.handle()
-async def _(session: Uninfo, params: Arparma):
-    if await getBanGroup.get(b19, session, "b19"):
-        await send.sendWithAt(b19, "这里被管理员禁止使用这个功能了呐QAQ！", True)
+async def _(session: Uninfo, nnum: Match[int]):
+    if await getBanGroup.get(session, "b19"):
+        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！", True)
         return
-    save = await send.getsaveResult(b19, session)
+    save = await send.getsaveResult(session)
     if not save:
         return
     if err := await save.checkNoInfo():
-        await send.sendWithAt(
-            b19, "以下曲目无信息，可能导致b19显示错误\n" + "".join(err)
-        )
-    nnum = params.query("nnum") or 33
-    nnum = max(nnum, 33)
-    nnum = min(nnum, PluginConfig.get("B19MaxNum"))
+        await send.sendWithAt("以下曲目无信息，可能导致b19显示错误\n" + "".join(err))
+    num = nnum.result if nnum.available else 33
+    num = max(num, 33)
+    num = min(num, PluginConfig.get("B19MaxNum"))
     # NOTE: 因响应器限制，暂时无法实现匹配中间消息(bksong)(取消息不可预料)
     plugin_data = await getNotes.getNotesData(session.user.id)
     if not PluginConfig.get("isGuild"):
         await send.sendWithAt(
-            b19, "正在生成图片，请稍等一下哦！\n//·/w\\·\\\\", recallTime=5
+            "正在生成图片，请稍等一下哦！\n//·/w\\·\\\\", recallTime=5
         )
-    save_b19 = await save.getB19(nnum)
+    save_b19 = await save.getB19(num)
     stats = await save.getStats()
     money = save.gameProgress.money
     gameuser = {
@@ -160,39 +158,37 @@ async def _(session: Uninfo, params: Arparma):
             f"请注意，当前版本可能更改了计算规则\n计算rks: {save_b19['com_rks']}\n"
             f"存档rks:{save.saveInfo.summary.rankingScore}"
         )
-    await send.sendWithAt(b19, res, True)
+    await send.sendWithAt(res, True)
 
 
 # FIXME: 这个和b19就多了个spInfo，后续合并一下优化代码
 @p30.handle()
-async def _(session: Uninfo, params: Arparma):
-    if await getBanGroup.get(p30, session, "p30"):
-        await send.sendWithAt(p30, "这里被管理员禁止使用这个功能了呐QAQ！", True)
+async def _(session: Uninfo, nnum: Match[int]):
+    if await getBanGroup.get(session, "p30"):
+        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！", True)
         return
-    save = await send.getsaveResult(p30, session)
+    save = await send.getsaveResult(session)
     if not save:
         return
     err = await save.checkNoInfo()
     if err:
-        await send.sendWithAt(
-            p30, "以下曲目无信息，可能导致b19显示错误\n" + "\n".join(err)
-        )
-    nnum = params.query("nnum") or 33
-    nnum = max(nnum, 33)
-    nnum = min(nnum, PluginConfig.get("B19MaxNum"))
+        await send.sendWithAt("以下曲目无信息，可能导致b19显示错误\n" + "\n".join(err))
+    num = nnum.result if nnum.available else 33
+    num = max(num, 33)
+    num = min(num, PluginConfig.get("B19MaxNum"))
     # NOTE: 因响应器限制，暂时无法实现匹配中间消息(bksong)(取消息不可预料)
     plugin_data = await getNotes.getNotesData(session.user.id)
     if not PluginConfig.get("isGuild"):
         await send.sendWithAt(
-            p30, "正在生成图片，请稍等一下哦！\n//·/w\\·\\\\", recallTime=5
+            "正在生成图片，请稍等一下哦！\n//·/w\\·\\\\", recallTime=5
         )
     try:
         await getdata.buildingRecord(p30, session, PhigrosUser(save.sessionToken))
     except Exception as e:
         logger.error("p30更新存档失败", "phi-plugin", session=session, e=e)
-        await send.sendWithAt(p30, "p30生成失败了...", True)
+        await send.sendWithAt("p30生成失败了...", True)
         return
-    save_b19 = await save.getBestWithLimit(nnum, [{"type": "acc", "value": [100, 100]}])
+    save_b19 = await save.getBestWithLimit(num, [{"type": "acc", "value": [100, 100]}])
     stats = await save.getStats()
     money = save.gameProgress.money
     gameuser = {
@@ -225,34 +221,32 @@ async def _(session: Uninfo, params: Arparma):
             f"计算rks: {save_b19['com_rks']}\n"
             f"存档rks:{save.saveInfo.summary.rankingScore}"
         )
-    await send.sendWithAt(p30, res, True)
+    await send.sendWithAt(res, True)
 
 
 # NOTE: arc版查分图
 @arcgrosB19.handle()
-async def _(session: Uninfo, params: Arparma):
-    if await getBanGroup.get(arcgrosB19, session, "arcgrosB19"):
-        await send.sendWithAt(arcgrosB19, "这里被管理员禁止使用这个功能了呐QAQ！", True)
+async def _(session: Uninfo, nnum: Match[str]):
+    if await getBanGroup.get(session, "arcgrosB19"):
+        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！", True)
         return
-    save = await send.getsaveResult(arcgrosB19, session)
+    save = await send.getsaveResult(session)
     if not save:
         return
     if err := await save.checkNoInfo():
-        await send.sendWithAt(
-            arcgrosB19, "以下曲目无信息，可能导致b19显示错误\n" + "\n".join(err)
-        )
-    nnum = params.query("nnum") or "b32"
+        await send.sendWithAt("以下曲目无信息，可能导致b19显示错误\n" + "\n".join(err))
+    num = nnum.result if nnum.available else "b32"
 
     # 提取数字
-    if isinstance(nnum, str):
-        match = re.search(r"\d+", nnum)  # 匹配字符串中的第一个数字序列
-        nnum = int(match.group()) if match else 32
+    if isinstance(num, str):
+        match = re.search(r"\d+", num)  # 匹配字符串中的第一个数字序列
+        num = int(match.group()) if match else 32
     else:
-        nnum = int(nnum)  # 确保为整数
-    nnum = max(nnum, 30)
-    nnum = min(nnum, PluginConfig.get("B19MaxNum"))
+        num = int(num)  # 确保为整数
+    num = max(num, 30)
+    num = min(num, PluginConfig.get("B19MaxNum"))
     plugin_data = await getNotes.getNotesData(session.user.id)
-    save_b19 = await save.getB19(nnum)
+    save_b19 = await save.getB19(num)
     money = save.gameProgress.money
     gameuser = {
         "avatar": await getdata.idgetsong(save.gameuser.avatar) or "Introduction",
@@ -279,38 +273,37 @@ async def _(session: Uninfo, params: Arparma):
         "spInfo": "All Perfect Only Mode",
         "fCompute": fCompute,
     }
-    await send.sendWithAt(arcgrosB19, await picmodle.arcgros_b19(data), True)
+    await send.sendWithAt(await picmodle.arcgros_b19(data), True)
 
 
 # NOTE: limit只对acc满分生效是正常的，符合原版js逻辑
 # NOTE: 限制最低acc后的rks
 @lmtAcc.handle()
-async def _(session: Uninfo, params: Arparma):
-    if await getBanGroup.get(lmtAcc, session, "lmtAcc"):
-        await send.sendWithAt(lmtAcc, "这里被管理员禁止使用这个功能了呐QAQ！", True)
+async def _(session: Uninfo, acc: Match[float]):
+    if await getBanGroup.get(session, "lmtAcc"):
+        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！", True)
         return
-    acc = params.query("acc") or None
-    if acc is None or not isinstance(acc, float) or acc < 0 or acc > 100:
+    _acc = acc.result if acc.available else None
+    if _acc is None or not isinstance(_acc, float) or _acc < 0 or _acc > 100:
         await send.sendWithAt(
-            lmtAcc,
-            f"我听不懂 {acc} 是多少喵！请指定一个0-100的数字喵！\n"
+            f"我听不懂 {_acc} 是多少喵！请指定一个0-100的数字喵！\n"
             f"格式：{cmdhead} lmtacc <0-100>",
         )
         return
-    save = await send.getsaveResult(lmtAcc, session)
+    save = await send.getsaveResult(session)
     if not save:
         return
     if err := await save.checkNoInfo():
-        await send.sendWithAt(
-            arcgrosB19, "以下曲目无信息，可能导致b19显示错误\n" + "\n".join(err)
-        )
+        await send.sendWithAt("以下曲目无信息，可能导致b19显示错误\n" + "\n".join(err))
     nnum = 33
     plugin_data = await getdata.getpluginData(session.user.id)
     if not PluginConfig.get("isGuild"):
         await send.sendWithAt(
-            lmtAcc, "正在生成图片，请稍等一下哦！\n//·/w\\·\\\\", recallTime=5
+            "正在生成图片，请稍等一下哦！\n//·/w\\·\\\\", recallTime=5
         )
-    save_b19 = await save.getBestWithLimit(nnum, [{"type": "acc", "value": [acc, 100]}])
+    save_b19 = await save.getBestWithLimit(
+        nnum, [{"type": "acc", "value": [_acc, 100]}]
+    )
     stats = await save.getStats()
     money = save.gameProgress.money
     gameuser = {
@@ -335,7 +328,7 @@ async def _(session: Uninfo, params: Arparma):
         "theme": plugin_data.get("plugin_data", {}).get("theme", "star"),
         "gameuser": gameuser,
         "stats": stats,
-        "spInfo": f"ACC is limited to {acc}%",
+        "spInfo": f"ACC is limited to {_acc}%",
     }
     res: list = [await picmodle.b19(to_dict(data))]
     if abs(save_b19.get("com_rks", 0) - save.saveInfo.summary.rankingScore) > 0.1:  # type: ignore
@@ -343,48 +336,42 @@ async def _(session: Uninfo, params: Arparma):
             f"计算rks: {save_b19['com_rks']}\n"
             f"存档rks:{save.saveInfo.summary.rankingScore}"
         )
-    await send.sendWithAt(lmtAcc, res, True)
+    await send.sendWithAt(res, True)
 
 
 @singlescore.handle()
-async def _(session: Uninfo, params: Arparma):
-    if await getBanGroup.get(singlescore, session, "singlescore"):
+async def _(session: Uninfo, picversion: Match[int], song: Match[str]):
+    if await getBanGroup.get(session, "singlescore"):
+        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！", True)
+        return
+    _picversion = picversion.result if picversion.available else 1
+    _song = song.result if song.available else None
+    if not _song:
+        await send.sendWithAt(f"请指定曲名哦！\n格式：{cmdhead} score <曲名>")
+        return
+    __song = await getdata.fuzzysongsnick(_song)
+    if not __song:
         await send.sendWithAt(
-            singlescore, "这里被管理员禁止使用这个功能了呐QAQ！", True
+            f"未找到 {_song} 的有关信息哦！",
         )
         return
-    picversion = params.query("picversion")
-    song = params.query("song")
-    if not song:
-        await send.sendWithAt(
-            singlescore, f"请指定曲名哦！\n格式：{cmdhead} score <曲名>"
-        )
-        return
-    song = await getdata.fuzzysongsnick(song)
-    if not song:
-        await send.sendWithAt(
-            singlescore,
-            f"未找到 {song} 的有关信息哦！",
-        )
-        return
-    save = await send.getsaveResult(singlescore, session)
+    save = await send.getsaveResult(session)
     if not save:
         return
-    song = song[0]
+    _song = __song[0]
     Record = save.gameRecord
-    songId = await getInfo.SongGetId(song)
+    songId = await getInfo.SongGetId(_song)
     ans = Record.get(songId) if songId else None
     if not ans:
         await send.sendWithAt(
-            singlescore,
-            f"我不知道你关于[{song}]的成绩哦！"
+            f"我不知道你关于[{_song}]的成绩哦！"
             f"可以试试更新成绩哦！\n格式：{cmdhead} update",
         )
         return
     dan = await getdata.getDan(session.user.id)
     assert isinstance(dan, dict)
     data = {
-        "songName": song,
+        "songName": _song,
         "PlayerId": save.saveInfo.PlayerId,
         "avatar": await getdata.idgetavatar(session.user.id),
         "Rks": round(save.saveInfo.summary.rankingScore, 4),
@@ -394,10 +381,10 @@ async def _(session: Uninfo, params: Arparma):
         "CLGMOD": dan.get("Dan") if dan else None,
         "EX": dan.get("EX") if dan else None,
     }
-    data["illustration"] = await getInfo.getill(song)
-    songsinfo = await getInfo.info(song, True)
+    data["illustration"] = await getInfo.getill(_song)
+    songsinfo = await getInfo.info(_song, True)
     assert songsinfo is not None
-    match picversion:
+    match _picversion:
         case 2:
             for i, a in enumerate(ans):
                 if a:
@@ -414,7 +401,7 @@ async def _(session: Uninfo, params: Arparma):
                     }
                 else:
                     data[Level[i]] = {"Rating": "NEW"}
-            await send.sendWithAt(singlescore, await picmodle.score(data, 2))
+            await send.sendWithAt(await picmodle.score(data, 2))
         case _:
             for i, _ in enumerate(Level):
                 if not songsinfo.chart.get(Level[i]):
@@ -432,24 +419,24 @@ async def _(session: Uninfo, params: Arparma):
                             songId,
                             i,
                             4,
-                            songsinfo.chart[Level[i]].difficulty,  # type: ignore # NOTE: 这里类型一定是flloat
+                            songsinfo.chart[Level[i]].difficulty,
                         ),
                     }
                 else:
                     data[Level[i]] = {"Rating": "NEW"}
-            await send.sendWithAt(singlescore, await picmodle.score(data, 1), True)
+            await send.sendWithAt(await picmodle.score(data, 1), True)
 
 
 # NOTE: 推分建议，建议的是RKS+0.01的所需值
 @suggest.handle()
-async def _(session: Uninfo, param: Arparma):
-    if await getBanGroup.get(suggest, session, "suggest"):
-        await send.sendWithAt(suggest, "这里被管理员禁止使用这个功能了呐QAQ！", True)
+async def _(session: Uninfo, input: Match[tuple[str]]):
+    if await getBanGroup.get(session, "suggest"):
+        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！", True)
         return
-    save = await send.getsaveResult(suggest, session)
+    save = await send.getsaveResult(session)
     if not save:
         return
-    input_ = " ".join(param.query("input") or [])
+    input_ = " ".join(input.result if input.available else [])
     # 处理范围请求
     req = fCompute.match_request(input_)
     range_ = req["range"]
@@ -495,14 +482,12 @@ async def _(session: Uninfo, param: Arparma):
     limitnum = PluginConfig.get("listScoreMaxNum")
     if len(data) > limitnum:
         await send.sendWithAt(
-            suggest,
             f"谱面数量过多({len(data)})大于设置的最大值({limitnum})，只显示前{limitnum}条！",
         )
     data = data[:limitnum]
     data = sorted(data, key=cmp_to_key(cmpsugg))
     plugin_data = await getdata.getpluginData(session.user.id)
     await send.sendWithAt(
-        suggest,
         await picmodle.list(
             {
                 "head_title": "推分建议",
@@ -524,24 +509,23 @@ async def _(session: Uninfo, param: Arparma):
 
 
 @chap__.handle()
-async def _(session: Uninfo, params: Arparma):
-    if await getBanGroup.get(chap__, session, "chap"):
-        await send.sendWithAt(chap__, "这里被管理员禁止使用这个功能了呐QAQ！", True)
+async def _(session: Uninfo, song: Match):
+    if await getBanGroup.get(session, "chap"):
+        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！", True)
         return
-    msg = " ".join(params.query("song") or [])
+    msg = " ".join(song.result if song.available else [])
     if msg.upper() == "HELP" or not msg:
-        await send.sendWithAt(chap__, pic.getimg("chapHelp"))
+        await send.sendWithAt(pic.getimg("chapHelp"))
         return
     chap = fCompute.fuzzySearch(msg, getInfo.chapNick)
     chap = chap[0].get("value") if chap else ""
     if not chap and msg != "ALL":
         await send.sendWithAt(
-            chap__,
             f"未找到{msg}章节QAQ！可以使用 {cmdhead} chap help 来查询支持的名称嗷！",
             True,
         )
         return
-    save = await send.getsaveResult(chap__, session)
+    save = await send.getsaveResult(session)
     if not save:
         return
     song_box = {}
@@ -562,16 +546,16 @@ async def _(session: Uninfo, params: Arparma):
     rank = {"EZ": 0, "HD": 0, "IN": 0, "AT": 0}
     # 统计各难度ACC和
     rankAcc = {"EZ": 0.0, "HD": 0.0, "IN": 0.0, "AT": 0.0}
-    for song in getInfo.ori_info:
-        if getInfo.ori_info[song].chapter == chap or msg == "ALL":
-            song_box[song] = {
-                "illustration": await getInfo.getill(song, "low"),
+    for _song in getInfo.ori_info:
+        if getInfo.ori_info[_song].chapter == chap or msg == "ALL":
+            song_box[_song] = {
+                "illustration": await getInfo.getill(_song, "low"),
                 "chart": {},
             }
-            id = getInfo.idssong[song]
+            id = getInfo.idssong[_song]
             # 曲目成绩对象
             songRecord = save.getSongsRecord(id)
-            info = await getInfo.info(song, True)
+            info = await getInfo.info(_song, True)
             assert info is not None
             for level in info.chart:
                 i = LevelNum[level]
@@ -579,7 +563,7 @@ async def _(session: Uninfo, params: Arparma):
                 if not level:
                     continue
                 Record = songRecord[i] if i < len(songRecord) else None
-                song_box[song]["chart"][level] = {
+                song_box[_song]["chart"][level] = {
                     "difficulty": info.chart[level].difficulty,
                     "Rating": getattr(Record, "Rating", "NEW"),
                     "suggest": save.getSuggest(
@@ -590,10 +574,10 @@ async def _(session: Uninfo, params: Arparma):
                     ),
                 }
                 if Record:
-                    song_box[song]["chart"][level]["score"] = Record.score
-                    song_box[song]["chart"][level]["acc"] = round(Record.acc, 4)
-                    song_box[song]["chart"][level]["rks"] = round(Record.rks, 4)
-                    song_box[song]["chart"][level]["fc"] = Record.fc
+                    song_box[_song]["chart"][level]["score"] = Record.score
+                    song_box[_song]["chart"][level]["acc"] = round(Record.acc, 4)
+                    song_box[_song]["chart"][level]["rks"] = round(Record.rks, 4)
+                    song_box[_song]["chart"][level]["fc"] = Record.fc
                 count["tot"] += 1
                 if getattr(Record, "Rating", None):
                     assert Record is not None
@@ -606,7 +590,6 @@ async def _(session: Uninfo, params: Arparma):
         level: rankAcc[level] / rank[level] for level in rank if rank.get(level)
     }
     await send.sendWithAt(
-        chap__,
         await picmodle.chap(
             {
                 "player": {"id": save.saveInfo.PlayerId},
@@ -622,7 +605,7 @@ async def _(session: Uninfo, params: Arparma):
     )
 
 
-def cmpsugg(a, b):
+def cmpsugg(a: dict, b: dict):
     def com(difficulty, suggest):
         # 计算核心公式
         return difficulty + (min(suggest - 98, 1) ** 2) * difficulty * 0.089
