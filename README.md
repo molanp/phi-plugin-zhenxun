@@ -1,9 +1,9 @@
 <div align="center">
   <h1>
     <picture>
-      <source srcset="./image/fix.avif" type="image/avif" width="80%">
-      <source srcset="./image/fix.webp" type="image/webp" width="80%">
-      <img src="./image/fix.png" width="80%">
+      <source srcset="./image/logo.avif" type="image/avif" width="80%">
+      <source srcset="./image/logo.webp" type="image/webp" width="80%">
+      <img src="./image/logo.png" width="80%">
     </picture>
   </h1>
 
@@ -20,9 +20,9 @@
 
 当前同步的版本
 
-[faccd28f3466f7add05144c71715bd9d5a3efb41](https://github.com/Catrong/phi-plugin/commit/faccd28f3466f7add05144c71715bd9d5a3efb41)
+[3abe791edcf9b9195bda3203ad0b9855cefa1dc3](https://github.com/Catrong/phi-plugin/commit/3abe791edcf9b9195bda3203ad0b9855cefa1dc3)
 
-[已落后的变更](https://github.com/Catrong/phi-plugin/compare/faccd28f3466f7add05144c71715bd9d5a3efb41...main)
+[已落后的变更](https://github.com/Catrong/phi-plugin/compare/3abe791edcf9b9195bda3203ad0b9855cefa1dc3...main)
 
 </details>
 
@@ -159,4 +159,4 @@
 ## 💕 感谢
 
 - [phi-plugin](https://github.com/Catrong/phi-plugin) 适用于 Yunzai-Bot V3 的 phigros 辅助插件，支持查询分数信息等功能，以及猜曲目等小游戏
-- [@Windows10555](https://github.com/Windows10555) 图片后期处理
+- [@Windows10555](https://github.com/Windows10555) LOGO 后期处理
