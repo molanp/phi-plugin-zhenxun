@@ -40,7 +40,7 @@
   - [x] 移植 `guessTips`
 - [x] 移植 `help`
 - [x] 移植 `jrrp`
-- [ ] 移植 `manage`
+- [x] 移植 `manage`
 - [ ] 移植 `money`
 - [ ] 移植 `phisong`
 - [ ] 移植 `RankList`

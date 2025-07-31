@@ -1,3 +1,7 @@
+"""
+phigros b19查询
+"""
+
 from functools import cmp_to_key
 import math
 import random

@@ -1,3 +1,7 @@
+"""
+phi-plugin 猜曲游戏
+"""
+
 import re
 
 from nonebot import on_message
@@ -64,7 +68,7 @@ ans = on_alconna(Alconna(rf"re:{cmdhead}\s*(ans|答案|结束)"), priority=5, bl
 
 
 @start.handle()
-async def s(session: Uninfo, gameType: Match[str], songname: Match[str]):
+async def _(session: Uninfo, gameType: Match[str], songname: Match[str]):
     if not ensure_group(session):
         await send.sendWithAt("请在群聊中使用这个功能嗷！")
         return
@@ -97,7 +101,7 @@ async def s(session: Uninfo, gameType: Match[str], songname: Match[str]):
 
 
 @reveal.handle()
-async def r(session: Uninfo, content: Match[str | int]):
+async def _(session: Uninfo, content: Match[str | int]):
     match gameList[session.scene.id]["gameType"]:
         case "guessLetter":
             msg = str(content.result) if content.available else ""
@@ -107,7 +111,7 @@ async def r(session: Uninfo, content: Match[str | int]):
 
 
 @guess.handle()
-async def g(session: Uninfo, msg: UniMsg):
+async def _(session: Uninfo, msg: UniMsg):
     _msg = msg.extract_plain_text().strip()
     match gameList[session.scene.id]["gameType"]:
         case "guessTips":
@@ -121,7 +125,7 @@ async def g(session: Uninfo, msg: UniMsg):
 
 
 @getTip.handle()
-async def ge(session: Uninfo):
+async def _(session: Uninfo):
     match gameList[session.scene.id]["gameType"]:
         case "guessTips":
             return await guessTips.getTip(session, gameList)
@@ -132,7 +136,7 @@ async def ge(session: Uninfo):
 
 
 @ans.handle()
-async def a(session: Uninfo):
+async def _(session: Uninfo):
     match gameList[session.scene.id]["gameType"]:
         case "guessTips":
             return await guessTips.ans(session, gameList)

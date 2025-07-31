@@ -54,18 +54,19 @@ class getBackup:
             # 1. 备份 savePath 下的存档
             if not savePath.exists():
                 await send.sendWithAt("存档目录不存在，请检查路径！")
-                logger.warning("存档目录不存在，请检查路径！", "phi-plugin")
+                logger.warning("存档目录不存在，请检查路径！", "phi-plugin:backup")
                 return False
 
             list_dirs = [d for d in savePath.iterdir() if d.is_dir()]
             if len(list_dirs) >= MaxNum:
                 await send.sendWithAt("存档数量过多，请手动备份 /data/saveData/ 目录！")
                 logger.warning(
-                    "存档数量过多，请手动备份 /data/saveData/ 目录！", "phi-plugin"
+                    "存档数量过多，请手动备份 /data/saveData/ 目录！",
+                    "phi-plugin:backup",
                 )
             else:
                 await send.sendWithAt("开始备份存档，请稍等...")
-                logger.info("开始备份存档...", "phi-plugin")
+                logger.info("开始备份存档...", "phi-plugin:backup")
                 bar = ProgressBar("存档备份中", len(list_dirs))
                 for idx, folder in enumerate(list_dirs):
                     target_folder = save_data_temp / folder.name
@@ -74,7 +75,7 @@ class getBackup:
                         if file.is_dir():
                             logger.warning(
                                 f"备份错误：意料之外的文件夹 {file}",
-                                "phi-plugin",
+                                "phi-plugin:backup",
                             )
                         else:
                             shutil.copy(file, target_folder / file.name)
@@ -83,7 +84,7 @@ class getBackup:
             # 2. 备份 pluginDataPath 下的插件数据
             if not pluginDataPath.exists():
                 await send.sendWithAt("插件数据目录不存在，请检查路径！")
-                logger.warning("插件数据目录不存在，请检查路径！", "phi-plugin")
+                logger.warning("插件数据目录不存在，请检查路径！", "phi-plugin:backup")
                 return False
 
             list_files = [f for f in pluginDataPath.iterdir() if f.is_file()]
@@ -93,11 +94,11 @@ class getBackup:
                 )
                 logger.warning(
                     "插件数据数量过多，请手动备份 /data/pluginData/ 目录！",
-                    "phi-plugin",
+                    "phi-plugin:backup",
                 )
             else:
                 await send.sendWithAt("开始备份插件数据，请稍等...")
-                logger.info("开始备份插件数据...", "phi-plugin")
+                logger.info("开始备份插件数据...", "phi-plugin:backup")
                 bar = ProgressBar("[phi-plugin] 插件数据备份中", len(list_files))
                 for idx, file in enumerate(list_files):
                     shutil.copy(file, plugin_data_temp / file.name)
@@ -105,7 +106,7 @@ class getBackup:
 
             # 3. 提取 Redis 中 user_token 数据
             await send.sendWithAt("开始备份user_token，请稍等...")
-            logger.info("开始备份user_token数据...", "phi-plugin")
+            logger.info("开始备份user_token数据...", "phi-plugin:backup")
 
             # 从数据库中获取所有未封禁用户的 uid -> sessionToken 映射
             users = await SstkData.filter(is_banned=False).values("uid", "sessionToken")
@@ -119,11 +120,11 @@ class getBackup:
             # 4. 打包压缩
             zip_path.parent.mkdir(parents=True, exist_ok=True)
             await send.sendWithAt("开始压缩备份数据，请稍等...")
-            logger.info("开始压缩备份数据...", "phi-plugin")
+            logger.info("开始压缩备份数据...", "phi-plugin:backup")
 
             await zip(zip_path, temp_dir)
 
-            logger.success(f"备份完成 {zip_path}", "phi-plugin")
+            logger.success(f"备份完成 {zip_path}", "phi-plugin:backup")
             await send.sendWithAt(
                 f"{zip_name.replace('.zip', '')} 成功备份到 {backupPath} 目录下",
             )
@@ -137,7 +138,7 @@ class getBackup:
             return True
 
         except Exception as ex:
-            logger.error("备份出错", "phi-plugin", e=ex)
+            logger.error("备份出错", "phi-plugin:backup", e=ex)
             return False
         finally:
             if temp_dir.exists():
@@ -257,7 +258,7 @@ class getBackup:
     async def _restore_user_tokens(zipf: zipfile.ZipFile):
         """恢复 user_token.json 到数据库"""
         if "user_token.json" not in zipf.namelist():
-            logger.warning("备份中未找到 user_token.json", "phi-plugin")
+            logger.warning("备份中未找到 user_token.json", "phi-plugin:restore")
             return
 
         token_data = zipf.read("user_token.json").decode("utf-8")

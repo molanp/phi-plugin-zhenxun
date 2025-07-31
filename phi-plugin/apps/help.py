@@ -1,3 +1,7 @@
+"""
+phigros屁股肉帮助
+"""
+
 import random
 import re
 

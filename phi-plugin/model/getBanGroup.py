@@ -14,7 +14,25 @@ from .send import send
 
 class getBanGroup:
     @staticmethod
-    async def redis(group_id: str, func: str) -> bool:
+    async def redis(
+        group_id: str,
+        func: Literal[
+            "help",
+            "bind",
+            "b19",
+            "wb19",
+            "song",
+            "ranklist",
+            "fnc",
+            "tipgame",
+            "guessgame",
+            "ltrgame",
+            "sign",
+            "setting",
+            "dan",
+            "apiSetting",
+        ],
+    ) -> bool:
         return await banGroup.getStatus(group_id, func)
 
     @staticmethod

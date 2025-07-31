@@ -1,3 +1,7 @@
+"""
+phigros趣味功能
+"""
+
 from datetime import datetime
 import math
 import random

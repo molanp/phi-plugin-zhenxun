@@ -141,9 +141,7 @@ class getSave:
         if all:
             return dan
         else:
-            return (
-                dan[0] if (hasattr(dan, "__getitem__") and len(dan) > 0) else None
-            )
+            return dan[0] if (hasattr(dan, "__getitem__") and len(dan) > 0) else None
 
     @classmethod
     async def delSave(cls, user_id: str):
@@ -183,6 +181,7 @@ class getSave:
     async def banSessionToken(cls, token: str):
         """
         禁用 sessionToken
+
         :param str token: sessionToken
         """
         return await SstkData.ban_sstk(token)
@@ -191,6 +190,7 @@ class getSave:
     async def allowSessionToken(cls, token: str):
         """
         解禁 sessionToken
+
         :param str token: sessionToken
         """
         return await SstkData.unban_sstk(token)
@@ -199,6 +199,7 @@ class getSave:
     async def isBanSessionToken(cls, token: str | None):
         """
         检查 sessionToken 是否被禁用
+
         :param str|None token: sessionToken
         """
         return False if token is None else await SstkData.is_ban_sessionToken(token)

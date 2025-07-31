@@ -195,7 +195,7 @@ class RksRank(Model):
 
         higher_count = await cls.filter(rks__gt=target.rks).count()
         return higher_count + 1
-    
+
     @classmethod
     async def getRankByRks(cls, rks: float) -> int:
         """
@@ -280,6 +280,10 @@ class banGroup(Model):
             return False
         await cls.create(group_id=group_id, func=func)
         return True
+
+    @classmethod
+    async def show(cls, group_id: str) -> list[str]:
+        return [i.func for i in await cls.filter(group_id=group_id)]
 
     @classmethod
     async def remove(cls, group_id: str, func: str) -> bool:
