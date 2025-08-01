@@ -188,6 +188,8 @@ onLinePhiIllUrl = "https://gitee.com/Steveeee-e/phi-plugin-ill/raw/main"
 try:
     cmdhead = PluginConfig.get("cmdhead", "/phi")
     """命令前缀"""
+    VikaToken = PluginConfig.get("VikaToken")
 except Exception:
     cmdhead = "/phi"
     """命令前缀"""
+    VikaToken = ""

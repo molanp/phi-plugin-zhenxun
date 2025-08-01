@@ -1,8 +1,8 @@
+import contextlib
 import re
+from typing import Any
 
-from zhenxun.services.log import logger
-
-from ..config import PluginConfig
+from ..config import VikaToken
 from ..vika import Vika as __Vika
 
 cfg = {
@@ -14,47 +14,50 @@ cfg = {
 
 class _Vika:
     def __init__(self, token: str):
-        self.vika = __Vika(token=token, field_key="id")
-        self.PhigrosDan = self.vika.datasheet("dstkfifML5zGiURp6h")
+        try:
+            self.vika = __Vika(token=token, field_key="id")
+            self.PhigrosDan = self.vika.datasheet("dstkfifML5zGiURp6h")
+        except Exception:
+            self.PhigrosDan = None
 
-    async def GetUserDanBySstk(self, session_token: str) -> list[dict] | None:
+    async def GetUserDanBySstk(self, session_token: str):
         """通过 sessionToken 获取用户的民间段位数据"""
-        try:
-            response = await self.PhigrosDan.records.query(  # type: ignore
-                {**cfg, "filterByFormula": f"{{fldB7Wx6wHX57}} = '{session_token}'"}
-            )
-            if response.success:
+        response = None
+        if self.PhigrosDan:
+            with contextlib.suppress(Exception):
+                response = await self.PhigrosDan.records.query(  # type: ignore
+                    {**cfg, "filterByFormula": f"{{fldB7Wx6wHX57}} = '{session_token}'"}
+                )
+            if getattr(response, "success", None):
                 return make_response(response)
-        except Exception as e:
-            logger.error(f"Error in GetUserDanBySstk: {e!s}")
         return None
 
-    async def GetUserDanById(self, object_id: str) -> list[dict] | None:
+    async def GetUserDanById(self, object_id: str):
         """通过 ObjectId 获取用户的民间段位数据"""
-        try:
-            response = await self.PhigrosDan.records.query(  # type: ignore
-                {**cfg, "filterByFormula": f"{{fld9mDj3ktKD7}} = '{object_id}'"}
-            )
-            if response.success:
+        response = None
+        if self.PhigrosDan:
+            with contextlib.suppress(Exception):
+                response = await self.PhigrosDan.records.query(  # type: ignore
+                    {**cfg, "filterByFormula": f"{{fld9mDj3ktKD7}} = '{object_id}'"}
+                )
+            if getattr(response, "success", None):
                 return make_response(response)
-        except Exception as e:
-            logger.error(f"Error in GetUserDanById: {e!s}")
         return None
 
-    async def GetUserDanByName(self, nickname: str) -> list[dict] | None:
+    async def GetUserDanByName(self, nickname: str):
         """通过 nickname 获取用户的民间段位数据"""
-        try:
-            response = await self.PhigrosDan.records.query(  # type: ignore
-                {**cfg, "filterByFormula": f"{{fldzkniADAUck}} = '{nickname}'"}
-            )
-            if response.success:
+        response = None
+        if self.PhigrosDan:
+            with contextlib.suppress(Exception):
+                response = await self.PhigrosDan.records.query(  # type: ignore
+                    {**cfg, "filterByFormula": f"{{fldzkniADAUck}} = '{nickname}'"}
+                )
+            if getattr(response, "success", None):
                 return make_response(response)
-        except Exception as e:
-            logger.error(f"Error in GetUserDanByName: {e!s}")
         return None
 
 
-def make_response(response) -> list[dict] | None:
+def make_response(response) -> list[dict[str, Any]] | None:
     records = getattr(response.data, "records", [])
     if not records:
         return None
@@ -88,4 +91,4 @@ def make_response(response) -> list[dict] | None:
     return sorted(result, key=lambda x: -x["dan_num"]) if result else None
 
 
-Vika = _Vika(PluginConfig.get("VikaToken"))
+Vika = _Vika(VikaToken)

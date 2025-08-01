@@ -33,7 +33,7 @@
 - [x] 移植依赖
 - [ ] 移植 `apiSetting`
 - [x] 移植 `b19`
-- [ ] 移植 `Dan`
+- [x] 移植 `Dan`
 - [x] 移植 `guessGame`
   - [x] 移植 `guessIll`
   - [x] 移植 `guessLetter`

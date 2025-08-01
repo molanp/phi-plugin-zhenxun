@@ -1,4 +1,5 @@
 import shutil
+from typing import Any, overload
 
 from ..models import SstkData
 from .cls.common import Save
@@ -123,8 +124,16 @@ class getSave:
             return None
         return await readFile.SetFile(savePath / (sstk) / "history.json", data)
 
+    @overload
     @classmethod
-    async def getDan(cls, user_id: str, all=False):
+    async def getDan(cls, user_id: str, all: bool = True) -> list[dict[str, Any]]: ...
+    @overload
+    @classmethod
+    async def getDan(cls, user_id: str, all: bool = False) -> dict[str, Any]: ...
+    @classmethod
+    async def getDan(
+        cls, user_id: str, all: bool = False
+    ) -> dict[str, Any] | list[dict[str, Any]]:
         """
         获取玩家 Dan 数据
 
@@ -134,14 +143,11 @@ class getSave:
         """
         history = await cls.getHistory(user_id)
 
-        dan = history.dan if history else None
-        # NOTE: 逻辑为 return dan ? (all ? dan : dan[0]) : undefined
-        if dan is None:
-            return None
+        dan = history.dan
         if all:
             return dan
         else:
-            return dan[0] if (hasattr(dan, "__getitem__") and len(dan) > 0) else None
+            return dan[0] if dan else []
 
     @classmethod
     async def delSave(cls, user_id: str):

@@ -118,7 +118,7 @@ class saveHistory:
     - v2,由于曲名错误，删除所有记录，曲名使用id记录
     - v3,添加课题模式历史记录
     """
-    dan: list
+    dan: list[dict[str, Any]]
     """民间考核"""
 
     def __init__(self, data: dict[str, Any]):
