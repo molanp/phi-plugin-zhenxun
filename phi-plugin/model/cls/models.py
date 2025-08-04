@@ -278,4 +278,40 @@ class saveHistoryModel(BaseModel):
     data: list[saveHistoryObject]
 
 
+class commentObject(BaseModel):
+    sessionToken: str | None = None
+    """phigrosToken, 仅在新建时添加"""
+    id: int
+    """自增长ID"""
+    songId: str
+    """曲目ID"""
+    rank: Literal["EZ", "HD", "IN", "AT", "LEGACY"]
+    """等级"""
+    apiUserId: int | str
+    """用户ID"""
+    rks: float
+    """RKS"""
+    score: int
+    """分数"""
+    acc: int
+    """准确率"""
+    fc: bool
+    """是否全连"""
+    spInfo: str
+    """特殊信息, FC AP"""
+    challenge: int
+    """难度"""
+    time: str
+    comment: str
+    """评论内容"""
+    PlayerId: str | None = None
+    """玩家ID, 仅在查询时添加"""
+    avatar: str | None = None
+    """头像, 仅在查询时添加"""
+
+
+class tokenManageParams(highAu):
+    operation: Literal["delete", "rmau"]
+
+
 OriSave = dict[str, Any]

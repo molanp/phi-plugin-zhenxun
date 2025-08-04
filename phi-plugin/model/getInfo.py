@@ -393,6 +393,8 @@ class getInfo:
         :param Distance: 匹配阈值，猜词0.95
         :return: 原曲名称数组，按照匹配程度降序
         """
+        if not mic:
+            return []
         result = []  # 存储匹配结果 { song, dis }
 
         # 获取用户配置和所有曲目信息

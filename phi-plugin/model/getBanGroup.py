@@ -146,6 +146,7 @@ class getBanGroup:
                 | "table"
                 | "comment"
                 | "recallComment"
+                | "myComment"
             ):
                 return await getBanGroup.redis(group_id, "song")
             case "rankList" | "godList":

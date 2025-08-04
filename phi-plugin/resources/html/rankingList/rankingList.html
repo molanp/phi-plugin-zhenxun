@@ -131,7 +131,7 @@
       {% if e.list %} {% for song in e.list %} {% if song %}
       <div class="ill_box">
         <img src="{{ song.illustration }}" alt="{{ song.illustration }}" />
-        <div class="b30_dif IN-BKG">
+        <div class="b30_dif {{song.rank}}-BKG">
           <p>{{ song.rank }} {{ "%.1f"|format(song.difficulty) }}</p>
         </div>
         <div class="Rating">

@@ -1,3 +1,22 @@
+"""
+评论对象字典
+* **str** sessionToken
+* **str** userObjectId 用户ObjectId
+* **float** rks
+* **Level** rank
+* **int** score
+* **float** acc
+* **bool** fc
+* **str|None** spInfo
+* **int** challenge
+* **datetime** time
+* **str** comment
+* **str|None** thisId 在add时添加
+* **str|None** songId 仅在getByCommentId时添加
+* **str|None** PlayerId 仅在查询时添加
+* **str|None** avatar 仅在查询时添加
+"""
+
 import secrets
 
 from .getFile import readFile as getFile
@@ -8,6 +27,24 @@ dataPath = otherDataPath / "commentData.json"
 
 class getComment:
     data = None
+    """
+    评论对象字典
+    * **str** sessionToken
+    * **str** userObjectId 用户ObjectId
+    * **float** rks
+    * **Level** rank
+    * **int** score
+    * **float** acc
+    * **bool** fc
+    * **str|None** spInfo
+    * **int** challenge
+    * **datetime** time
+    * **str** comment
+    * **str|None** thisId 在add时添加
+    * **str|None** songId 仅在getByCommentId时添加
+    * **str|None** PlayerId 仅在查询时添加
+    * **str|None** avatar 仅在查询时添加
+    """
 
     @classmethod
     async def load(cls):

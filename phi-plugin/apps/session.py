@@ -106,7 +106,7 @@ async def _(bot, session: Uninfo, sstk: Match[str]):
                 )
                 await build(session, updateData, history)
                 return
-            if result.message == "用户 未找到":
+            if result.message == "未找到对应 用户":
                 await send.sendWithAt(
                     "喂喂喂！你还没输入sessionToken呐！\n"
                     f"扫码绑定：{cmdhead} bind qrcode\n"

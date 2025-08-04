@@ -1,3 +1,4 @@
+from typing import Any, Literal
 from zhenxun.services.log import logger
 from zhenxun.utils.http_utils import AsyncHttpx
 
@@ -13,7 +14,9 @@ from .cls.models import (
     ScoreDetail,
     SongRecordHistory,
     UserResponse,
+    commentObject,
     saveHistoryModel,
+    tokenManageParams,
 )
 
 
@@ -23,7 +26,16 @@ class makeRequest:
         """
         绑定平台账号与用户Token
 
-        :param params:  基础参数
+        :param dict params: 请求参数字典
+
+            - str platform: 平台名称
+            - str  platform_id: 用户平台内id
+
+            可选字段:
+
+            - str token: PhigrosToken
+            - str api_user_id: 用户api内id
+            - str api_token: 用户api token
         """
         return BindSuccessResponse(**await makeFetch(burl("/bind"), params))
 
@@ -32,10 +44,16 @@ class makeRequest:
         """
         解绑平台账号
 
-        :param params: 请求参数字典，必须包含以下字段：
+        :param dict params: 请求参数字典
 
-            - platform (str): 平台名称
-            - platform_id (str): 用户在平台内的唯一标识
+            - str platform: 平台名称
+            - str  platform_id: 用户平台内id
+
+            可选字段:
+
+            - str token: PhigrosToken
+            - str api_user_id: 用户api内id
+            - str api_token: 用户api token
         """
         return BaseResponse(**await makeFetch(burl("/unbind"), params))
 
@@ -44,7 +62,16 @@ class makeRequest:
         """
         清空用户数据
 
-        :param params: 登录信息
+        :param dict params: 请求参数字典
+        
+            - str platform: 平台名称
+            - str  platform_id: 用户平台内id
+            - str api_token: 用户api token
+
+            可选字段:
+            
+            - str token: PhigrosToken
+            - str api_user_id: 用户api内id
         """
         return BaseResponse(**await makeFetch(burl("/clear"), params))
 
@@ -56,8 +83,8 @@ class makeRequest:
         :param params: 登录信息,需包含以下字段
 
             - user_id: 用户 ID
-            - token_old: 原有API Token（如已有Token时必填）
-            - token_new: 新的API Token
+            - ?token_old: 原有API Token（如已有Token时必填）
+            - ?token_new: 新的API Token
             - platform: 平台名称
             - platform_id: 用户平台内id
         """
@@ -68,13 +95,22 @@ class makeRequest:
         """
         获取用户 API Token 列表
 
-        :param params:
+        :param dict params: 请求参数字典
+        
+            - str platform: 平台名称
+            - str  platform_id: 用户平台内id
+            - str api_token: 用户api token
+
+            可选字段:
+            
+            - str token: PhigrosToken
+            - str api_user_id: 用户api内id
         :return: UserResponse
         """
         return UserResponse(**(await makeFetch(burl("/tokenList"), params))["data"])
 
     @staticmethod
-    async def tokenManage(params: dict) -> BaseResponse:
+    async def tokenManage(params: tokenManageParams) -> BaseResponse:
         """
         管理用户 API Token
 
@@ -84,26 +120,80 @@ class makeRequest:
 
     @staticmethod
     async def getCloudSong(params: dict) -> GetCloudSongResponse:
-        """获取用户云存档单曲数据"""
+        """
+        获取用户云存档单曲数据
+        
+        :param dict params: 请求参数字典
+        
+            - str platform: 平台名称
+            - str  platform_id: 用户平台内id
+            - str api_token: 用户api token
+            - str song_id: 歌曲ID
+            - Literal[EZ,HD,IN,AT] difficulty: 难度
+
+            可选字段:
+            
+            - str token: PhigrosToken
+            - str api_user_id: 用户api内id
+        """
         return GetCloudSongResponse(
             **(await makeFetch(burl("/get/cloud/song"), params))["data"]
         )
 
     @staticmethod
     async def getCloudSaves(params: dict) -> OriSave:
-        """获取用户云存档数据"""
+        """
+        获取用户云存档数据
+
+        :param dict params: 请求参数字典
+
+            - str platform: 平台名称
+            - str  platform_id: 用户平台内id
+
+            可选字段:
+
+            - str token: PhigrosToken
+            - str api_user_id: 用户api内id
+            - str api_token: 用户api token
+        """
         return (await makeFetch(burl("/get/cloud/saves"), params))["data"]
 
     @staticmethod
     async def getCloudSaveInfo(params: dict) -> SaveInfo:
-        """获取用户云存档saveInfo数据"""
+        """
+        获取用户云存档saveInfo数据
+
+        :param dict params: 请求参数字典
+
+            - str platform: 平台名称
+            - str  platform_id: 用户平台内id
+
+            可选字段:
+
+            - str token: PhigrosToken
+            - str api_user_id: 用户api内id
+            - str api_token: 用户api token
+        """
         return SaveInfo(
             **(await makeFetch(burl("/get/cloud/saveInfo"), params))["data"]
         )
 
     @staticmethod
     async def getRanklistUser(params: dict) -> RanklistResponseData:
-        """根据用户获取排行榜相关信息"""
+        """
+        根据用户获取排行榜相关信息
+
+        :param dict params: 请求参数字典
+
+            - str platform: 平台名称
+            - str  platform_id: 用户平台内id
+
+            可选字段:
+
+            - str token: PhigrosToken
+            - str api_user_id: 用户api内id
+            - str api_token: 用户api token
+        """
         return RanklistResponseData(
             **(await makeFetch(burl("/get/ranklist/user"), params))["data"]
         )
@@ -113,9 +203,9 @@ class makeRequest:
         """
         根据名次获取排行榜相关信息
 
-        :param params: 请求参数,需包含以下内容
+        :param params: 请求参数
 
-            - request_rank: 请求的排名
+            - int request_rank: 请求的排名
         """
         return RanklistResponseData(
             **(await makeFetch(burl("/get/ranklist/rank"), params))["data"]
@@ -126,9 +216,9 @@ class makeRequest:
         """
         获取rks大于目标值的用户数量
 
-        :param params: 请求参数,需包含以下内容
+        :param params: 请求参数
 
-            - request_rks: 请求的排名
+            - float request_rks: 请求的排名
         """
         return (await makeFetch(burl("/get/ranklist/rksRank"), params))["data"]
 
@@ -150,11 +240,23 @@ class makeRequest:
 
         根据传入参数不同，返回不同类型的成绩数据：
 
-        - 如果 params 中含有 song_id，返回 ScoreDetail
-        - 如果 params 中含有 difficulty，返回 list[SongRecordHistory]
+        :param dict params: 请求参数字典
+
+            - str platform: 平台名称
+            - str  platform_id: 用户平台内id
+
+            可选字段:
+
+            - str token: PhigrosToken
+            - str api_user_id: 用户api内id
+            - str api_token: 用户api token
+
+
+        - 如果 params 中含有 song_id(str)，返回 ScoreDetail
+        - 如果 params 中含有 difficulty(Literal[EZ,HD,IN,AT])，返回 list[SongRecordHistory]
         - 否则返回 dict[str, ScoreDetail]
 
-        :param HighAuWithSongInfo params: 请求参数，包含 baseAu 和歌曲信息
+        :param baseAu & songInfoRequest params: 请求参数，包含 baseAu 和歌曲信息
         （song_id 或 difficulty）
 
         :returns:
@@ -165,7 +267,11 @@ class makeRequest:
 
     @staticmethod
     async def setHistory(params: dict) -> BaseResponse:
-        """上传用户的历史记录"""
+        """
+        上传用户的历史记录
+
+        :param dict params: {baseAu & {data: saveHistory}}
+        """
         return BaseResponse(**await makeFetch(burl("/set/history"), params))
 
     @staticmethod
@@ -187,11 +293,94 @@ class makeRequest:
 
     @staticmethod
     async def getUserBan(params: dict) -> bool:
-        "查询用户是否被禁用"
+        """
+        查询用户是否被禁用
+
+        :param dict params: 请求参数字典
+
+            - str platform: 平台名称
+            - str  platform_id: 用户平台内id
+
+            可选字段:
+
+            - str token: PhigrosToken
+            - str api_user_id: 用户api内id
+            - str api_token: 用户api token
+        """
         return (await makeFetch(burl("/get/banUser"), params))["data"]
 
+    @staticmethod
+    async def getCommentsBySongID(
+        params: dict[Literal["songId"], str],
+    ) -> list[commentObject]:
+        """获取歌曲评论"""
+        return [
+            commentObject(**i)
+            for i in (await makeFetch(burl("/comment/get/bySongId"), params))["data"]
+        ]
 
-async def makeFetch(url: str, params: dict) -> dict:
+    @staticmethod
+    async def getCommentsByUserId(
+        params: dict,
+    ) -> list[commentObject]:
+        """
+        获取歌曲评论
+
+        :param dict params: 请求参数字典
+
+            - str platform: 平台名称
+            - str  platform_id: 用户平台内id
+
+            可选字段:
+
+            - str token: PhigrosToken
+            - str api_user_id: 用户api内id
+            - str api_token: 用户api token
+        """
+        return [
+            commentObject(**i)
+            for i in (await makeFetch(burl("/comment/get/byUserId"), params))["data"]
+        ]
+
+    @staticmethod
+    async def addComment(params: dict) -> BaseResponse:
+        """
+        添加单条评论
+
+        :param dict params: {baseAu & {data: {comment: commentObject}}}
+        """
+        return BaseResponse(**await makeFetch(burl("/comment/add"), params))
+
+    @staticmethod
+    async def delComment(params: dict) -> BaseResponse:
+        """
+        删除单条评论
+
+        :param dict params: {baseAu & {commentId: commentId}}
+        """
+        return BaseResponse(**await makeFetch(burl("/comment/del"), params))
+
+    @staticmethod
+    async def updateComments(params: dict) -> BaseResponse:
+        """
+        批量添加评论
+
+        :param dict params: ```
+        {
+            data: {
+                comments: [
+                    commentObject,
+                    commentObject,
+                    ...
+                ]
+            }
+        }
+        ```
+        """
+        return BaseResponse(**await makeFetch(burl("/comment/update"), params))
+
+
+async def makeFetch(url: str, params: Any) -> dict:
     logger.debug(f"请求API: {url} with params: {params}", "phi-plugin:makeFetch")
     try:
         response = await AsyncHttpx.post(

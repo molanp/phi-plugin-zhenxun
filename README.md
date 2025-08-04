@@ -20,12 +20,13 @@
 
 当前同步的版本
 
-[3abe791edcf9b9195bda3203ad0b9855cefa1dc3](https://github.com/Catrong/phi-plugin/commit/3abe791edcf9b9195bda3203ad0b9855cefa1dc3)
+[956aa9182be6e9fb562949a2cd2b67d704d5b767](https://github.com/Catrong/phi-plugin/commit/956aa9182be6e9fb562949a2cd2b67d704d5b767)
 
-[已落后的变更](https://github.com/Catrong/phi-plugin/compare/3abe791edcf9b9195bda3203ad0b9855cefa1dc3...main)
+[已落后的变更](https://github.com/Catrong/phi-plugin/compare/956aa9182be6e9fb562949a2cd2b67d704d5b767...main)
 
 </details>
 
+## 关于开发进程，请查看投票 https://github.com/molanp/zhenxun_plugin_phi-plugin/discussions/1
 ## 长期寻求合作者共同开发
 
 ## 任务列表
@@ -90,6 +91,11 @@
 | `/phi (ltr\|开字母)`                                                  | 根据字母猜曲名，`/phi 出` `/phi open`... 开指定的字母，`/phi 第n个` `/phi nX.xxx` 进行回答，`/phi ans` 获取答案 |
 | `/phi (tipgame\|提示猜曲)`                                            | 根据提示猜曲名，#tip 获得下一条提示，#ans 获取答案，回答直接回复                                                |
 | `/phi (song\|曲) xxx`                                                 | 查询 phigros 中某一曲目的图鉴，支持设定别名                                                                     |
+| `/phi chart <曲名> <难度>`                                            | 查询 phigros 中某一谱面的详细信息                                                                               |
+| `/phi (addtag\|subtag\|retag) <曲名> <难度> <标签>`                   | 对某个标签赞成、反对或撤销表态，难度默认为 IN                                                                   |
+| `/phi (comment\|cmt\|评论\|评价) <曲名> <难度?>(换行)<内容>`          | 评论曲目，难度默认为 IN                                                                                         |
+| `/phi recmt <评论ID>`                                                 | 查看并确认是否删评，仅发送者和主人权限，需要二次确认                                                            |
+| `/phi mycmt`                                                          | 查看自己的云端评论                                                                                              |
 | `/phi (table\|定数表) <定数>`                                         | 查询 phigros 定数表（B 站[@yuhao7370](space.bilibili.com/275661582)）                                           |
 | `/phi new`                                                            | 查询更新的曲目                                                                                                  |
 | `/phi tips`                                                           | 随机 tips                                                                                                       |
