@@ -4,7 +4,6 @@ import struct
 
 class ByteReader:
     def __init__(self, data: str | bytes, position=0):
-        # 如果是str，假定是hex字符串；如果是bytes或bytearray，直接用
         if isinstance(data, str):
             self.data = bytearray.fromhex(data)
         else:

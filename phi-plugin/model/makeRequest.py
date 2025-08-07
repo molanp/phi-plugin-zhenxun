@@ -1,4 +1,5 @@
 from typing import Any, Literal
+
 from zhenxun.services.log import logger
 from zhenxun.utils.http_utils import AsyncHttpx
 
@@ -7,7 +8,6 @@ from .cls.models import (
     BaseResponse,
     BindSuccessResponse,
     GetCloudSongResponse,
-    OriSave,
     RanklistResponseData,
     RanklistRksResponseData,
     SaveInfo,
@@ -29,7 +29,7 @@ class makeRequest:
         :param dict params: 请求参数字典
 
             - str platform: 平台名称
-            - str  platform_id: 用户平台内id
+            - str platform_id: 用户平台内id
 
             可选字段:
 
@@ -47,7 +47,7 @@ class makeRequest:
         :param dict params: 请求参数字典
 
             - str platform: 平台名称
-            - str  platform_id: 用户平台内id
+            - str platform_id: 用户平台内id
 
             可选字段:
 
@@ -63,13 +63,13 @@ class makeRequest:
         清空用户数据
 
         :param dict params: 请求参数字典
-        
+
             - str platform: 平台名称
-            - str  platform_id: 用户平台内id
+            - str platform_id: 用户平台内id
             - str api_token: 用户api token
 
             可选字段:
-            
+
             - str token: PhigrosToken
             - str api_user_id: 用户api内id
         """
@@ -96,13 +96,13 @@ class makeRequest:
         获取用户 API Token 列表
 
         :param dict params: 请求参数字典
-        
+
             - str platform: 平台名称
-            - str  platform_id: 用户平台内id
+            - str platform_id: 用户平台内id
             - str api_token: 用户api token
 
             可选字段:
-            
+
             - str token: PhigrosToken
             - str api_user_id: 用户api内id
         :return: UserResponse
@@ -114,7 +114,7 @@ class makeRequest:
         """
         管理用户 API Token
 
-        :param params:
+        :param tokenManageParams params:
         """
         return BaseResponse(**await makeFetch(burl("/token/manage"), params))
 
@@ -122,17 +122,17 @@ class makeRequest:
     async def getCloudSong(params: dict) -> GetCloudSongResponse:
         """
         获取用户云存档单曲数据
-        
+
         :param dict params: 请求参数字典
-        
+
             - str platform: 平台名称
-            - str  platform_id: 用户平台内id
+            - str platform_id: 用户平台内id
             - str api_token: 用户api token
             - str song_id: 歌曲ID
             - Literal[EZ,HD,IN,AT] difficulty: 难度
 
             可选字段:
-            
+
             - str token: PhigrosToken
             - str api_user_id: 用户api内id
         """
@@ -141,14 +141,14 @@ class makeRequest:
         )
 
     @staticmethod
-    async def getCloudSaves(params: dict) -> OriSave:
+    async def getCloudSaves(params: dict) -> dict[str, Any]:
         """
         获取用户云存档数据
 
         :param dict params: 请求参数字典
 
             - str platform: 平台名称
-            - str  platform_id: 用户平台内id
+            - str platform_id: 用户平台内id
 
             可选字段:
 
@@ -166,7 +166,7 @@ class makeRequest:
         :param dict params: 请求参数字典
 
             - str platform: 平台名称
-            - str  platform_id: 用户平台内id
+            - str platform_id: 用户平台内id
 
             可选字段:
 
@@ -186,7 +186,7 @@ class makeRequest:
         :param dict params: 请求参数字典
 
             - str platform: 平台名称
-            - str  platform_id: 用户平台内id
+            - str platform_id: 用户平台内id
 
             可选字段:
 
@@ -199,28 +199,30 @@ class makeRequest:
         )
 
     @staticmethod
-    async def getRanklistRank(params: dict) -> RanklistResponseData:
+    async def getRanklistRank(request_rank: int) -> RanklistResponseData:
         """
         根据名次获取排行榜相关信息
 
-        :param params: 请求参数
-
-            - int request_rank: 请求的排名
+        :param int request_rank: 请求的排名
         """
         return RanklistResponseData(
-            **(await makeFetch(burl("/get/ranklist/rank"), params))["data"]
+            **(
+                await makeFetch(
+                    burl("/get/ranklist/rank"), {"request_rank": request_rank}
+                )
+            )["data"]
         )
 
     @staticmethod
-    async def getRanklistRks(params: dict) -> RanklistRksResponseData:
+    async def getRanklistRks(request_rks: float) -> RanklistRksResponseData:
         """
         获取rks大于目标值的用户数量
 
-        :param params: 请求参数
-
-            - float request_rks: 请求的排名
+        :param float request_rks: 请求的rks
         """
-        return (await makeFetch(burl("/get/ranklist/rksRank"), params))["data"]
+        return (
+            await makeFetch(burl("/get/ranklist/rksRank"), {"request_rks": request_rks})
+        )["data"]
 
     @staticmethod
     async def getHistory(params: dict) -> saveHistoryModel:
@@ -243,7 +245,7 @@ class makeRequest:
         :param dict params: 请求参数字典
 
             - str platform: 平台名称
-            - str  platform_id: 用户平台内id
+            - str platform_id: 用户平台内id
 
             可选字段:
 
@@ -280,14 +282,14 @@ class makeRequest:
         上传用户 token 数据。
 
         :param params: 包含用户 token 信息的字典，格式为：
-
-                {
-                    "data": {
-                        "userId1": "token1",
-                        "userId2": "token2",
-                        ...
-                    }
-                }
+        ```
+        {
+            "data": {
+                "userId1": "token1",
+                "userId2": "token2",
+                ...
+            }
+        }
         """
         return BaseResponse(**await makeFetch(burl("/set/usersToken"), params))
 
@@ -299,7 +301,7 @@ class makeRequest:
         :param dict params: 请求参数字典
 
             - str platform: 平台名称
-            - str  platform_id: 用户平台内id
+            - str platform_id: 用户平台内id
 
             可选字段:
 
@@ -329,7 +331,7 @@ class makeRequest:
         :param dict params: 请求参数字典
 
             - str platform: 平台名称
-            - str  platform_id: 用户平台内id
+            - str platform_id: 用户平台内id
 
             可选字段:
 

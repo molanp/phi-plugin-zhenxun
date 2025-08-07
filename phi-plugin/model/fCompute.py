@@ -146,42 +146,26 @@ class fCompute:
         return new_arr
 
     @staticmethod
-    def formatDate(date: str | datetime) -> str:
+    def formatDate(date: datetime | str | float | None) -> str:
         """
         转换时间格式
 
-        :param date: 时间（字符串或 datetime 对象）
+        :param date: 时间表示
         :return: 格式化后的字符串，如 '2020/10/8 10:08:08'
         """
-        if isinstance(date, str):
-            try:
-                # 尝试解析字符串为 datetime 对象
-                dt = datetime.fromisoformat(date.replace("Z", "+00:00"))
-            except ValueError:
-                # 如果不支持 ISO 格式，尝试其他常见格式
-                dt = datetime.strptime(date.replace("Z", "+00:00"), "%Y/%m/%d %H:%M:%S")
-        else:
-            dt = date
+        dt = Date(date)
 
         return dt.strftime("%Y/%m/%d %H:%M:%S")
 
     @staticmethod
-    def formatDateToNow(date: str | datetime) -> str:
+    def formatDateToNow(date: datetime | str | float | None) -> str:
         """
         计算当前时间与指定时间之间的天数差，并返回格式如 '-3d' 的字符串
 
-        :param date: 时间（字符串或 datetime 对象）
+        :param date: 时间表示
         :return: 格式化后的字符串，如 '-3d'
         """
-        if isinstance(date, str):
-            try:
-                # 尝试解析字符串为 datetime 对象
-                dt = datetime.fromisoformat(date.replace("Z", "+00:00"))
-            except ValueError:
-                # 如果不支持 ISO 格式，尝试其他常见格式
-                dt = datetime.strptime(date.replace("Z", "+00:00"), "%Y/%m/%d %H:%M:%S")
-        else:
-            dt = date
+        dt = Date(date)
 
         now = datetime.now()
         delta_days = (now - dt).days

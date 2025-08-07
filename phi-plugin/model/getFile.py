@@ -23,13 +23,13 @@ async def csv_write(file_path: str | Path, data: list[dict[str, Any]]):
     [
         {
             "id": "1",
-            "name": "张三",
-            "age": "18"
+            "name": "a",
+            "age": "99"
         },
         {
             "id": "2",
-            "name": "李四",
-            "age": "19"
+            "name": "b",
+            "age": "114"
         }
     ]
     """
@@ -225,115 +225,3 @@ class readFile:
                 e=e,
             )
             return False
-
-    # @classmethod
-    # async def movJsonFile(cls, _path: str | Path) -> None:
-    #     """
-    #     将本地 JSON 用户数据迁移到数据库，并整理结构
-
-    #     :param _path: 待迁移的数据目录
-    #     """
-    #     from .getSave import getSave
-
-    #     root_path = Path(_path)
-    #     if not root_path.exists():
-    #         return
-
-    #     # 读取 user_token.json
-    #     user_token_path = root_path / "user_token.json"
-    #     user_token = await readFile.FileReader(user_token_path) or {}
-
-    #     # 获取所有用户 json 文件
-    #     files = [
-    #         f
-    #         for f in root_path.iterdir()
-    #        if f.is_file() and f.name.endswith(".json") and f.name != "user_token.json"
-    #     ]
-    #     tot = len(files)
-    #     already = 0
-
-    #     logger.info(f"共发现 {tot} 个用户文件", "phi-plugin:数据整合，请勿中断进程")
-
-    #     for file in files:
-    #         user_id = file.stem  # 去掉 .json 后缀
-    #         try:
-    #             json_data = await readFile.FileReader(file)
-    #             if not json_data:
-    #                 continue
-
-    #             session = json_data.get("sessionToken")
-    #             if not session:
-    #                 continue
-
-    #             # 更新映射关系
-    #             user_token[user_id] = session
-
-    #             # 存储 save.json 到新路径
-    #             save_path = Path(savePath) / session / "save.json"
-    #             await readFile.SetFile(save_path, json_data)
-
-    #             # 存储 history.json（来自 pluginDataPath）
-    #             plugin_data_path = Path(pluginDataPath) / f"{user_id}_.json"
-    #             if plugin_data_path.exists():
-    #                 json_ = await readFile.FileReader(plugin_data_path)
-    #                 if json_:
-    #                     tem_file = {
-    #                         "data": json_.get("data"),
-    #                         "rks": json_.get("rks"),
-    #                         "scoreHistory": json_.get("scoreHistory"),
-    #                         "CLGMOD": json_.get("CLGMOD"),
-    #                         "version": json_.get("version"),
-    #                     }
-    #                     history_path = Path(savePath) / session / "history.json"
-    #                     await readFile.SetFile(history_path, tem_file)
-
-    #             # 删除原文件
-    #             await readFile.DelFile(file)
-
-    #             already += 1
-    #         except Exception as e:
-    #             logger.error(f"数据迁移失败 | 用户: {user_id}", e=e)
-
-    #     # 等待所有文件处理完成
-    #     while already < tot:
-    #         logger.info(f"{already}/{tot}", "phi-plugin:数据整合，请勿中断进程")
-    #         await asyncio.sleep(1)
-
-    #     logger.info(f"{already}/{tot}", "phi-plugin:数据整合完成")
-
-    #     # 写回 user_token.json
-    #     await readFile.SetFile("user_token.json", user_token)
-
-    #     # 存储到数据库
-    #     already = 0
-    #     tot = len(user_token)
-    #     for user_id, session_token in user_token.items():
-    #         logger.info(f"{already}/{tot}", "phi-plugin:数据转移，请勿中断进程")
-    #         await getSave.add_user_token(user_id, session_token)
-
-    #         try:
-    #             save = await getSave.getSave(user_id)
-    #             if not save:
-    #                 continue
-
-    #             rks = save.getRks()
-    #             if rks is None or rks == float("nan"):
-    #                 logger.warning(
-    #                     f"奇怪的rks: {save.saveInfo.summary.rankingScore}",
-    #                     "phi-plugin:数据转移，请勿中断进程",
-    #                 )
-    #                 continue
-
-    #             await getRksRank.addUserRks(session_token, rks)
-    #         except Exception as err:
-    #             logger.error(
-    #                 "数据转移失败: 跳过该用户 {user_id} {session_token}",
-    #                 "phi-plugin",
-    #                 e=err,
-    #             )
-    #         already += 1
-
-    #     logger.info(f"{already}/{tot}", "phi-plugin:数据转移完成")
-
-    #     # 删除旧的 user_token.json
-    #     await readFile.DelFile(Path(dataPath) / "user_token.json")

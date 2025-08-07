@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel
 
@@ -29,7 +29,16 @@ class SongsInfoObject(BaseModel):
     """画师"""
     spinfo: str = ""
     """特殊信息"""
-    chart: dict[str, Chart] = {}
+    chart: dict[
+        Literal[
+            "EZ",
+            "HD",
+            "IN",
+            "AT",
+            "LEGACY",
+        ],
+        Chart,
+    ] = {}
     """谱面详情"""
     sp_vis: bool = False
     """是否是特殊谱面"""

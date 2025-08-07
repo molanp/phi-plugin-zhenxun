@@ -29,12 +29,12 @@ ill_update = on_alconna(
 
 @update.handle()
 async def _():
-    await send.sendWithAt("没写，等真寻有强制git环境再写", True)
+    await send.sendWithAt("没写", True)
 
 
 @ill_update.handle()
 async def _():
-    await send.sendWithAt("没写，等真寻有强制git环境再写", True)
+    await send.sendWithAt("没写", True)
 
 
 # // 是否在更新中

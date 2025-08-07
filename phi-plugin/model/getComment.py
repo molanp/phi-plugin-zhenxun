@@ -26,7 +26,7 @@ dataPath = otherDataPath / "commentData.json"
 
 
 class getComment:
-    data = None
+    data: dict[str, list[dict]] = {}  # noqa: RUF012
     """
     评论对象字典
     * **str** sessionToken
@@ -86,10 +86,10 @@ class getComment:
         if cls.data is None:
             await cls.load()
             assert cls.data is not None
-        songId = cls.data.get(commentId, None)
+        songId = cls.data.get(commentId)
         if not songId:
             return None
-        for comment in cls.data[songId]:
+        for comment in songId:
             if comment.get("thisId") == commentId:
                 comment["songId"] = songId
                 return comment

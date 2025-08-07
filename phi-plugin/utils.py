@@ -1,6 +1,12 @@
 import contextlib
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Literal
+
+from nonebot.internal.rule import Rule
+from nonebot_plugin_alconna import UniMessage
+from nonebot_plugin_uninfo import Uninfo
+
+from .model.getBanGroup import getBanGroup
 
 
 def to_dict(c: Any) -> dict:
@@ -18,14 +24,10 @@ def to_dict(c: Any) -> dict:
             return {k: convert(v) for k, v in value.items()}
 
         if isinstance(value, type):
-            return {
-                k: convert(v) for k, v in vars(value).items()
-            }
+            return {k: convert(v) for k, v in vars(value).items()}
 
         if hasattr(value, "__dict__"):
-            return {
-                k: convert(v) for k, v in vars(value).items()
-            }
+            return {k: convert(v) for k, v in vars(value).items()}
 
         return value
 
@@ -102,3 +104,79 @@ def Rating(score: int | None, fc: bool):
         return "S"
     else:
         return "V"
+
+
+def can_be_call(
+    key: Literal[
+        "bind",
+        "unbind",
+        "b19",
+        "p30",
+        "lmtAcc",
+        "arcgrosB19",
+        "update",
+        "info",
+        "list",
+        "singlescore",
+        "lvscore",
+        "bestn",
+        "data",
+        "chap",
+        "suggest",
+        "help",
+        "tkhelp",
+        "apihelp",
+        "auth",
+        "clearApiData",
+        "updateHistory",
+        "setApiToken",
+        "tokenList",
+        "song",
+        "ill",
+        "chart",
+        "addtag",
+        "retag",
+        "search",
+        "alias",
+        "randmic",
+        "randClg",
+        "table",
+        "comment",
+        "recallCommenttokenManage",
+        "rankList",
+        "godList",
+        "comrks",
+        "tips",
+        "newSong",
+        "tipgame",
+        "guessgame",
+        "ltrgame",
+        "sign",
+        "send",
+        "tasks",
+        "retask",
+        "jrrp",
+        "theme",
+        "dan",
+        "danupdate",
+    ],
+) -> Rule:
+    """
+    功能是否能被调用
+
+    参数:
+        key: 功能名称
+
+    返回:
+        Rule: Rule
+    """
+
+    async def _rule(session: Uninfo) -> bool:
+        if await getBanGroup.get(session, key):
+            await UniMessage("这里被管理员禁止使用这个功能了呐QAQ！").send(
+                reply_to=True
+            )
+            return False
+        return True
+
+    return Rule(_rule)

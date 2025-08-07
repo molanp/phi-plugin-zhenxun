@@ -22,7 +22,6 @@ from ..model.cls.common import Save
 from ..model.cls.saveHistory import saveHistory
 from ..model.cls.scoreHistory import scoreHistory
 from ..model.fCompute import fCompute
-from ..model.getBanGroup import getBanGroup
 from ..model.getdata import getdata
 from ..model.getInfo import getInfo
 from ..model.getNotes import getNotes
@@ -33,7 +32,7 @@ from ..model.makeRequest import makeRequest
 from ..model.makeRequestFnc import makeRequestFnc
 from ..model.send import send
 from ..models import qrCode
-from ..utils import Date, to_dict
+from ..utils import Date, can_be_call, to_dict
 
 recmdhead = re.escape(cmdhead)
 apiMsg = (
@@ -43,16 +42,19 @@ apiMsg = (
 
 bind = on_alconna(
     Alconna(rf"re:{recmdhead}\s*(绑定|bind)", Args["sessionToken?", str | int, ""]),
+    rule=can_be_call("bind"),
     block=True,
     priority=5,
 )
 update = on_alconna(
     Alconna(rf"re:{recmdhead}\s*(更新|update)"),
+    rule=can_be_call("update"),
     block=True,
     priority=5,
 )
 unbind = on_alconna(
     Alconna(rf"re:{recmdhead}\s*(解绑|unbind)"),
+    rule=can_be_call("unbind"),
     block=True,
     priority=5,
 )
@@ -71,9 +73,6 @@ getSstk = on_alconna(
 @bind.handle()
 async def _(bot, session: Uninfo, sstk: Match[str]):
     """这里逻辑太复杂了，得谨慎点"""
-    if await getBanGroup.get(session, "bind"):
-        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！")
-        return
     param = sstk.result if sstk.available else ""
     sessionToken = re.compile(r"[0-9a-zA-Z]{25}|qrcode", re.IGNORECASE).search(param)
     localPhigrosToken = await getSave.get_user_token(session.user.id)
@@ -235,9 +234,6 @@ async def _(bot, session: Uninfo, sstk: Match[str]):
 
 @update.handle()
 async def _(session: Uninfo):
-    if await getBanGroup.get(session, "update"):
-        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！")
-        return
     if PluginConfig.get("openPhiPluginApi"):
         try:
             updateData = await getUpdateSave.getNewSaveFromApi(session)
@@ -274,9 +270,6 @@ async def _(session: Uninfo):
 
 @unbind.handle()
 async def _(session: Uninfo):
-    if await getBanGroup.get(session, "unbind"):
-        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！")
-        return
     if not await getSave.get_user_token(
         session.user.id
     ) and not await getSaveFromApi.get_user_apiId(session.user.id):

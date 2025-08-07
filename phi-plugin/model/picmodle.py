@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Any, Literal
 
 from nonebot_plugin_alconna import Image
 
@@ -8,7 +8,7 @@ from .puppeteer import Puppeteer
 
 class picmodle:
     @classmethod
-    async def atlas(cls, info: dict) -> Image:
+    async def atlas(cls, info: dict[str, Any]) -> Image:
         """曲目图鉴"""
         return await cls.common(
             "atlas",
@@ -23,27 +23,27 @@ class picmodle:
         )
 
     @classmethod
-    async def b19(cls, data: dict) -> Image:
+    async def b19(cls, data: dict[str, Any]) -> Image:
         """b19"""
         return await cls.common("b19", data)
 
     @classmethod
-    async def arcgros_b19(cls, data: dict) -> Image:
+    async def arcgros_b19(cls, data: dict[str, Any]) -> Image:
         """arcgros b19"""
         return await cls.common("arcgrosB19", data)
 
     @classmethod
-    async def update(cls, data: dict) -> Image:
+    async def update(cls, data: dict[str, Any]) -> Image:
         """更新"""
         return await cls.common("update", data)
 
     @classmethod
-    async def tasks(cls, data: dict) -> Image:
+    async def tasks(cls, data: dict[str, Any]) -> Image:
         """任务"""
         return await cls.common("tasks", data)
 
     @classmethod
-    async def user_info(cls, info: dict, picversion: int) -> Image:
+    async def user_info(cls, info: dict[str, Any], picversion: int) -> Image:
         """
         个人信息
 
@@ -62,17 +62,17 @@ class picmodle:
             )
 
     @classmethod
-    async def lvsco(cls, data: dict) -> Image:
+    async def lvsco(cls, data: dict[str, Any]) -> Image:
         """lvsco"""
         return await cls.common("lvsco", data)
 
     @classmethod
-    async def list(cls, data: dict) -> Image:
+    async def list(cls, data: dict[str, Any]) -> Image:
         """列表"""
         return await cls.common("list", data)
 
     @classmethod
-    async def score(cls, data: dict, picversion: Literal[1, 2] = 2) -> Image:
+    async def score(cls, data: dict[str, Any], picversion: Literal[1, 2] = 2) -> Image:
         """
         单曲成绩
 
@@ -85,27 +85,27 @@ class picmodle:
             return await cls.render("score/scoreOld", {**data})
 
     @classmethod
-    async def ill(cls, data: dict) -> Image:
+    async def ill(cls, data: dict[str, Any]) -> Image:
         """曲绘"""
         return await cls.common("ill", data)
 
     @classmethod
-    async def guess(cls, data: dict) -> Image:
+    async def guess(cls, data: dict[str, Any]) -> Image:
         """猜歌"""
         return await cls.common("guess", data)
 
     @classmethod
-    async def rand(cls, data: dict) -> Image:
+    async def rand(cls, data: dict[str, Any]) -> Image:
         """随机"""
         return await cls.common("rand", data)
 
     @classmethod
-    async def help(cls, data: dict) -> Image:
+    async def help(cls, data: dict[str, Any]) -> Image:
         """帮助"""
         return await cls.common("help", data)
 
     @classmethod
-    async def chap(cls, data: dict) -> Image:
+    async def chap(cls, data: dict[str, Any]) -> Image:
         """章节"""
         return await cls.common("chap", data)
 
@@ -131,7 +131,7 @@ class picmodle:
             "clg",
             "jrrp",
         ],
-        data: dict,
+        data: dict[str, Any],
     ) -> Image:
         """
         :param kind: 类型
@@ -146,7 +146,7 @@ class picmodle:
         )
 
     @classmethod
-    async def render(cls, path: str, params: dict) -> Image:
+    async def render(cls, path: str, params: dict[str, Any]) -> Image:
         """
         渲染函数
 

@@ -1,6 +1,6 @@
 from datetime import datetime
 import math
-from typing import Any
+from typing import Any, Literal
 
 from ...utils import Date, to_dict
 from ..constNum import MAX_DIFFICULTY, Level
@@ -86,7 +86,7 @@ class saveHistory:
     scoreHistory: dict[
         str,
         dict[
-            str,
+            Literal["EZ", "HD", "IN", "AT", "LEGACY"],
             list[tuple[float, int, datetime, bool]],
         ],
     ]

@@ -3,6 +3,7 @@ phigros屁股肉管理
 """
 
 import re
+from typing import Literal
 
 from nonebot.permission import SUPERUSER
 from nonebot_plugin_alconna import Alconna, Args, Match, on_alconna
@@ -21,7 +22,24 @@ from ..model.path import backupPath
 from ..model.send import send
 from ..models import banGroup
 
-banSetting = [
+banSetting: list[
+    Literal[
+        "help",
+        "bind",
+        "b19",
+        "wb19",
+        "song",
+        "ranklist",
+        "fnc",
+        "tipgame",
+        "guessgame",
+        "ltrgame",
+        "sign",
+        "setting",
+        "dan",
+        "apiSetting",
+    ]
+] = [
     "help",
     "bind",
     "b19",
@@ -49,6 +67,7 @@ backup = on_alconna(
     Alconna(rf"re:{recmdhead}\s*backup", Args["extra?", str, ""]),
     priority=5,
     block=True,
+    permission=SUPERUSER,
 )
 
 restore = on_alconna(
@@ -188,10 +207,7 @@ async def _(session: Uninfo, func: Match[str]):
     match f:
         case "all":
             for i in banSetting:
-                await banGroup.add(
-                    group_id,
-                    i,
-                )
+                await banGroup.add(group_id, i)
         case _:
             if f in banSetting:
                 return await banGroup.add(

@@ -5,7 +5,7 @@ from typing_extensions import Self
 from nonebot.compat import field_validator
 from pydantic import BaseModel
 
-from ...utils import Date
+from ...utils import Date, to_dict
 
 
 class RecordModel(BaseModel):
@@ -35,22 +35,27 @@ class HistoryModel(LevelData):
 
 class rksLine(BaseModel):
     rks_history: list[list[float]]
+    """list[x1, y1, x2, y2]"""
     rks_range: list[float]
+    """[min, max]"""
     rks_date: list[int]
+    """[min, max]"""
 
 
 class dataLine(BaseModel):
     data_history: list[list[float]]
+    """list[x1, y1, x2, y2]"""
     data_range: list[float | str]
     """[min, max], 如果数字大于1024，则转为KiB，MiB，GiB，TiB，Pib"""
     data_date: list[int]
+    """[min, max]"""
 
 
 class rksLineWithdataLine(rksLine, dataLine):
     @classmethod
     def from_models(cls, rks: rksLine, data: dataLine) -> Self:
         """从两个模型实例创建合并实例"""
-        merged_data = {**rks.model_dump(), **data.model_dump()}
+        merged_data = {**to_dict(rks), **to_dict(data)}
         return cls(**merged_data)
 
 
@@ -174,9 +179,9 @@ class GetCloudSongResponse(BaseModel):
 class GameUserBasic(BaseModel):
     """游戏用户基础信息"""
 
-    background: str
+    background: str = ""
     """背景图"""
-    selfIntro: str
+    selfIntro: str = ""
     """自我介绍（仅 me 对象中存在）"""
 
 
@@ -186,10 +191,10 @@ class SummaryInfo(BaseModel):
     rankingScore: float
     """排名分数"""
     challengeModeRank: int
-    """挑战模式排名"""
-    updatedAt: str
+    """ChallengeMode"""
+    updatedAt: str = ""
     """更新时间（仅 me 对象中存在）"""
-    avatar: str
+    avatar: str = ""
     """头像（仅 me 对象中存在）"""
 
 
@@ -207,26 +212,30 @@ class SaveInfo(BaseModel):
     """分数概要"""
     modifiedAt: ModifiedTime
     """修改时间"""
-
-
-class UserItem(BaseModel):
-    """用户条目"""
-
-    gameuser: GameUserBasic
-    """基础信息（普通用户只有 background）"""
-    saveInfo: SaveInfo
-    """存档信息"""
-    index: int
-    """用户索引"""
+    PlayerId: str
+    """玩家 ID"""
 
 
 class MeData(BaseModel):
     """当前用户数据"""
 
     save: dict[str, Any]
-    """存档数据（oriSave 类型）"""
-    history: dict[str, saveHistoryObject]
-    """用户历史记录（saveHistory 类型）"""
+    """存档数据"""
+    history: dict[str, Any]
+    """用户历史记录"""
+
+
+class UserItem(BaseModel):
+    """用户条目"""
+
+    gameuser: GameUserBasic = GameUserBasic()
+    """基础信息（普通用户只有 background）"""
+    saveInfo: SaveInfo
+    """存档信息"""
+    index: int
+    """用户索引"""
+    me: MeData
+    """当前用户扩展数据"""
 
 
 class RanklistResponseData(BaseModel):
@@ -310,8 +319,16 @@ class commentObject(BaseModel):
     """头像, 仅在查询时添加"""
 
 
-class tokenManageParams(highAu):
+class tokenManageParams(BaseModel):
+    platform: str
+    """平台名称"""
+    platform_id: str
+    """用户平台内id"""
+    api_token: str
+    """用户api token"""
+    token: str | None = None
+    """PhigrosToken"""
+    api_user_id: str | None = None
+    """用户api内id"""
     operation: Literal["delete", "rmau"]
-
-
-OriSave = dict[str, Any]
+    """操作"""

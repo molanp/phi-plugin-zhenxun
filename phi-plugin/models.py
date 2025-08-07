@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 from tortoise import fields
 
@@ -173,14 +173,13 @@ class RksRank(Model):
         return deleted > 0
 
     @classmethod
-    async def getAllRank(cls) -> list[dict]:
+    async def getAllRank(cls) -> int:
         """
-        获取RKS排名
+        获取排名总数
 
-        :param limit: 排行榜限制数量
-        :return: 排行榜数据
+        :return: 排名总数
         """
-        return await cls.filter().order_by("-rks").values()
+        return await cls.filter().count()
 
     @classmethod
     async def getUserRank(cls, sessionToken: str) -> int:
@@ -208,19 +207,19 @@ class RksRank(Model):
         return higher_count + 1
 
     @classmethod
-    async def getRankUser(cls, min_rank: int, max_rank: int) -> list[dict]:
+    async def getRankUser(cls, min_rank: int, max_rank: int) -> list[str]:
         """
-        获取指定排名范围的用户数据（基于RKS分数降序）
+        获取指定排名范围的用户sessionToken（基于RKS分数降序）
 
         :param min_rank: 起始排名（0起始）
         :param max_rank: 结束排名（不包含）
-        :return: 包含用户数据的字典列表
+        :return: 包含用户sessionToken的列表
         """
         # 按 RKS 降序排列，从 min_rank 开始取 (max_rank - min_rank) 条记录
         query = (
             cls.filter().order_by("-rks").offset(min_rank).limit(max_rank - min_rank)
         )
-        return await query.values()
+        return list(await query.values_list("sessionToken", flat=True)) # type: ignore
 
 
 class userApiId(Model):
@@ -271,11 +270,49 @@ class banGroup(Model):
         table_description = "Phi 群组封禁功能表"
 
     @classmethod
-    async def getStatus(cls, group_id: str, func: str) -> bool:
+    async def getStatus(
+        cls,
+        group_id: str,
+        func: Literal[
+            "help",
+            "bind",
+            "b19",
+            "wb19",
+            "song",
+            "ranklist",
+            "fnc",
+            "tipgame",
+            "guessgame",
+            "ltrgame",
+            "sign",
+            "setting",
+            "dan",
+            "apiSetting",
+        ],
+    ) -> bool:
         return await cls.filter(group_id=group_id, func=func).exists()
 
     @classmethod
-    async def add(cls, group_id: str, func: str) -> bool:
+    async def add(
+        cls,
+        group_id: str,
+        func: Literal[
+            "help",
+            "bind",
+            "b19",
+            "wb19",
+            "song",
+            "ranklist",
+            "fnc",
+            "tipgame",
+            "guessgame",
+            "ltrgame",
+            "sign",
+            "setting",
+            "dan",
+            "apiSetting",
+        ],
+    ) -> bool:
         if await cls.getStatus(group_id, func):
             return False
         await cls.create(group_id=group_id, func=func)
@@ -286,7 +323,26 @@ class banGroup(Model):
         return [i.func for i in await cls.filter(group_id=group_id)]
 
     @classmethod
-    async def remove(cls, group_id: str, func: str) -> bool:
+    async def remove(
+        cls,
+        group_id: str,
+        func: Literal[
+            "help",
+            "bind",
+            "b19",
+            "wb19",
+            "song",
+            "ranklist",
+            "fnc",
+            "tipgame",
+            "guessgame",
+            "ltrgame",
+            "sign",
+            "setting",
+            "dan",
+            "apiSetting",
+        ],
+    ) -> bool:
         deleted = await cls.filter(group_id=group_id, func=func).delete()
         return deleted > 0
 

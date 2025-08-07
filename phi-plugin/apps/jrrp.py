@@ -12,23 +12,25 @@ from nonebot_plugin_uninfo import Uninfo
 
 from ..config import cmdhead
 from ..model.fCompute import fCompute
-from ..model.getBanGroup import getBanGroup
 from ..model.getFile import readFile
 from ..model.getInfo import getInfo
 from ..model.path import infoPath
 from ..model.picmodle import picmodle
 from ..model.send import send
 from ..models import jrrpModel
+from ..utils import can_be_call
 
 recmdhead = re.escape(cmdhead)
-jrrp = on_alconna(Alconna(rf"re:{recmdhead}\s*(jrrp|今日人品)"), priority=5, block=True)
+jrrp = on_alconna(
+    Alconna(rf"re:{recmdhead}\s*(jrrp|今日人品)"),
+    rule=can_be_call("jrrp"),
+    priority=5,
+    block=True,
+)
 
 
 @jrrp.handle()
 async def _(session: Uninfo):
-    if await getBanGroup.get(session, "jrrp"):
-        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！", True)
-        return
     jrrp_data: list = await jrrpModel.get_jrrp(session.user.id)
     sentence = await readFile.FileReader(infoPath / "sentences.json")
     if not jrrp_data:

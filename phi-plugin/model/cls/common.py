@@ -1,7 +1,7 @@
 import copy
 from datetime import datetime
 import math
-from typing import Any
+from typing import Any, Literal, TypedDict
 
 from nonebot.compat import field_validator
 from pydantic import BaseModel
@@ -13,10 +13,20 @@ from ..fCompute import fCompute
 from ..getInfo import getInfo
 from ..getRksRank import getRksRank
 from .LevelRecordInfo import LevelRecordInfo
-from .models import OriSave
 
 
-def checkLimit(record: LevelRecordInfo, limit: list[dict[str, str | list[float]]]):
+class LimitObject(TypedDict):
+    type: Literal["acc", "score", "rks"]
+    value: list[float]
+
+
+class B19Result(TypedDict):
+    phi: list[LevelRecordInfo | bool]
+    b19_list: list[LevelRecordInfo]
+    com_rks: float
+
+
+def checkLimit(record: LevelRecordInfo, limit: list[LimitObject]):
     """
     :param limit: 限制条件
     ```
@@ -27,19 +37,12 @@ def checkLimit(record: LevelRecordInfo, limit: list[dict[str, str | list[float]]
         },
         ...
     ]
+
     :return: 不满足返回False
     """
     for lim in limit:
-        value = lim.get("value")
-        assert isinstance(value, list), (
-            f"Expected 'value' to be a list, got {type(value)}"
-        )
-        assert len(value) == 2, f"Expected 'value' to have 2 elements, got {len(value)}"
-        assert all(isinstance(x, int | float) for x in value), (
-            f"Expected all elements of 'value' to be numbers, got {value}"
-        )
-
-        match lim.get("type"):
+        value = lim["value"]
+        match lim["type"]:
             case "acc":
                 if record.acc < value[0] or record.acc > value[1]:
                     return False
@@ -231,10 +234,10 @@ class Save:
     gameuser: GameUser
     gameRecord: dict[str, list["LevelRecordInfo | None"]]
     sortedRecord: list["LevelRecordInfo"] = []  # noqa: RUF012
-    B19List: dict[str, list["LevelRecordInfo"] | float]
+    B19List: B19Result
     b19_rks: float
 
-    async def constructor(self, data: OriSave, ignore: bool = False) -> "Save":
+    async def constructor(self, data: dict[str, Any], ignore: bool = False) -> "Save":
         """
         :param data: 原始数据
         :param ignore: 跳过存档检查
@@ -411,16 +414,9 @@ class Save:
         """
         return record_list if (record_list := self.gameRecord.get(id)) else []
 
-    async def getB19(self, num: int) -> dict[str, list[LevelRecordInfo] | float]:
+    async def getB19(self, num: int) -> B19Result:
         """
         :param num: B几
-        :return:
-        ```
-        {
-            "phi": list[LevelRecordInfo | False],
-            "b19_list": list[LevelRecordInfo],
-            "com_rks": float,
-        }
         """
         if hasattr(self, "B19List"):
             return self.B19List
@@ -429,7 +425,9 @@ class Save:
         # 满分且 rks 最高的成绩数组
         philist = self.findAccRecord(100)
         # p3
-        phi = [philist.pop(0) for _ in range(min(3, len(philist)))]
+        phi: list[LevelRecordInfo | bool] = [
+            philist.pop(0) for _ in range(min(3, len(philist)))
+        ]
         # logger.info(phi, "phi-plugin")
         if len(phi) < 3:
             # 在末尾补到3位
@@ -490,36 +488,19 @@ class Save:
         self.B19List = {
             "phi": phi,  # type: ignore
             "b19_list": b19_list,
+            "com_rks": com_rks,
         }
         self.b19_rks = b19_list[min(len(b19_list) - 1, 26)].rks
         return {
-            "phi": phi,  # type: ignore
+            "phi": phi,
             "b19_list": b19_list,
             "com_rks": com_rks,
         }
 
-    async def getBestWithLimit(
-        self, num: int, limit: list[dict[str, str | list[float]]]
-    ) -> dict[str, list[LevelRecordInfo] | float]:
+    async def getBestWithLimit(self, num: int, limit: list[LimitObject]) -> B19Result:
         """
         :param num: B几
         :param limit: 限制条件
-        ```
-        [
-            {
-                "type": 限制条目 acc|score|rks,
-                "value": [min, max]
-            },
-            ...
-        ]
-        ```
-        :return:
-        ```
-        {
-            "phi": list[LevelRecordInfo],
-            "b19_list": list[LevelRecordInfo],
-            "com_rks": float,
-        }
         """
         # 计算得到的rks，仅作为测试使用
         sum_rks: float = 0
@@ -532,7 +513,9 @@ class Save:
                 philist.pop(i)
             i -= 1
         # p3
-        phi = [philist.pop(0) for _ in range(min(3, len(philist)))]
+        phi: list[LevelRecordInfo | bool] = [
+            philist.pop(0) for _ in range(min(3, len(philist)))
+        ]
         # logger.info(phi, "phi-plugin")
         if len(phi) < 3:
             # 在末尾补到3位
@@ -590,13 +573,13 @@ class Save:
             b19_list.append(record)
         com_rks = sum_rks / 30
         self.B19List = {
-            "phi": phi,  # type: ignore
+            "phi": phi,
             "b19_list": b19_list,
             "com_rks": com_rks,
         }
         self.b19_rks = b19_list[min(len(b19_list) - 1, 26)].rks
         return {
-            "phi": phi,  # type: ignore
+            "phi": phi,
             "b19_list": b19_list,
             "com_rks": com_rks,
         }
@@ -660,7 +643,7 @@ class Save:
         stats = [stats_ for _ in range(4)]
         for song in getInfo.ori_info:
             info = getInfo.ori_info[song]
-            if info.chart.get("At") and info.chart["At"].difficulty:
+            if info.chart.get("AT") and info.chart["AT"].difficulty:
                 tot[3] += 1
             if info.chart.get("IN") and info.chart["IN"].difficulty:
                 tot[2] += 1

@@ -73,5 +73,5 @@ class getNotes:
         return await readFile.SetFile(pluginDataPath / f"{user_id}_.json", data)
 
     @staticmethod
-    async def delNotesData(user_id) -> bool:
+    async def delNotesData(user_id: str) -> bool:
         return await readFile.DelFile(pluginDataPath / f"{user_id}_.json")

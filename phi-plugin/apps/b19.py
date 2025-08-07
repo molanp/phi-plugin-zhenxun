@@ -25,14 +25,13 @@ from ..lib.PhigrosUser import PhigrosUser
 from ..model.cls.LevelRecordInfo import LevelRecordInfo
 from ..model.constNum import LevelNum
 from ..model.fCompute import fCompute
-from ..model.getBanGroup import getBanGroup
 from ..model.getdata import getdata
 from ..model.getInfo import getInfo
 from ..model.getNotes import getNotes
 from ..model.getPic import pic
 from ..model.picmodle import picmodle
 from ..model.send import send
-from ..utils import to_dict
+from ..utils import can_be_call, to_dict
 
 ChallengeModeName = ["白", "绿", "蓝", "红", "金", "彩"]
 
@@ -45,6 +44,7 @@ b19 = on_alconna(
         Args["nnum", int, 33],
         meta=CommandMeta(compact=True),
     ),
+    rule=can_be_call("b19"),
     block=True,
     priority=5,
 )
@@ -55,6 +55,7 @@ p30 = on_alconna(
         Args["nnum", int, 33],
         meta=CommandMeta(compact=True),
     ),
+    rule=can_be_call("p30"),
     block=True,
     priority=5,
 )
@@ -65,6 +66,7 @@ arcgrosB19 = on_alconna(
         Args["nnum", str, "b32"],
         meta=CommandMeta(compact=True),
     ),
+    rule=can_be_call("arcgrosB19"),
     block=True,
     priority=5,
 )
@@ -75,6 +77,7 @@ lmtAcc = on_alconna(
         Args["acc", float, None],
         meta=CommandMeta(compact=True),
     ),
+    rule=can_be_call("lmtAcc"),
     block=True,
     priority=5,
 )
@@ -86,6 +89,7 @@ singlescore = on_alconna(
         Args["song", str, None],
         meta=CommandMeta(compact=True),
     ),
+    rule=can_be_call("singlescore"),
     block=True,
     priority=5,
 )
@@ -96,6 +100,7 @@ suggest = on_alconna(
         Args["input", MultiVar(str)],
         meta=CommandMeta(compact=True),
     ),
+    rule=can_be_call("suggest"),
     block=True,
     priority=5,
 )
@@ -106,6 +111,7 @@ chap__ = on_alconna(
         Args["song", MultiVar(str), ("help",)],
         meta=CommandMeta(compact=True),
     ),
+    rule=can_be_call("chap"),
     block=True,
     priority=5,
 )
@@ -113,9 +119,6 @@ chap__ = on_alconna(
 
 @b19.handle()
 async def _(session: Uninfo, nnum: Match[int]):
-    if await getBanGroup.get(session, "b19"):
-        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！", True)
-        return
     save = await send.getsaveResult(session)
     if not save:
         return
@@ -168,9 +171,6 @@ async def _(session: Uninfo, nnum: Match[int]):
 # FIXME: 这个和b19就多了个spInfo，后续合并一下优化代码
 @p30.handle()
 async def _(session: Uninfo, nnum: Match[int]):
-    if await getBanGroup.get(session, "p30"):
-        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！", True)
-        return
     save = await send.getsaveResult(session)
     if not save:
         return
@@ -231,9 +231,6 @@ async def _(session: Uninfo, nnum: Match[int]):
 # NOTE: arc版查分图
 @arcgrosB19.handle()
 async def _(session: Uninfo, nnum: Match[str]):
-    if await getBanGroup.get(session, "arcgrosB19"):
-        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！", True)
-        return
     save = await send.getsaveResult(session)
     if not save:
         return
@@ -284,9 +281,6 @@ async def _(session: Uninfo, nnum: Match[str]):
 # NOTE: 限制最低acc后的rks
 @lmtAcc.handle()
 async def _(session: Uninfo, acc: Match[float]):
-    if await getBanGroup.get(session, "lmtAcc"):
-        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！", True)
-        return
     _acc = acc.result if acc.available else None
     if _acc is None or not isinstance(_acc, float) or _acc < 0 or _acc > 100:
         await send.sendWithAt(
@@ -335,7 +329,12 @@ async def _(session: Uninfo, acc: Match[float]):
         "spInfo": f"ACC is limited to {_acc}%",
     }
     res: list = [await picmodle.b19(to_dict(data))]
-    if abs(save_b19.get("com_rks", 0) - save.saveInfo.summary.rankingScore) > 0.1:  # type: ignore
+    if (
+        abs(
+            save_b19["com_rks"] - save.saveInfo.summary.rankingScore
+        )
+        > 0.1
+    ):
         res.append(
             f"计算rks: {save_b19['com_rks']}\n"
             f"存档rks:{save.saveInfo.summary.rankingScore}"
@@ -345,9 +344,6 @@ async def _(session: Uninfo, acc: Match[float]):
 
 @singlescore.handle()
 async def _(session: Uninfo, picversion: Match[int], song: Match[str]):
-    if await getBanGroup.get(session, "singlescore"):
-        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！", True)
-        return
     _picversion = picversion.result if picversion.available else 1
     _song = song.result if song.available else None
     if not _song:
@@ -434,9 +430,6 @@ async def _(session: Uninfo, picversion: Match[int], song: Match[str]):
 # NOTE: 推分建议，建议的是RKS+0.01的所需值
 @suggest.handle()
 async def _(session: Uninfo, input: Match[tuple[str]]):
-    if await getBanGroup.get(session, "suggest"):
-        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！", True)
-        return
     save = await send.getsaveResult(session)
     if not save:
         return
@@ -514,9 +507,6 @@ async def _(session: Uninfo, input: Match[tuple[str]]):
 
 @chap__.handle()
 async def _(session: Uninfo, song: Match):
-    if await getBanGroup.get(session, "chap"):
-        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！", True)
-        return
     msg = " ".join(song.result if song.available else [])
     if msg.upper() == "HELP" or not msg:
         await send.sendWithAt(pic.getimg("chapHelp"))

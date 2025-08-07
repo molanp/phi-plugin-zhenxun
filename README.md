@@ -44,9 +44,10 @@
 - [x] 移植 `manage`
 - [ ] 移植 `money`
 - [ ] 移植 `phisong`
-- [ ] 移植 `RankList`
+- [x] 移植 `RankList`
 - [x] 移植 `session`
 - [ ] 移植 `setting`
+- [x] 移植 `update`~~写了一句话应该也算移植吧~~
 - [ ] 移植 `user`
 - [ ] 测试功能
 - [ ] 整理代码逻辑

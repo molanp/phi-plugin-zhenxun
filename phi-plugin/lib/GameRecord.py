@@ -16,6 +16,8 @@ class GameRecord:
         初始化
 
         :param data: 二进制数据
+
+        参考 https://github.com/Teahouse-Studios/akari-bot/blob/master/modules/phigros/game_record.py#L68-L102
         """
         self.name: str = "gameRecord"
         self.version: int = 1

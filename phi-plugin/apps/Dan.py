@@ -10,12 +10,11 @@ from nonebot_plugin_uninfo import Uninfo
 from zhenxun.services.log import logger
 
 from ..config import cmdhead
-from ..model.getBanGroup import getBanGroup
 from ..model.getdata import getdata
 from ..model.getSave import getSave
 from ..model.send import send
 from ..model.Vika import Vika
-from ..utils import to_dict
+from ..utils import can_be_call, to_dict
 
 read = "https://www.bilibili.com/read/cv27354116"
 sheet = "https://f.kdocs.cn/g/fxsg4EM2/"
@@ -35,22 +34,19 @@ danupdate = on_alconna(
     Alconna(rf"re:{recmdhead}\s*(Dan|dan)\s*update"),
     block=True,
     priority=5,
-    rule=is_enable,
+    rule=is_enable & can_be_call("danupdate"),
 )
 
 dan = on_alconna(
     Alconna(rf"re:{recmdhead}\s*(Dan|dan)", Args["name?", str, ""]),
     block=True,
     priority=5,
-    rule=is_enable,
+    rule=is_enable & can_be_call("dan"),
 )
 
 
 @dan.handle()
 async def _(session: Uninfo, name: Match[str]):
-    if await getBanGroup.get(session, "dan"):
-        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！", True)
-        return
     _name = name.result if name.available else ""
     if not _name:
         dan = await getSave.getDan(session.user.id, True)
@@ -104,9 +100,6 @@ async def _(session: Uninfo, name: Match[str]):
 
 @danupdate.handle()
 async def _(session: Uninfo):
-    if await getBanGroup.get(session, "danupdate"):
-        await send.sendWithAt("这里被管理员禁止使用这个功能了呐QAQ！", True)
-        return
     # 检查是否绑定并提示
     save = await send.getsaveResult(session)
     if not save:

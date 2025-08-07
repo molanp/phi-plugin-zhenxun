@@ -1,4 +1,14 @@
-Level: list[str] = [
+from typing import Literal
+
+Level: list[
+    Literal[
+        "EZ",
+        "HD",
+        "IN",
+        "AT",
+        "LEGACY",
+    ]
+] = [
     "EZ",
     "HD",
     "IN",
@@ -6,7 +16,16 @@ Level: list[str] = [
     "LEGACY",
 ]
 """难度映射"""
-LevelNum = {
+LevelNum: dict[
+    Literal[
+        "EZ",
+        "HD",
+        "IN",
+        "AT",
+        "LEGACY",
+    ],
+    int,
+] = {
     "EZ": 0,
     "HD": 1,
     "IN": 2,
@@ -14,5 +33,5 @@ LevelNum = {
     "LEGACY": 4,
 }
 
-MAX_DIFFICULTY = 17.6
+MAX_DIFFICULTY: float = 17.6
 """最大难度"""
