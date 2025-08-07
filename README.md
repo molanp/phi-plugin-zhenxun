@@ -165,5 +165,8 @@
 
 ## 💕 感谢
 
-- [phi-plugin](https://github.com/Catrong/phi-plugin) 适用于 Yunzai-Bot V3 的 phigros 辅助插件，支持查询分数信息等功能，以及猜曲目等小游戏
+- [Catrong/phi-plugin](https://github.com/Catrong/phi-plugin) 适用于 Yunzai-Bot V3 的 phigros 辅助插件，支持查询分数信息等功能，以及猜曲目等小游戏
 - [@Windows10555](https://github.com/Windows10555) LOGO 后期处理
+- [nonebot/nonebot2](https://github.com/nonebot/nonebot2) 跨平台 Python 异步机器人框架
+- [zhenxun-org/zhenxun_bot](https://github.com/zhenxun-org/zhenxun_bot) 基于 Nonebot2 开发，实现多平台适配和多Bot管理的，非常可爱的绪山真寻Bot
+- [Teahouse-Studios/akari-bot](https://github.com/Teahouse-Studios/akari-bot) 茶馆群内机器人（小可）
