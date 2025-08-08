@@ -44,7 +44,6 @@ class getBanGroup:
             "list",
             "singlescore",
             "lvscore",
-            "bestn",
             "data",
             "chap",
             "suggest",
@@ -106,7 +105,7 @@ class getBanGroup:
                 | "suggest"
             ):
                 return await getBanGroup.redis(group_id, "b19")
-            case "bestn" | "data":
+            case "data":
                 return await getBanGroup.redis(group_id, "wb19")
             case (
                 "song"

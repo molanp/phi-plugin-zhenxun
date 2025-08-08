@@ -38,11 +38,6 @@
                 "desc": "获取 P30 成绩图，在主题不为⌈使一颗心免于哀伤⌋时可以选择背景曲绘<br>eg1: /P30    eg2: /p30 df"
             },
             {
-                "title": "杠批比三零",
-                "eg": "杠批比三零 杠批B30",
-                "desc": "获取 B30 成绩图<br>eg1: 杠批比三零<br>eg2: 杠批B99"
-            },
-            {
                 "title": "/info",
                 "eg": "/info [背景(可选)]",
                 "desc": "获取你的个人统计信息<br>eg1: /info    eg2: /info df"
@@ -76,11 +71,6 @@
                 "title": "/lmtacc",
                 "eg": "/lmtacc <0-100>",
                 "desc": "计算筛去小于输入的acc值的成绩后的玩家RKS值 <br>eg: /lmtacc 98.5"
-            },
-            {
-                "title": "/bestN",
-                "eg": "/best <1-99>",
-                "desc": "获取文字版 B<N> 成绩，私聊获取完整版，建议私聊使用<br>eg: /best 19"
             },
             {
                 "title": "/suggest [定数] [难度] [评级]",

@@ -79,7 +79,6 @@
 | `/phi (lvsco(re)\|scolv) <定数范围> <难度>`                           | 获取区间成绩                                                                                                    |
 | `/phi chap <章节名称\|help>`                                          | 获取章节成绩                                                                                                    |
 | `/phi list <定数范围> <EZ\|HD\|IN\|AT> <NEW\|C\|B\|A\|S\|V\|FC\|PHI>` | 获取区间每首曲目的成绩                                                                                          |
-| `/phi best1(+)`                                                       | 查询文字版 b30（或更多），最高 b99                                                                              |
 | `/phi (score\|单曲成绩)xxx`                                           | 获取单曲成绩及这首歌的推分建议                                                                                  |
 | `/phi (suggest\|推分)`                                                | 获取可以让 RKS+0.01 的曲目及其所需 ACC                                                                          |
 | `/phi (ranklist\|排行榜)`                                             | 获取 RKS 排行榜                                                                                                 |
@@ -136,7 +135,7 @@
 | help      | 帮助功能                     | /help /tkhelp                                               |
 | bind      | 绑定功能                     | /bind /unbind                                               |
 | b19       | 图片查分功能                 | /pgr /update /info /list /pb30 /score /lvsco /chap /suggest |
-| wb19      | 文字查分功能                 | /data /best                                                 |
+| wb19      | 文字查分功能                 | /data                                                       |
 | song      | 图鉴功能                     | /song /ill /search /alias /rand /randclg /table             |
 | ranklist  | 排行榜功能，不会禁用用户排名 | /ranklist /godlist                                          |
 | fnc       | 小功能                       | /com /tips /lmtacc /new                                     |

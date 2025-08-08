@@ -135,7 +135,7 @@ async def _(session: Uninfo, nnum: Match[int]):
     stats = save.getStats()
     money = save.gameProgress.money
     gameuser = {
-        "avatar": getdata.idgetsong(save.gameuser.avatar) or "Introduction",
+        "avatar": getdata.idgetavatar(save.gameuser.avatar),
         "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
         "ChallengeModeRank": save.saveInfo.summary.challengeModeRank % 100,
         "rks": save.saveInfo.summary.rankingScore,
@@ -194,7 +194,7 @@ async def _(session: Uninfo, nnum: Match[int]):
     stats = save.getStats()
     money = save.gameProgress.money
     gameuser = {
-        "avatar": getdata.idgetsong(save.gameuser.avatar) or "Introduction",
+        "avatar": getdata.idgetavatar(save.gameuser.avatar),
         "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
         "ChallengeModeRank": save.saveInfo.summary.challengeModeRank % 100,
         "rks": save_b19["com_rks"],
@@ -248,7 +248,7 @@ async def _(session: Uninfo, nnum: Match[str]):
     save_b19 = await save.getB19(num)
     money = save.gameProgress.money
     gameuser = {
-        "avatar": getdata.idgetsong(save.gameuser.avatar) or "Introduction",
+        "avatar": getdata.idgetavatar(save.gameuser.avatar),
         "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
         "ChallengeModeRank": save.saveInfo.summary.challengeModeRank % 100,
         "rks": save_b19["com_rks"],
@@ -303,7 +303,7 @@ async def _(session: Uninfo, acc: Match[float]):
     stats = save.getStats()
     money = save.gameProgress.money
     gameuser = {
-        "avatar": getdata.idgetsong(save.gameuser.avatar) or "Introduction",
+        "avatar": getdata.idgetavatar(save.gameuser.avatar),
         "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
         "ChallengeModeRank": save.saveInfo.summary.challengeModeRank % 100,
         "rks": save.saveInfo.summary.rankingScore,
