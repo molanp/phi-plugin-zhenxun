@@ -26,8 +26,6 @@
 
 </details>
 
-## 关于开发进程，请查看投票 https://github.com/molanp/zhenxun_plugin_phi-plugin/discussions/1
-
 ## 长期寻求合作者共同开发
 
 ## 任务列表

@@ -1,3 +1,4 @@
 qrcode
 pycryptodome
 cn2an
+pypinyin
