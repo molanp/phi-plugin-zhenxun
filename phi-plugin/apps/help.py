@@ -8,7 +8,7 @@ import re
 from nonebot_plugin_alconna import Alconna, on_alconna
 from nonebot_plugin_uninfo import Uninfo
 
-from ..config import PluginConfig, cmdhead
+from ..config import cmdhead
 from ..model.fCompute import fCompute
 from ..model.getdata import getdata
 from ..model.getFile import readFile
@@ -36,14 +36,6 @@ tkhelp = on_alconna(
     priority=5,
     block=True,
 )
-apihelp = on_alconna(
-    Alconna(
-        rf"re:{recmdhead}\s*api(命令|帮助|菜单|help|说明|功能|指令|使用说明)",
-    ),
-    rule=can_be_call("apihelp"),
-    priority=5,
-    block=True,
-)
 
 
 @help.handle()
@@ -64,32 +56,12 @@ async def _(session: Uninfo):
 
 
 @tkhelp.handle()
-async def _(session: Uninfo):
+async def _():
     await send.sendWithAt(
         (
             "sessionToken有关帮助：\n【推荐】：扫码登录TapTap获取token\n"
             f"指令：{cmdhead} bind qrcode\n"
             "【基础方法】https://www.kdocs.cn/l/catqcMM9UR5Y\n绑定sessionToken指令：\n"
             f"{cmdhead} bind <sessionToken>"
-        ),
-    )
-
-
-@apihelp.handle()
-async def _(session: Uninfo):
-    if not PluginConfig.get("openPhiPluginApi"):
-        await send.sendWithAt("这里没有连接查分平台哦！")
-        return
-    pluginData = await getdata.getpluginData(session.user.id)
-    apiHelp = await readFile.FileReader(infoPath / "help" / "api.json")
-    await send.sendWithAt(
-        await picmodle.help(
-            {
-                "helpGroup": apiHelp,
-                "cmdHead": cmdhead,
-                "isMaster": await fCompute.is_superuser(session),
-                "background": await getdata.getill(random.choice(getInfo.illlist)),
-                "theme": pluginData.get("plugin_data", {}).get("theme") or "star",
-            }
         ),
     )

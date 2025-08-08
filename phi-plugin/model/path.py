@@ -25,9 +25,6 @@ pluginDataPath = dataPath / "pluginData"
 # 用户存档数据路径
 savePath = dataPath / "saveData"
 
-# API用户存档数据路径
-apiSavePath = dataPath / "apiSaveData"
-
 # 其他插件数据路径
 otherDataPath = dataPath / "otherData"
 

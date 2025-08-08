@@ -26,19 +26,13 @@ from ..model.getdata import getdata
 from ..model.getInfo import getInfo
 from ..model.getNotes import getNotes
 from ..model.getSave import getSave
-from ..model.getSaveFromApi import getSaveFromApi
 from ..model.getUpdateSave import getUpdateSave
-from ..model.makeRequest import makeRequest
-from ..model.makeRequestFnc import makeRequestFnc
 from ..model.send import send
 from ..models import qrCode
 from ..utils import Date, can_be_call, to_dict
 
 recmdhead = re.escape(cmdhead)
-apiMsg = (
-    "\n请注意，您尚未设置API Token！\n指令格式：\n"
-    f"{cmdhead} setApiToken <apiToken>\n更多帮助：{cmdhead} apihelp"
-)
+
 
 bind = on_alconna(
     Alconna(rf"re:{recmdhead}\s*(绑定|bind)", Args["sessionToken?", str | int, ""]),
@@ -81,50 +75,11 @@ async def _(bot, session: Uninfo, sstk: Match[str]):
         await send.sendWithAt("不要重复绑定啊喂!")
         return
     if not sessionToken:
-        apiId = re.compile(r"[0-9]{10}", re.IGNORECASE).search(param)
-        apiId = apiId[0] if apiId else None
-        if PluginConfig.get("openPhiPluginApi"):
-            result = await makeRequest.bind(
-                {
-                    **makeRequestFnc.makePlatform(session),
-                    "api_user_id": apiId,
-                }
-            )
-            if result.data.internal_id:
-                resMsg = (
-                    f"绑定成功！您的查分ID为：{result.data.internal_id}，请妥善保管嗷！"
-                )
-                if not result.data.have_api_token:
-                    resMsg += apiMsg
-                await send.sendWithAt(resMsg)
-                updateData = await getUpdateSave.getNewSaveFromApi(
-                    session, sessionToken
-                )
-                history = await getSaveFromApi.getHistory(
-                    session, ["data", "rks", "scoreHistory"]
-                )
-                await build(session, updateData, history)
-                return
-            if result.message == "未找到对应 用户":
-                await send.sendWithAt(
-                    "喂喂喂！你还没输入sessionToken呐！\n"
-                    f"扫码绑定：{cmdhead} bind qrcode\n"
-                    f"普通绑定：{cmdhead} bind <sessionToken>",
-                )
-            else:
-                await send.sendWithAt(result.message)
-                logger.error("API错误", "phi-plugin", session=session)
-                logger.error(result.message, "phi-plugin", session=session)
-        elif apiId:
-            await send.sendWithAt(
-                "这里没有连接查分平台哦！请使用sessionToken进行绑定！"
-            )
-        else:
-            await send.sendWithAt(
-                "喂喂喂！你还没输入sessionToken呐！\n"
-                f"扫码绑定：{cmdhead} bind qrcode\n"
-                f"普通绑定：{cmdhead} bind <sessionToken>",
-            )
+        await send.sendWithAt(
+            "喂喂喂！你还没输入sessionToken呐！\n"
+            f"扫码绑定：{cmdhead} bind qrcode\n"
+            f"普通绑定：{cmdhead} bind <sessionToken>",
+        )
         return
     if sessionToken == "qrcode":
         # 用户若已经触发且未绑定，则发送原来的二维码
@@ -196,37 +151,11 @@ async def _(bot, session: Uninfo, sstk: Match[str]):
             )
     if not PluginConfig.get("isGuild"):
         await send.sendWithAt("正在绑定，请稍等一下哦！\n >_<", recallTime=5)
-    if PluginConfig.get("openPhiPluginApi"):
-        try:
-            result = await makeRequest.bind(
-                {**makeRequestFnc.makePlatform(session), "token": sessionToken}
-            )
-            if result.data.internal_id:
-                resMsg = (
-                    f"绑定成功！您的查分ID为：{result.data.internal_id}，请妥善保管嗷！"
-                )
-                if not result.data.have_api_token:
-                    resMsg += apiMsg
-                await send.sendWithAt(resMsg)
-                updateData = await getUpdateSave.getNewSaveFromApi(
-                    session, sessionToken
-                )
-                history = await getSaveFromApi.getHistory(
-                    session, ["data", "rks", "scoreHistory"]
-                )
-                await build(session, updateData, history)
-        except Exception as e:
-            await send.sendWithAt(
-                f"{e}\n从API获取存档失败，本次绑定将不上传至查分平台QAQ！"
-            )
-            logger.error("API错误", "phi-plugin", e=e)
-        return
     await send.sendWithAt(
         "请注意保护好自己的sessionToken呐！如果需要获取已绑定的sessionToken可以私聊发送"
         f"{cmdhead} sessionToken 哦！",
         recallTime=10,
     )
-    # with contextlib.suppress(Exception):
     updateData = await getUpdateSave.getNewSaveFromLocal(session, sessionToken)
     history = await getSave.getHistory(session.user.id)
     await build(session, updateData, history)
@@ -234,19 +163,6 @@ async def _(bot, session: Uninfo, sstk: Match[str]):
 
 @update.handle()
 async def _(session: Uninfo):
-    if PluginConfig.get("openPhiPluginApi"):
-        try:
-            updateData = await getUpdateSave.getNewSaveFromApi(session)
-            history = await getSaveFromApi.getHistory(
-                session, ["data", "rks", "scoreHistory"]
-            )
-            await build(session, updateData, history)
-            return
-        except Exception as e:
-            await send.sendWithAt(
-                f"{e}\n从API获取存档失败，本次更新将使用本地数据QAQ！",
-            )
-            logger.error("API错误", "phi-plugin", e=e)
     sessionToken = await getSave.get_user_token(session.user.id)
     if not sessionToken:
         await send.sendWithAt(
@@ -272,7 +188,7 @@ async def _(session: Uninfo):
 async def _(session: Uninfo):
     if not await getSave.get_user_token(
         session.user.id
-    ) and not await getSaveFromApi.get_user_apiId(session.user.id):
+    ):
         await send.sendWithAt("没有找到你的存档信息嗷！")
         return
     ensure = await prompt(
@@ -282,8 +198,6 @@ async def _(session: Uninfo):
         flag = True
         try:
             await getSave.delSave(session.user.id)
-            if PluginConfig.get("openPhiPluginApi"):
-                await getSaveFromApi.delSave(session)
             await getNotes.delNotesData(session.user.id)
         except Exception as e:
             await send.sendWithAt(f"解绑失败QAQ！\n错误信息：{type(e)}: {e}")

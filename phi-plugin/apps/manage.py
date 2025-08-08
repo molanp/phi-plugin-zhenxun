@@ -37,7 +37,6 @@ banSetting: list[
         "sign",
         "setting",
         "dan",
-        "apiSetting",
     ]
 ] = [
     "help",
@@ -53,7 +52,6 @@ banSetting: list[
     "sign",
     "setting",
     "dan",
-    "apiSetting",
 ]
 
 

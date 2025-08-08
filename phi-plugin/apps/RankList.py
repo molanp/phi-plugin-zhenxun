@@ -8,9 +8,8 @@ from nonebot_plugin_alconna import Alconna, Args, Match, on_alconna
 from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.configs.config import BotConfig
-from zhenxun.services.log import logger
 
-from ..config import PluginConfig, cmdhead
+from ..config import cmdhead
 from ..lib.PhigrosUser import PhigrosUser
 from ..model.cls.models import UserItem
 from ..model.cls.saveHistory import Save, saveHistory
@@ -19,8 +18,6 @@ from ..model.getInfo import getInfo
 from ..model.getNotes import getNotes
 from ..model.getRksRank import getRksRank
 from ..model.getSave import getSave
-from ..model.makeRequest import makeRequest
-from ..model.makeRequestFnc import makeRequestFnc
 from ..model.picmodle import picmodle
 from ..model.send import send
 from ..utils import can_be_call, to_dict
@@ -52,45 +49,14 @@ godList = on_alconna(
 @rankList.handle()
 async def _(session: Uninfo, rank: Match[int]):
     msg = rank.result if rank.available else 0
+    rankNum = 0
     data = {
         "Title": "RankingScore排行榜",
-        "totDataNum": 0,
         "BotNick": BotConfig.self_nickname,
         "users": [],
         "me": {},
+        "totDataNum": await getRksRank.getAllRank(),
     }
-    if PluginConfig.get("openPhiPluginApi"):
-        try:
-            if msg:
-                api_ranklist = await makeRequest.getRanklistRank(request_rank=msg)
-            else:
-                api_ranklist = await makeRequest.getRanklistUser(
-                    makeRequestFnc.makePlatform(session)
-                )
-            data["totDataNum"] = api_ranklist.totDataNum
-            for item in api_ranklist.users:
-                data["users"].append(
-                    {
-                        **await makeSmallLine(item),
-                        "index": item.index,
-                        "me": api_ranklist.me,
-                    }
-                )
-            data["me"] = await makeLargeLine(
-                await Save.constructor(**api_ranklist.me.save),
-                saveHistory(api_ranklist.me.history),
-            )
-            await send.sendWithAt(
-                [
-                    f"总数据量：{data['totDataNum']}",
-                    await picmodle.common("rankingList", data),
-                ]
-            )
-            return
-        except Exception as e:
-            logger.error("API ERR", "phi-plugin:rankList", e=e)
-    rankNum = 0
-    data["totDataNum"] = await getRksRank.getAllRank()
     if msg:
         rankNum = max(min(msg, data["totDataNum"]), 1) - 1
     else:
@@ -136,16 +102,6 @@ async def _(q: Match[float]):
     if not rks:
         await send.sendWithAt(f"请输入要查询的 rks！\n格式： {cmdhead} rankfind <rks>")
         return
-    if PluginConfig.get("openPhiPluginApi"):
-        try:
-            res = await makeRequest.getRanklistRks(rks)
-            await send.sendWithAt(
-                f"当前服务器记录中一共有 {res.rksRank}"
-                f"/{res.totNum} 位玩家的 rks 大于 {rks}！"
-            )
-            return
-        except Exception as e:
-            logger.error("API ERR", "phi-plugin:rankList", e=e)
     totDataNum = await getRksRank.getAllRank()
     rank = await getRksRank.getRankByRks(rks)
     await send.sendWithAt(

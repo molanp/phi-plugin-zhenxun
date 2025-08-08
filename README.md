@@ -27,18 +27,16 @@
 </details>
 
 ## 关于开发进程，请查看投票 https://github.com/molanp/zhenxun_plugin_phi-plugin/discussions/1
+
 ## 长期寻求合作者共同开发
 
 ## 任务列表
 
 - [x] 移植依赖
-- [ ] 移植 `apiSetting`
+- [x] 移植 `apiSetting` (**已被放逐**)
 - [x] 移植 `b19`
 - [x] 移植 `Dan`
 - [x] 移植 `guessGame`
-  - [x] 移植 `guessIll`
-  - [x] 移植 `guessLetter`
-  - [x] 移植 `guessTips`
 - [x] 移植 `help`
 - [x] 移植 `jrrp`
 - [x] 移植 `manage`
@@ -46,8 +44,8 @@
 - [ ] 移植 `phisong`
 - [x] 移植 `RankList`
 - [x] 移植 `session`
-- [ ] 移植 `setting`
-- [x] 移植 `update`~~写了一句话应该也算移植吧~~
+- [x] 移植 `setting` (**不支持**)
+- [x] 移植 `update` (**不支持**)
 - [ ] 移植 `user`
 - [ ] 测试功能
 - [ ] 整理代码逻辑
@@ -168,5 +166,5 @@
 - [Catrong/phi-plugin](https://github.com/Catrong/phi-plugin) 适用于 Yunzai-Bot V3 的 phigros 辅助插件，支持查询分数信息等功能，以及猜曲目等小游戏
 - [@Windows10555](https://github.com/Windows10555) LOGO 后期处理
 - [nonebot/nonebot2](https://github.com/nonebot/nonebot2) 跨平台 Python 异步机器人框架
-- [zhenxun-org/zhenxun_bot](https://github.com/zhenxun-org/zhenxun_bot) 基于 Nonebot2 开发，实现多平台适配和多Bot管理的，非常可爱的绪山真寻Bot
+- [zhenxun-org/zhenxun_bot](https://github.com/zhenxun-org/zhenxun_bot) 基于 Nonebot2 开发，实现多平台适配和多 Bot 管理的，非常可爱的绪山真寻 Bot
 - [Teahouse-Studios/akari-bot](https://github.com/Teahouse-Studios/akari-bot) 茶馆群内机器人（小可）

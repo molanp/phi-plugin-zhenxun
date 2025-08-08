@@ -12,38 +12,9 @@ from .cls.common import Save
 from .getInfo import getInfo
 from .getNotes import getNotes
 from .getSave import getSave
-from .getSaveFromApi import getSaveFromApi
-from .makeRequest import makeRequest
-from .makeRequestFnc import makeRequestFnc
 
 
 class getUpdateSave:
-    @classmethod
-    async def getNewSaveFromApi(
-        cls, session: Uninfo, sessionToken: str | None = None
-    ) -> dict:
-        old = await getSaveFromApi.getSave(session.user.id)
-        newSaveInfo = await makeRequest.getCloudSaveInfo(
-            **{"token": sessionToken, **makeRequestFnc.makePlatform(session)}
-        )
-        if newSaveInfo.modifiedAt.iso == getattr(
-            getattr(getattr(old, "saveInfo", None), "modifiedAt", None),
-            "iso",
-            None,
-        ):
-            return {"save": old, "added_rks_notes": [0, 0]}
-        newSave = await makeRequest.getCloudSaves(
-            **{"token": sessionToken, **makeRequestFnc.makePlatform(session)}
-        )
-        await getSaveFromApi.putSave(session.user.id, newSave)
-        result = await Save().constructor(newSave)
-        await result.init()
-        await getSaveFromApi.putSave(session.user.id, to_dict(result))
-        if sessionToken:
-            await getSave.add_user_token(session.user.id, sessionToken)
-        added_rks_notes = await cls.buildingRecord(old, result, session)
-        return {"save": result, "added_rks_notes": added_rks_notes}
-
     @classmethod
     async def getNewSaveFromLocal(
         cls, session: Uninfo, sessionToken: str | None = None
@@ -99,10 +70,6 @@ class getUpdateSave:
         :return: [ks变化值，note变化值]，失败返回 false
         """
         notesData = await getNotes.getNotesData(session.user.id)
-        # 修正(我没有旧用户，不需要了)
-        # if notesData.get("update") or notesData.get("task_update"):
-        #     notesData.pop("update", None)
-        #     notesData.pop("task_update", None)
         # note数量变化
         add_money = 0
         add_money = 0

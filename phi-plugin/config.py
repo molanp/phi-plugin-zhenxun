@@ -156,16 +156,7 @@ CONFIG = (
             value="https://phiupdateinfo.pmya.xyz/",
             type=str,
             help="Phigros更新信息API地址",
-        ),
-        RegisterConfig(
-            key="openPhiPluginApi",
-            value=False,
-            type=bool,
-            help="是否启用Phigros联合查分API",
-        ),
-        RegisterConfig(
-            key="phiPluginApiUrl", value=None, type=str, help="Phigros联合查分API地址"
-        ),
+        )
     ],
 )
 
