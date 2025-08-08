@@ -3,12 +3,11 @@ phigros屁股肉帮助
 """
 
 import random
-import re
 
 from nonebot_plugin_alconna import Alconna, on_alconna
 from nonebot_plugin_uninfo import Uninfo
 
-from ..config import cmdhead
+from ..config import cmdhead, recmdhead
 from ..model.fCompute import fCompute
 from ..model.getdata import getdata
 from ..model.getFile import readFile
@@ -17,8 +16,6 @@ from ..model.path import infoPath
 from ..model.picmodle import picmodle
 from ..model.send import send
 from ..utils import can_be_call
-
-recmdhead = re.escape(cmdhead)
 
 help = on_alconna(
     Alconna(

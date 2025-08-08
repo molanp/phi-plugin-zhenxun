@@ -1,9 +1,9 @@
 from datetime import datetime
 import math
-from typing import Any, Literal
+from typing import Any
 
 from ...utils import Date, to_dict
-from ..constNum import MAX_DIFFICULTY, Level
+from ..constNum import MAX_DIFFICULTY, LevelItem
 from ..fCompute import fCompute
 from .common import Save
 from .LevelRecordInfo import LevelRecordInfo
@@ -86,7 +86,7 @@ class saveHistory:
     scoreHistory: dict[
         str,
         dict[
-            Literal["EZ", "HD", "IN", "AT", "LEGACY"],
+            LevelItem,
             list[tuple[float, int, datetime, bool]],
         ],
     ]
@@ -187,13 +187,9 @@ class saveHistory:
         for id in save.gameRecord:
             if self.scoreHistory.get(id) is None:
                 self.scoreHistory[id] = {}
-                for i, _ in enumerate(save.gameRecord.get(id, [])):
-                    # 难度映射
-                    level = Level[i]
+                for level, record in save.gameRecord.get(id, {}).items():
                     # 提取成绩
-                    now = (
-                        save.gameRecord[id][i] if i < len(save.gameRecord[id]) else None
-                    )
+                    now = record
                     if not now:
                         continue
                     now.date = save.saveInfo.modifiedAt.iso
@@ -207,9 +203,6 @@ class saveHistory:
                                 now.fc,
                             )
                         ]
-                        continue
-                    # 新存档该难度无成绩
-                    if i >= len(save.gameRecord[id]):
                         continue
                     # 本地记录日期为递增
                     for i in range(len(self.scoreHistory[id][level]) - 1, -1, -1):

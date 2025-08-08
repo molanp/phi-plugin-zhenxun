@@ -2,14 +2,12 @@
 phigros屁股肉段位
 """
 
-import re
-
 from nonebot_plugin_alconna import Alconna, Args, Image, Match, on_alconna
 from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.services.log import logger
 
-from ..config import cmdhead
+from ..config import cmdhead, recmdhead
 from ..model.getdata import getdata
 from ..model.getSave import getSave
 from ..model.send import send
@@ -19,7 +17,6 @@ from ..utils import can_be_call, to_dict
 read = "https://www.bilibili.com/read/cv27354116"
 sheet = "https://f.kdocs.cn/g/fxsg4EM2/"
 word = getdata.getimg("dan_code")
-recmdhead = re.escape(cmdhead)
 cancanneed = bool(Vika.PhigrosDan)
 
 if not cancanneed:
@@ -38,7 +35,7 @@ danupdate = on_alconna(
 )
 
 dan = on_alconna(
-    Alconna(rf"re:{recmdhead}\s*(Dan|dan)", Args["name?", str, ""]),
+    Alconna(rf"re:{recmdhead}\s*(Dan|dan)", Args["name?", str]),
     block=True,
     priority=5,
     rule=is_enable & can_be_call("dan"),
@@ -47,7 +44,7 @@ dan = on_alconna(
 
 @dan.handle()
 async def _(session: Uninfo, name: Match[str]):
-    _name = name.result if name.available else ""
+    _name = name.result if name.available else None
     if not _name:
         dan = await getSave.getDan(session.user.id, True)
         if dan:

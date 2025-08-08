@@ -2,7 +2,6 @@
 phigros屁股肉管理
 """
 
-import re
 from typing import Literal
 
 from nonebot.permission import SUPERUSER
@@ -14,7 +13,7 @@ from nonebot_plugin_waiter import prompt
 from zhenxun.services.log import logger
 from zhenxun.utils.rules import admin_check, ensure_group
 
-from ..config import cmdhead
+from ..config import recmdhead
 from ..model.getBackup import getBackup
 from ..model.getRksRank import getRksRank
 from ..model.getSave import getSave
@@ -54,8 +53,6 @@ banSetting: list[
     "dan",
 ]
 
-
-recmdhead = re.escape(cmdhead)
 
 restartpu = on_alconna(
     Alconna(rf"re:{recmdhead}\s*repu"), priority=5, block=True, permission=SUPERUSER

@@ -20,10 +20,10 @@ from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.services.log import logger
 
-from ..config import PluginConfig, cmdhead
+from ..config import PluginConfig, cmdhead, recmdhead
 from ..lib.PhigrosUser import PhigrosUser
 from ..model.cls.LevelRecordInfo import LevelRecordInfo
-from ..model.constNum import LevelNum
+from ..model.constNum import Level, LevelNum
 from ..model.fCompute import fCompute
 from ..model.getdata import getdata
 from ..model.getInfo import getInfo
@@ -35,8 +35,6 @@ from ..utils import can_be_call, to_dict
 
 ChallengeModeName = ["白", "绿", "蓝", "红", "金", "彩"]
 
-Level: list = ["EZ", "HD", "IN", "AT", None]  # 存档的难度映射
-recmdhead = re.escape(cmdhead)
 
 b19 = on_alconna(
     Alconna(
@@ -134,10 +132,10 @@ async def _(session: Uninfo, nnum: Match[int]):
             "正在生成图片，请稍等一下哦！\n//·/w\\·\\\\", recallTime=5
         )
     save_b19 = await save.getB19(num)
-    stats = await save.getStats()
+    stats = save.getStats()
     money = save.gameProgress.money
     gameuser = {
-        "avatar": await getdata.idgetsong(save.gameuser.avatar) or "Introduction",
+        "avatar": getdata.idgetsong(save.gameuser.avatar) or "Introduction",
         "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
         "ChallengeModeRank": save.saveInfo.summary.challengeModeRank % 100,
         "rks": save.saveInfo.summary.rankingScore,
@@ -193,10 +191,10 @@ async def _(session: Uninfo, nnum: Match[int]):
         await send.sendWithAt("p30生成失败了...", True)
         return
     save_b19 = await save.getBestWithLimit(num, [{"type": "acc", "value": [100, 100]}])
-    stats = await save.getStats()
+    stats = save.getStats()
     money = save.gameProgress.money
     gameuser = {
-        "avatar": await getdata.idgetsong(save.gameuser.avatar) or "Introduction",
+        "avatar": getdata.idgetsong(save.gameuser.avatar) or "Introduction",
         "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
         "ChallengeModeRank": save.saveInfo.summary.challengeModeRank % 100,
         "rks": save_b19["com_rks"],
@@ -250,7 +248,7 @@ async def _(session: Uninfo, nnum: Match[str]):
     save_b19 = await save.getB19(num)
     money = save.gameProgress.money
     gameuser = {
-        "avatar": await getdata.idgetsong(save.gameuser.avatar) or "Introduction",
+        "avatar": getdata.idgetsong(save.gameuser.avatar) or "Introduction",
         "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
         "ChallengeModeRank": save.saveInfo.summary.challengeModeRank % 100,
         "rks": save_b19["com_rks"],
@@ -302,10 +300,10 @@ async def _(session: Uninfo, acc: Match[float]):
     save_b19 = await save.getBestWithLimit(
         nnum, [{"type": "acc", "value": [_acc, 100]}]
     )
-    stats = await save.getStats()
+    stats = save.getStats()
     money = save.gameProgress.money
     gameuser = {
-        "avatar": await getdata.idgetsong(save.gameuser.avatar) or "Introduction",
+        "avatar": getdata.idgetsong(save.gameuser.avatar) or "Introduction",
         "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
         "ChallengeModeRank": save.saveInfo.summary.challengeModeRank % 100,
         "rks": save.saveInfo.summary.rankingScore,
@@ -329,12 +327,7 @@ async def _(session: Uninfo, acc: Match[float]):
         "spInfo": f"ACC is limited to {_acc}%",
     }
     res: list = [await picmodle.b19(to_dict(data))]
-    if (
-        abs(
-            save_b19["com_rks"] - save.saveInfo.summary.rankingScore
-        )
-        > 0.1
-    ):
+    if abs(save_b19["com_rks"] - save.saveInfo.summary.rankingScore) > 0.1:
         res.append(
             f"计算rks: {save_b19['com_rks']}\n"
             f"存档rks:{save.saveInfo.summary.rankingScore}"
@@ -360,7 +353,7 @@ async def _(session: Uninfo, picversion: Match[int], song: Match[str]):
         return
     _song = __song[0]
     Record = save.gameRecord
-    songId = await getInfo.SongGetId(_song)
+    songId = getInfo.SongGetId(_song)
     ans = Record.get(songId) if songId else None
     if not ans:
         await send.sendWithAt(
@@ -373,7 +366,7 @@ async def _(session: Uninfo, picversion: Match[int], song: Match[str]):
     data = {
         "songName": _song,
         "PlayerId": save.saveInfo.PlayerId,
-        "avatar": await getdata.idgetavatar(session.user.id),
+        "avatar": getdata.idgetavatar(session.user.id),
         "Rks": round(save.saveInfo.summary.rankingScore, 4),
         "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
         "ChallengeModeRank": save.saveInfo.summary.challengeModeRank % 100,
@@ -386,44 +379,44 @@ async def _(session: Uninfo, picversion: Match[int], song: Match[str]):
     assert songsinfo is not None
     match _picversion:
         case 2:
-            for i, a in enumerate(ans):
+            for level, a in ans.items():
                 if a:
                     a.acc = round(a.acc, 4)
                     a.rks = round(a.rks, 4)
-                    data[Level[i]] = {
-                        **to_dict(ans[i]),
+                    data[level] = {
+                        **to_dict(a),
                         "suggest": save.getSuggest(
                             songId,
-                            i,
+                            level,
                             4,
-                            songsinfo.chart[Level[i]].difficulty,
+                            songsinfo.chart[level].difficulty,
                         ),
                     }
                 else:
-                    data[Level[i]] = {"Rating": "NEW"}
+                    data[level] = {"Rating": "NEW"}
             await send.sendWithAt(await picmodle.score(data, 2))
         case _:
-            for i, _ in enumerate(Level):
-                if not songsinfo.chart.get(Level[i]):
+            for level in Level:
+                if level not in songsinfo.chart:
                     break
-                data["scoreData"][Level[i]] = {
-                    "difficulty": songsinfo.chart[Level[i]].difficulty
+                data["scoreData"][level] = {
+                    "difficulty": songsinfo.chart[level].difficulty
                 }
-            for i, a in enumerate(ans):
+            for level, a in ans.items():
                 if a:
                     a.acc = round(a.acc, 4)
                     a.rks = round(a.rks, 4)
-                    data[Level[i]] = {
-                        **to_dict(ans[i]),
+                    data[level] = {
+                        **to_dict(a),
                         "suggest": save.getSuggest(
                             songId,
-                            i,
+                            level,
                             4,
-                            songsinfo.chart[Level[i]].difficulty,
+                            songsinfo.chart[level].difficulty,
                         ),
                     }
                 else:
-                    data[Level[i]] = {"Rating": "NEW"}
+                    data[level] = {"Rating": "NEW"}
             await send.sendWithAt(await picmodle.score(data, 1), True)
 
 
@@ -444,7 +437,7 @@ async def _(session: Uninfo, input: Match[tuple[str]]):
     # 计算
     data = []
     for id in Record:
-        song = await getdata.idgetsong(id)
+        song = getdata.idgetsong(id)
         if not song:
             logger.warning(f"曲目无信息: {id}", "phi-plugin")
             continue
@@ -457,14 +450,15 @@ async def _(session: Uninfo, input: Match[tuple[str]]):
             difficulty = info.chart[Level[lv]].difficulty
             assert isinstance(difficulty, float)
             if range_[0] <= difficulty and difficulty <= range_[1] and isask[lv]:
-                rlv = record[lv]
+                level = LevelNum[lv]
+                rlv = record[level]
                 if not rlv and not scoreAsk["NEW"]:
                     continue
                 if rlv and not scoreAsk[rlv.Rating.upper()]:
                     continue
                 if not rlv:
                     rlv = LevelRecordInfo()
-                rlv.suggest = save.getSuggest(id, lv, 4, difficulty)
+                rlv.suggest = save.getSuggest(id, level, 4, difficulty)
                 if "无" in rlv.suggest:
                     continue
                 data.append(
@@ -552,17 +546,16 @@ async def _(session: Uninfo, song: Match):
             info = await getInfo.info(_song, True)
             assert info is not None
             for level in info.chart:
-                i = LevelNum[level]
                 # 跳过旧谱
                 if not level:
                     continue
-                Record = songRecord[i] if i < len(songRecord) else None
+                Record = None if level not in songRecord else songRecord[level]
                 song_box[_song]["chart"][level] = {
                     "difficulty": info.chart[level].difficulty,
                     "Rating": getattr(Record, "Rating", "NEW"),
                     "suggest": save.getSuggest(
                         id,
-                        i,
+                        level,
                         4,
                         info.chart[level].difficulty,  # type: ignore
                     ),

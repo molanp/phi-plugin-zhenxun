@@ -1,23 +1,40 @@
-from typing import Any
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Literal
 
 from pydantic import BaseModel
 
 from ..utils import to_dict
+from .constNum import LevelItem
 from .getFile import readFile
 from .getSave import getSave
 from .path import pluginDataPath, savePath
 
 
-class pluginDataDetail(BaseModel):
+class taskDataDetail(BaseModel):
+    rank: LevelItem
+    type: Literal["score", "acc"]
+    value: float = 0.0
+
+
+class taskData(BaseModel):
+    song: str
+    reward: int = 0
+    finished: bool = False
+    illustration: str | Path = ""
+    request: taskDataDetail
+
+
+class NotesDataDetail(BaseModel):
     money: int = 0
-    sign_in: str = ""
-    task_time: str = ""
-    task: list = []
+    sign_in: datetime = datetime.fromtimestamp(0)
+    task_time: datetime = datetime.fromtimestamp(0)
+    task: list[taskData] = []
     theme: str = "star"
 
 
-class pluginData(BaseModel):
-    plugin_data: pluginDataDetail = pluginDataDetail()
+class NotesData(BaseModel):
+    plugin_data: NotesDataDetail = NotesDataDetail()
 
 
 class getNotes:
@@ -37,7 +54,7 @@ class getNotes:
         return {}
 
     @staticmethod
-    async def putPluginData(user_id: str, data: dict) -> bool:
+    async def putPluginData(user_id: str, data: dict[str, Any]) -> bool:
         """保存 user_id 对应的娱乐数据"""
         session = await getSave.get_user_token(user_id)
         if data.get("rks") is not None:
@@ -54,7 +71,7 @@ class getNotes:
         return await readFile.SetFile(pluginDataPath / f"{user_id}_.json", data)
 
     @staticmethod
-    async def getNotesData(user_id: str, islock: bool = False) -> pluginData:
+    async def getNotesData(user_id: str, islock: bool = False) -> NotesData:
         """
         获取并初始化用户数据
 
@@ -63,12 +80,12 @@ class getNotes:
         """
         data = await readFile.FileReader(pluginDataPath / f"{user_id}_.json")
         if not data or not data.get("plugin_data"):
-            return pluginData()
+            return NotesData()
         else:
-            return pluginData(**data.get("plugin_data"))
+            return NotesData(**data.get("plugin_data"))
 
     @staticmethod
-    async def putNotesData(user_id: str, data: dict) -> bool:
+    async def putNotesData(user_id: str, data: dict[str, Any]) -> bool:
         """保存用户数据"""
         return await readFile.SetFile(pluginDataPath / f"{user_id}_.json", data)
 

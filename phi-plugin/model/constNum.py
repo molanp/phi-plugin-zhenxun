@@ -1,37 +1,30 @@
 from typing import Literal
 
-Level: list[
-    Literal[
-        "EZ",
-        "HD",
-        "IN",
-        "AT",
-        "LEGACY",
-    ]
-] = [
+LevelItem = Literal[
     "EZ",
     "HD",
     "IN",
     "AT",
     "LEGACY",
 ]
-"""难度映射"""
-LevelNum: dict[
-    Literal[
-        "EZ",
-        "HD",
-        "IN",
-        "AT",
-        "LEGACY",
-    ],
-    int,
-] = {
-    "EZ": 0,
-    "HD": 1,
-    "IN": 2,
-    "AT": 3,
-    "LEGACY": 4,
+
+Level: list[LevelItem] = [
+    "EZ",
+    "HD",
+    "IN",
+    "AT",
+    "LEGACY",
+]
+"""难度列表"""
+
+LevelNum: dict[int, LevelItem] = {
+    0: "EZ",
+    1: "HD",
+    2: "IN",
+    3: "AT",
+    4: "LEGACY",
 }
+"""难度映射"""
 
 MAX_DIFFICULTY: float = 17.6
 """最大难度"""

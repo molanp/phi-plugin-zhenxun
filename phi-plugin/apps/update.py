@@ -2,17 +2,13 @@
 phi-plugin更新
 """
 
-import re
-
 from nonebot.permission import SUPERUSER
 from nonebot_plugin_alconna import Alconna, on_alconna
 
 from zhenxun.utils.repo_utils.utils import check_git
 
-from ..config import cmdhead
+from ..config import recmdhead
 from ..model.send import send
-
-recmdhead = re.escape(cmdhead)
 
 update = on_alconna(
     Alconna(rf"re:{recmdhead}\s*(强制|qz)?(更新|gx)"),
@@ -22,7 +18,7 @@ update = on_alconna(
 )
 
 ill_update = on_alconna(
-    Alconna(rf"re:{cmdhead}\s*(下载|更新|gx|down|up)\s*(曲绘|ill)"),
+    Alconna(rf"re:{recmdhead}\s*(下载|更新|gx|down|up)\s*(曲绘|ill)"),
     priority=5,
     block=True,
     permission=SUPERUSER,

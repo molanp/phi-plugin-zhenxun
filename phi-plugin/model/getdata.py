@@ -13,7 +13,7 @@ from ..utils import to_dict
 from .cls.common import Save
 from .cls.models import LevelData
 from .cls.SongsInfo import SongsInfoObject
-from .constNum import Level
+from .constNum import LevelItem
 from .getFile import SUPPORTED_FORMATS, readFile
 from .getInfo import getInfo
 from .getNotes import getNotes
@@ -270,38 +270,27 @@ class getdata:
         history.update(now)
         await getSave.putHistory(session.user.id, to_dict(history))
         pluginData = await getNotes.getNotesData(session.user.id)
-        # 修正
-        # 移植不需要考虑
-        # if pluginData.get("update") or pluginData.get("task_update"):
-        #     pluginData.pop("update", None)
-        #     pluginData.pop("task_update", None)
         # note数量变化
         add_money = 0
         task = pluginData.plugin_data.task
         if task:
             for id in now.gameRecord:
-                for i, _ in enumerate(task):
-                    if not task[i]:
-                        continue
-                    if (
-                        not task[i]["finished"]
-                        and getInfo.songsid.get(id) == task[i]["song"]
-                    ):
-                        level = Level.index(task[i]["request"]["rank"])
-                        temp = now.gameRecord[id][level]
+                for t in task:
+                    if not t.finished and getInfo.idgetsong(id) == t.song:
+                        temp = now.gameRecord[id][t.request.rank]
                         if not temp:
                             continue
-                        match task[i]["request"]["type"]:
+                        match t.request.type:
                             case "acc":
-                                if temp.acc >= task[i]["request"]["value"]:
-                                    pluginData.plugin_data.task[i]["finished"] = True
-                                    pluginData.plugin_data.money += task[i]["reward"]
-                                    add_money += task[i]["reward"]
+                                if temp.acc >= t.request.value:
+                                    t.finished = True
+                                    pluginData.plugin_data.money += t.reward
+                                    add_money += t.reward
                             case "score":
-                                if temp.score >= task[i]["request"]["value"]:
-                                    pluginData.plugin_data.task[i]["finished"] = True
-                                    pluginData.plugin_data.money += task[i]["reward"]
-                                    add_money += task[i]["reward"]
+                                if temp.score >= t.request.value:
+                                    t.finished = True
+                                    pluginData.plugin_data.money += t.reward
+                                    add_money += t.reward
         await getdata.putpluginData(session.user.id, to_dict(pluginData))
         # rks变化
         add_rks = (
@@ -368,34 +357,34 @@ class getdata:
         return await getInfo.getill(name, kind)
 
     @staticmethod
-    async def idgetavatar(id: str):
+    def idgetavatar(id: str):
         """
         通过id获得头像文件名称
 
         :param id: id
         :return: file name
         """
-        return await getInfo.idgetavatar(id)
+        return getInfo.idgetavatar(id)
 
     @staticmethod
-    async def idgetsong(id: str) -> str | None:
+    def idgetsong(id: str) -> str | None:
         """
         根据曲目id获取原名
 
         :param str id: 曲目id
         :return: 原名
         """
-        return await getInfo.idgetsong(id)
+        return getInfo.idgetsong(id)
 
     @staticmethod
-    async def SongGetId(song: str) -> str | None:
+    def SongGetId(song: str) -> str | None:
         """
         通过原曲曲目获取曲目id
 
         :param str song: 原曲曲名
         :return: 曲目id
         """
-        return await getInfo.SongGetId(song)
+        return getInfo.SongGetId(song)
 
     @staticmethod
     def getrks(acc: float, difficulty: int):
@@ -435,7 +424,7 @@ class getdata:
 
 def add_new_score(
     pluginData: dict,
-    level: Literal["EZ", "HD", "IN", "AT", "LEGACY"],
+    level: LevelItem,
     nowRecord: LevelData,
 ) -> int:
     """

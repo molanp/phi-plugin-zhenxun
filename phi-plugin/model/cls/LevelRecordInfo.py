@@ -44,7 +44,7 @@ class LevelRecordInfo(BaseModel):
         :param rank: 难度
         """
         data_ = {"fc": data["fc"], "score": data["score"], "acc": data["acc"], "id": id}
-        song = await getInfo.idgetsong(id)
+        song = getInfo.idgetsong(id)
         info = await getInfo.info(song, True) if song else None
         data_["rank"] = (
             getInfo.Level[rank] if isinstance(rank, int) else rank

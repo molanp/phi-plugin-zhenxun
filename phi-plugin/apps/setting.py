@@ -1,14 +1,11 @@
 """phigros屁股肉设置"""
 
-import re
 from typing import Any
 
 from nonebot.permission import SUPERUSER
 from nonebot_plugin_alconna import Alconna, Args, on_alconna
 
-from ..config import cmdhead
-
-recmdhead = re.escape(cmdhead)
+from ..config import recmdhead
 
 set = on_alconna(
     Alconna(rf"re:{recmdhead}\s*(设置|set)", Args["name", str]["value", Any]),

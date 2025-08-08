@@ -2,16 +2,14 @@
 
 import contextlib
 import random
-import re
 
 from nonebot_plugin_alconna import Alconna, Args, Match, on_alconna
 from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.configs.config import BotConfig
 
-from ..config import cmdhead
+from ..config import cmdhead, recmdhead
 from ..lib.PhigrosUser import PhigrosUser
-from ..model.cls.models import UserItem
 from ..model.cls.saveHistory import Save, saveHistory
 from ..model.fCompute import fCompute
 from ..model.getInfo import getInfo
@@ -22,17 +20,15 @@ from ..model.picmodle import picmodle
 from ..model.send import send
 from ..utils import can_be_call, to_dict
 
-recmdhead = re.escape(cmdhead)
-
 rankList = on_alconna(
-    Alconna(rf"re:{recmdhead}\s*(排行榜|ranklist)", Args["rank", int, 0]),
+    Alconna(rf"re:{recmdhead}\s*(排行榜|ranklist)", Args["rank?", int]),
     rule=can_be_call("rankList"),
     priority=5,
     block=True,
 )
 
 rankfind = on_alconna(
-    Alconna(rf"re:{recmdhead}\s*(查询排名|rankfind)", Args["q?", float, 0]),
+    Alconna(rf"re:{recmdhead}\s*(查询排名|rankfind)", Args["q?", float]),
     rule=can_be_call("rankList"),
     priority=5,
     block=True,
@@ -145,7 +141,7 @@ async def makeLargeLine(save: Save, history: saveHistory):
     lineData = history.getRksAndDataLine()
     for index, item in enumerate(lineData.rks_date):
         item = fCompute.formatDateToNow(item)
-        lineData.rks_date[index] = item  # pyright: ignore[reportArgumentType, reportCallIssue]
+        lineData.rks_date[index] = item # pyright: ignore[reportCallIssue, reportArgumentType]
     clgHistory = []
     clgHistory.extend(
         {
@@ -165,7 +161,7 @@ async def makeLargeLine(save: Save, history: saveHistory):
     }
     return {
         "backgroundurl": await getInfo.getBackground(save.gameuser.background),
-        "avatar": await getInfo.idgetavatar(save.saveInfo.summary.avatar)
+        "avatar": getInfo.idgetavatar(save.saveInfo.summary.avatar)
         or "Introduction",
         "playerId": fCompute.convertRichText(save.saveInfo.PlayerId),
         "rks": save.saveInfo.summary.rankingScore,
@@ -181,13 +177,13 @@ async def makeLargeLine(save: Save, history: saveHistory):
     }
 
 
-async def makeSmallLine(save: UserItem | Save):
+async def makeSmallLine(save: Save):
     """创建一个简略对象"""
     if not save:
         return {"playerId": "无效用户"}
     return {
         "backgroundurl": await getInfo.getBackground(save.gameuser.background),
-        "avatar": await getInfo.idgetavatar(save.saveInfo.summary.avatar)
+        "avatar": getInfo.idgetavatar(save.saveInfo.summary.avatar)
         or "Introduction",
         "playerId": fCompute.convertRichText(save.saveInfo.PlayerId),
         "rks": save.saveInfo.summary.rankingScore,

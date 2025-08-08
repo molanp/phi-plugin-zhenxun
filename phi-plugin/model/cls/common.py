@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from zhenxun.services.log import logger
 
 from ...utils import Date
+from ..constNum import LevelItem, LevelNum
 from ..fCompute import fCompute
 from ..getInfo import getInfo
 from ..getRksRank import getRksRank
@@ -232,7 +233,9 @@ class Save:
     """官方存档版本号"""
     gameProgress: GameProgress
     gameuser: GameUser
-    gameRecord: dict[str, list["LevelRecordInfo | None"]]
+    gameRecord: dict[
+        str, dict[Literal["EZ", "HD", "IN", "AT", "LEGACY"], "LevelRecordInfo | None"]
+    ]
     sortedRecord: list["LevelRecordInfo"] = []  # noqa: RUF012
     B19List: B19Result
     b19_rks: float
@@ -259,13 +262,9 @@ class Save:
             )
         self.gameRecord = {}
         for id in data.get("gameRecord", {}):
-            self.gameRecord[id] = []
-            for i, _ in enumerate(data["gameRecord"][id]):
-                level = i
-                record = data["gameRecord"][id][i]
+            self.gameRecord[id] = {}
+            for level, record in data["gameRecord"][id].items():
                 if not record:
-                    while len(self.gameRecord[id]) <= level:
-                        self.gameRecord[id].append(None)
                     self.gameRecord[id][level] = None
                     continue
 
@@ -286,7 +285,7 @@ class Save:
                         raise ValueError(
                             "您的存档 acc 异常，该 token 已禁用"
                             f"，如有异议请联系机器人管理员。\n{self.sessionToken}\n{id}"
-                            "{level} {record['acc']}"
+                            f"{level} {record['acc']}"
                         )
                     if record["score"] > 1000000 or record["score"] < 0:
                         logger.error(
@@ -296,11 +295,8 @@ class Save:
                         raise ValueError(
                             "您的存档 score 异常，该 token 已禁用，"
                             f"如有异议请联系机器人管理员。\n{self.sessionToken}\n{id}"
-                            " {level} {record['score']}"
+                            f" {level} {record['score']}"
                         )
-                # 保持和 JS 一致，直接赋值到指定下标
-                while len(self.gameRecord[id]) <= level:
-                    self.gameRecord[id].append(None)
                 self.gameRecord[id][level] = await LevelRecordInfo.init(
                     record, id, level
                 )
@@ -321,9 +317,9 @@ class Save:
         """
 
         err = []
-        for song_id in self.gameRecord:
-            if not await getInfo.idgetsong(song_id):
-                err.append(song_id)
+        err.extend(
+            song_id for song_id in self.gameRecord if not getInfo.idgetsong(song_id)
+        )
         return err
 
     def getRecord(self) -> list[LevelRecordInfo]:
@@ -335,13 +331,13 @@ class Save:
         if self.sortedRecord:
             return self.sortedRecord
         sortedRecord: list[LevelRecordInfo] = []
-        for song_id, record_list in self.gameRecord.items():
-            for level_idx, tem in enumerate(record_list):
-                if level_idx == 4:
+        for record_list in self.gameRecord.values():
+            for level, record in record_list.items():
+                if level == "LEGACY":
                     break
-                if not tem or not getattr(tem, "score", None):
+                if not record or not record.score:
                     continue
-                sortedRecord.append(tem)
+                sortedRecord.append(record)
         sortedRecord.sort(key=lambda x: -x.rks)
         self.sortedRecord = sortedRecord
         return sortedRecord
@@ -355,14 +351,14 @@ class Save:
         :return: 按 rks 降序排列的成绩列表
         """
         record = []
-        for song_id, record_list in self.gameRecord.items():
-            for level_idx, tem in enumerate(record_list):
-                if level_idx == 4:
+        for record_list in self.gameRecord.values():
+            for level, r in record_list.items():
+                if level == "LEGACY":
                     break
-                if not tem:
+                if not r:
                     continue
-                if tem.acc >= acc:
-                    record.append(tem)
+                if r.acc >= acc:
+                    record.append(r)
 
         # 按 rks 降序排序
         record.sort(key=lambda x: -x.rks)
@@ -387,32 +383,37 @@ class Save:
         :return: 错误信息字符串
         """
         error = ""
-        Level = ["EZ", "HD", "IN", "AT", "LEGACY"]
 
         for song_id, records in self.gameRecord.items():
-            for level_idx, score in enumerate(records):
-                if not score:
+            for level, record in records.items():
+                if not record:
                     continue
 
-                acc = score.acc
-                score_val = score.score
-                fc = score.fc
+                acc = record.acc
+                score_val = record.score
+                fc = record.fc
                 if acc < 0 or acc > 100 or score_val < 0 or score_val > 1000000:
-                    error += f"\n{song_id} {Level[level_idx]} {fc} {acc:.2f} {score_val} 非法的成绩"  # noqa: E501
+                    error += (
+                        f"\n{song_id} {level} {fc} {acc:.2f} {score_val} 非法的成绩"
+                    )
                 if not fc and (score_val >= 1000000 or acc >= 100):
-                    error += f"\n{song_id} {Level[level_idx]} {fc} {acc:.2f} {score_val} 不符合预期的值"  # noqa: E501
+                    error += (
+                        f"\n{song_id} {level} {fc} {acc:.2f} {score_val} 不符合预期的值"
+                    )
                 if (score_val >= 1000000 and acc < 100) or (
                     score_val < 1000000 and acc >= 100
                 ):
-                    error += f"\n{song_id} {Level[level_idx]} {fc} {acc:.2f} {score_val} 成绩不自洽"  # noqa: E501
+                    error += (
+                        f"\n{song_id} {level} {fc} {acc:.2f} {score_val} 成绩不自洽"
+                    )
 
         return error
 
-    def getSongsRecord(self, id: str) -> list[LevelRecordInfo | None]:
+    def getSongsRecord(self, id: str) -> dict[LevelItem, LevelRecordInfo | None]:
         """
         :param str id: 曲目id
         """
-        return record_list if (record_list := self.gameRecord.get(id)) else []
+        return record_list if (record_list := self.gameRecord.get(id)) else {}
 
     async def getB19(self, num: int) -> B19Result:
         """
@@ -584,10 +585,12 @@ class Save:
             "com_rks": com_rks,
         }
 
-    def getSuggest(self, id: str | None, lv: int, count: int, difficulty: float) -> str:
+    def getSuggest(
+        self, id: str | None, rank: LevelItem, count: int, difficulty: float
+    ) -> str:
         """
         :param id: id
-        :param lv: lv
+        :param rank: 难度等级
         :param count: 保留位数
         :param difficulty: difficulty
         :return: 推分建议
@@ -599,20 +602,17 @@ class Save:
             self.b19_rks = record[26].rks if len(record) > 26 else 0
             acc_record = self.findAccRecord(100, True)
             self.b0_rks = acc_record[0].rks if acc_record else None
-        suggest = (
-            fCompute.suggest(
+        if id not in self.gameRecord or self.gameRecord[id][rank] is None:
+            suggest = fCompute.suggest(
                 max(self.b19_rks, 0) + self.minUpRks() * 30, difficulty, count
             )
-            if not self.gameRecord.get(id)
-            or lv >= len(self.gameRecord[id])
-            or getattr(self.gameRecord[id][lv], "rks", False)
-            else fCompute.suggest(
-                max(self.b19_rks, getattr(self.gameRecord[id][lv], "rks", 0))
+        else:
+            suggest = fCompute.suggest(
+                max(self.b19_rks, getattr(self.gameRecord[id][rank], "rks", 0))
                 + self.minUpRks() * 30,
                 difficulty,
                 count,
             )
-        )
         if "无" in suggest and difficulty > (self.b0_rks or 0) + self.minUpRks() * 30:
             return f"{100:.{count}f}%"
         return suggest
@@ -633,7 +633,7 @@ class Save:
         """
         return self.sessionToken
 
-    async def getStats(self) -> list[statsRecord]:
+    def getStats(self) -> list[statsRecord]:
         """获取存档成绩总览"""
         #'EZ', 'HD', 'IN', 'AT'
         tot = [0, 0, 0, 0]
@@ -664,14 +664,15 @@ class Save:
         stats[3].title = Level[3]
 
         for id in Record:
-            if not await getInfo.idgetsong(id):
+            if not getInfo.idgetsong(id):
                 continue
             record = Record[id]
             for lv in [0, 1, 2, 3]:
-                if lv >= len(record) or not record[lv]:
+                level = LevelNum[lv]
+                if lv >= len(record) or not record.get(level):
                     continue
                 stats[lv].unlock += 1
-                rlv = record[lv]
+                rlv = record[level]
                 assert rlv is not None
                 if rlv.score > 700000:
                     stats[lv].cleared += 1

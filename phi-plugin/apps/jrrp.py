@@ -5,12 +5,11 @@ phigros趣味功能
 from datetime import datetime
 import math
 import random
-import re
 
 from nonebot_plugin_alconna import Alconna, on_alconna
 from nonebot_plugin_uninfo import Uninfo
 
-from ..config import cmdhead
+from ..config import recmdhead
 from ..model.fCompute import fCompute
 from ..model.getFile import readFile
 from ..model.getInfo import getInfo
@@ -20,7 +19,6 @@ from ..model.send import send
 from ..models import jrrpModel
 from ..utils import can_be_call
 
-recmdhead = re.escape(cmdhead)
 jrrp = on_alconna(
     Alconna(rf"re:{recmdhead}\s*(jrrp|今日人品)"),
     rule=can_be_call("jrrp"),

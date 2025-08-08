@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from ...utils import Date, Rating
+from ..constNum import LevelItem
 from ..fCompute import fCompute
 from ..getInfo import getInfo
 
@@ -14,9 +15,9 @@ class scoreHistory:
     @staticmethod
     async def extend(
         songsid: str,
-        level: str,
-        now: list | tuple,
-        old: list | tuple | None = None,
+        level: LevelItem,
+        now: tuple[float, int, datetime, bool],
+        old: tuple[float, int, datetime, bool] | None = None,
     ):
         """
         扩充信息
@@ -24,16 +25,7 @@ class scoreHistory:
         :param songsid: 曲目id
         :param level: 难度
         """
-        song = await getInfo.idgetsong(songsid) or songsid
-        if isinstance(now, tuple):
-            now = list(now)
-        if isinstance(old, tuple):
-            old = list(old)
-        now[0] = now[0]
-        now[1] = now[1]
-        if old:
-            old[0] = old[0]
-            old[1] = old[1]
+        song = getInfo.idgetsong(songsid) or songsid
         info = await getInfo.info(song, True)
         if not info or not info.chart.get(level) or not info.chart[level].difficulty:
             # 无难度信息
@@ -47,7 +39,7 @@ class scoreHistory:
                 "score_new": now[1],
                 "score_old": old[1] if old else None,
                 "date_new": now[2],
-                "date_old": Date(old[2]) if old else None,
+                "date_old": old[2] if old else None,
             }
         # 有难度信息
         difficulty = info.chart[level].difficulty
@@ -64,7 +56,7 @@ class scoreHistory:
             "score_new": now[1],
             "score_old": old[1] if old else None,
             "date_new": now[2],
-            "date_old": Date(old[2]) if old else None,
+            "date_old": old[2] if old else None,
         }
 
     @staticmethod

@@ -69,7 +69,7 @@ class getInfo:
     """含有曲绘的曲目列表，原曲名称"""
     sp_info: dict[str, SongsInfoObject] = {}  # noqa: RUF012
     """SP信息"""
-    Level: list[str] = Level
+    Level = Level
     """难度映射"""
     MAX_DIFFICULTY: float = 0
     """最高定数"""
@@ -274,7 +274,7 @@ class getInfo:
             infoPath / "nicklist.yaml"
         )
         for id in nicklistTemp:
-            song = await cls.idgetsong(f"{id}.0") or id
+            song = cls.idgetsong(f"{id}.0") or id
             cls.nicklist[song] = nicklistTemp[id]
             for item in nicklistTemp[id]:
                 if item in cls.songnick:
@@ -485,7 +485,7 @@ class getInfo:
             ans = ortherIllPath / ans
         elif cls.ori_info.get(song) or cls.sp_info.get(song):
             if cls.ori_info.get(song):
-                SongId = await cls.SongGetId(song)
+                SongId = cls.SongGetId(song)
                 assert SongId is not None
                 if kind == "common":
                     ans = f"{onLinePhiIllUrl}/ill/" + re.sub(r"\.0$", ".png", SongId)
@@ -516,7 +516,7 @@ class getInfo:
         return f"{onLinePhiIllUrl}/chap/" + f"{name}.png"
 
     @classmethod
-    async def idgetavatar(cls, id: str):
+    def idgetavatar(cls, id: str):
         """
         通过id获得头像文件名称
 
@@ -527,7 +527,7 @@ class getInfo:
         return cls.avatarid[id] if id in cls.avatarid else "Introduction"
 
     @classmethod
-    async def idgetsong(cls, id: str) -> str | None:
+    def idgetsong(cls, id: str) -> str | None:
         """
         根据曲目id获取原名
 
@@ -538,7 +538,7 @@ class getInfo:
         return cls.songsid.get(id)
 
     @classmethod
-    async def SongGetId(cls, song: str) -> str | None:
+    def SongGetId(cls, song: str) -> str | None:
         """
         通过原曲曲目获取曲目id
 
@@ -566,7 +566,7 @@ class getInfo:
                 case "Le temps perdu-":
                     save_background = "Le temps perdu"
             return await cls.getill(
-                await cls.idgetsong(save_background) or save_background
+                cls.idgetsong(save_background) or save_background
             )
         except Exception as e:
             logger.error("获取背景曲绘错误", "phi-plugin", e=e)

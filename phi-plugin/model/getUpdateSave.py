@@ -76,33 +76,23 @@ class getUpdateSave:
 
         if task := notesData.plugin_data.task:
             for song_id, record_levels in now.gameRecord.items():
-                for i, task_info in enumerate(task):
+                for task_info in task:
                     if not task_info:  # 跳过空任务
                         continue
-                    if task_info.get("finished"):  # 已完成的任务跳过
+                    if task_info.finished:  # 已完成的任务跳过
                         continue
 
-                    song = task_info.get("song")
+                    song = task_info.song
                     if song != getInfo.idgetsong(song_id):
                         continue
 
-                    level = task_info["request"].get("rank", None)
-                    if level not in ["pst", "prs", "ftr", "byd"]:  # 根据实际等级设定
-                        continue
-
-                    level_index = {"pst": 0, "prs": 1, "ftr": 2, "byd": 3}.get(level, 0)
-                    current_record = (
-                        record_levels[level_index]
-                        if isinstance(record_levels, list)
-                        and len(record_levels) > level_index
-                        else None
-                    )
+                    current_record = record_levels.get(task_info.request.rank)
 
                     if not current_record:
                         continue
 
-                    request_type = task_info["request"].get("type")
-                    request_value = task_info["request"].get("value", 0)
+                    request_type = task_info.request.type
+                    request_value = task_info.request.value
 
                     if (
                         request_type == "acc" and current_record.acc >= request_value
@@ -111,8 +101,8 @@ class getUpdateSave:
                         and request_type == "score"
                         and current_record.score >= request_value
                     ):
-                        task_info["finished"] = True
-                        reward = task_info.get("reward", 0)
+                        task_info.finished = True
+                        reward = task_info.reward
                         add_money += reward
                         notesData.plugin_data.money += reward
         await getNotes.putNotesData(session.user.id, to_dict(notesData))

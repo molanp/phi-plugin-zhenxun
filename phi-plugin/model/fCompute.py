@@ -97,7 +97,7 @@ class fCompute:
                 case "Le temps perdu-":
                     save_background = "Le temps perdu"
             return await getInfo.getill(
-                await getInfo.idgetsong(save_background) or save_background
+                getInfo.idgetsong(save_background) or save_background
             )
         except Exception as e:
             logger.error("获取背景曲绘错误", "phi-plugin", e=e)

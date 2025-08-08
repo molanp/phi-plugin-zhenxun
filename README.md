@@ -10,7 +10,7 @@
 [![Stars](https://img.shields.io/github/stars/molanp/zhenxun_plugin_phi-plugin?style=flat-square&color=yellow&label=Star)](https://github.com/molanp/zhenxun_plugin_phi-plugin/stargazers)
 
 ![version](https://img.shields.io/badge/插件版本-0.1.0_beta-9cf?style=flat-square)
-![phigros-version](https://img.shields.io/badge/Phigros-3.14.2-9cf?style=flat-square)  
+![phigros-version](https://img.shields.io/badge/Phigros-3.15.0-9cf?style=flat-square)  
 [![zhenxun_bot](https://img.shields.io/badge/zhenxun_bot-latest-9cf?style=flat-square&logo=dependabot)](https://github.com/zhenxun-org/zhenxun_bot)
 
 </div>
@@ -20,9 +20,9 @@
 
 当前同步的版本
 
-[956aa9182be6e9fb562949a2cd2b67d704d5b767](https://github.com/Catrong/phi-plugin/commit/956aa9182be6e9fb562949a2cd2b67d704d5b767)
+[f5c95b0370d72d37536eda28f6bf531d79d7554f](https://github.com/Catrong/phi-plugin/commit/f5c95b0370d72d37536eda28f6bf531d79d7554f)
 
-[已落后的变更](https://github.com/Catrong/phi-plugin/compare/956aa9182be6e9fb562949a2cd2b67d704d5b767...main)
+[已落后的变更](https://github.com/Catrong/phi-plugin/compare/f5c95b0370d72d37536eda28f6bf531d79d7554f...main)
 
 </details>
 
@@ -40,7 +40,7 @@
 - [x] 移植 `help`
 - [x] 移植 `jrrp`
 - [x] 移植 `manage`
-- [ ] 移植 `money`
+- [x] 移植 `money`
 - [ ] 移植 `phisong`
 - [x] 移植 `RankList`
 - [x] 移植 `session`

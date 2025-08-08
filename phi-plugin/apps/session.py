@@ -16,7 +16,7 @@ from zhenxun.utils.platform import PlatformUtils
 from zhenxun.utils.rules import ensure_group
 from zhenxun.utils.withdraw_manage import WithdrawManager
 
-from ..config import PluginConfig, cmdhead
+from ..config import PluginConfig, cmdhead, recmdhead
 from ..lib.getQRcode import getQRcode
 from ..model.cls.common import Save
 from ..model.cls.saveHistory import saveHistory
@@ -30,9 +30,6 @@ from ..model.getUpdateSave import getUpdateSave
 from ..model.send import send
 from ..models import qrCode
 from ..utils import Date, can_be_call, to_dict
-
-recmdhead = re.escape(cmdhead)
-
 
 bind = on_alconna(
     Alconna(rf"re:{recmdhead}\s*(绑定|bind)", Args["sessionToken?", str | int, ""]),
@@ -186,9 +183,7 @@ async def _(session: Uninfo):
 
 @unbind.handle()
 async def _(session: Uninfo):
-    if not await getSave.get_user_token(
-        session.user.id
-    ):
+    if not await getSave.get_user_token(session.user.id):
         await send.sendWithAt("没有找到你的存档信息嗷！")
         return
     ensure = await prompt(
@@ -294,9 +289,7 @@ async def build(
     """
     保存PhigrosUser
 
-    js版本怎么跑起来的
-
-    :param matcher: matcher
+    :param session: Uninfo
     :param updateData: {save:Save, added_rks_notes: [number, number]}
     :param history: saveHistory
     :return: Promise<void>
@@ -421,19 +414,8 @@ async def build(
     task_time = fCompute.date_to_string(pluginData.plugin_data.task_time)
     # 添加曲绘
     if task_data:
-        for i, _ in enumerate(task_data):
-            if task_data[i]:
-                task_data[i]["illustration"] = await getdata.getill(
-                    task_data[i]["song"]
-                )
-                if task_data[i]["request"]["type"] == "acc":
-                    task_data[i]["request"]["value"] = (
-                        round(task_data[i]["request"]["value"], 4) + "%"
-                    )
-                    if len(task_data[i]["request"]["value"]) < 6:
-                        task_data[i]["request"]["value"] = (
-                            "0" + task_data[i]["request"]["value"]
-                        )
+        for task in task_data:
+            task.illustration = await getdata.getill(task.song)
     d_ = history.getRksLine()
     rks_history = d_.rks_history
     rks_range = d_.rks_range

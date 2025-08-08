@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 from typing import Any
 
 from zhenxun.configs.config import Config
@@ -156,7 +157,7 @@ CONFIG = (
             value="https://phiupdateinfo.pmya.xyz/",
             type=str,
             help="Phigros更新信息API地址",
-        )
+        ),
     ],
 )
 
@@ -184,3 +185,5 @@ except Exception:
     cmdhead = "/phi"
     """命令前缀"""
     VikaToken = ""
+
+recmdhead = re.escape(cmdhead)

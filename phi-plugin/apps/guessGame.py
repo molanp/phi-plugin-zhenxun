@@ -2,8 +2,6 @@
 phi-plugin 猜曲游戏
 """
 
-import re
-
 from nonebot import on_message
 from nonebot.internal.rule import Rule
 from nonebot_plugin_alconna import Alconna, Args, CommandMeta, Match, UniMsg, on_alconna
@@ -11,14 +9,13 @@ from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.utils.rules import ensure_group
 
-from ..config import cmdhead
+from ..config import cmdhead, recmdhead
 from ..model.getBanGroup import getBanGroup
 from ..model.send import send
 from .guessGame.guessIll import guessIll
 from .guessGame.guessLetter import guessLetter
 from .guessGame.guessTips import guessTips
 
-recmdhead = re.escape(cmdhead)
 games = ["提示猜曲", "tipgame", "ltr", "letter", "开字母", "guess", "猜曲绘"]
 gameList = {}
 
