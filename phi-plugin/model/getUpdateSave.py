@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, TypedDict
 
 from nonebot_plugin_uninfo import Uninfo
 
@@ -14,11 +14,15 @@ from .getNotes import getNotes
 from .getSave import getSave
 
 
+class UpdateSaveResult(TypedDict):
+    save: Save
+    added_rks_notes: list[float] | Literal[False]
+
 class getUpdateSave:
     @classmethod
     async def getNewSaveFromLocal(
         cls, session: Uninfo, sessionToken: str | None = None
-    ) -> dict:
+    ) -> UpdateSaveResult:
         from .send import send
 
         old = await getSave.getSave(session.user.id)

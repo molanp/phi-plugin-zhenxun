@@ -1,9 +1,11 @@
 from datetime import datetime
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel
 
 from ...utils import Rating
+from ..constNum import LevelItem
 from ..fCompute import fCompute
 from ..getInfo import getInfo
 
@@ -17,9 +19,18 @@ class LevelRecordInfo(BaseModel):
     """准确率"""
     id: str = ""
     """曲目id"""
-    rank: str = ""
+    rank: LevelItem = "EZ"
     """Level"""
-    Rating: str = ""
+    Rating: Literal[
+        "phi",
+        "FC",
+        "V",
+        "S",
+        "A",
+        "B",
+        "C",
+        "F",
+    ] = "F"
     """评分等级"""
     song: str = ""
     """曲名"""

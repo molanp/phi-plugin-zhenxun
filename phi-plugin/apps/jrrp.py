@@ -43,18 +43,18 @@ async def _(session: Uninfo):
             id_ = math.floor(random.random() * (len(good) + len(common)))
             if id_ < len(good):
                 jrrp_data.append(good[id_])
-                good.pop(id_)
+                del good[id_]
             else:
                 jrrp_data.append(common[id_ - len(good)])
-                common.pop(id_ - len(good))
+                del common[id_ - len(good)]
         for _ in range(4):
             id_ = math.floor(random.random() * (len(bad) + len(common)))
             if id_ < len(bad):
                 jrrp_data.append(bad[id_])
-                bad.pop(id_)
+                del bad[id_]
             else:
                 jrrp_data.append(common[id_ - len(bad)])
-                common.pop(id_ - len(bad))
+                del common[id_ - len(bad)]
         await jrrpModel.set_jrrp(session.user.id, jrrp_data)
     if jrrp_data[0] == 100:
         luck_rank = 5

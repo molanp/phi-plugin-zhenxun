@@ -204,7 +204,7 @@ class GameProgress(BaseModel):
     challengeModeRank: int
     """课题分"""
     money: list[float]
-    """data货币"""
+    """data货币["PiB", "TiB", "GiB", "MiB", "KiB"]"""
     unlockFlagOfSpasmodic: int
     """痉挛解锁"""
     unlockFlagOfIgallta: int
@@ -229,9 +229,9 @@ class Save:
     sessionToken: str
     saveInfo: SaveInfo
     saveUrl: str
-    Recordver: int
+    Recordver: float
     """官方存档版本号"""
-    gameProgress: GameProgress
+    gameProgress: GameProgress | None
     gameuser: GameUser
     gameRecord: dict[
         str, dict[Literal["EZ", "HD", "IN", "AT", "LEGACY"], "LevelRecordInfo | None"]
@@ -251,7 +251,9 @@ class Save:
         self.saveInfo = SaveInfo(**data["saveInfo"])
         self.saveUrl = data["saveUrl"]
         self.Recordver = data["Recordver"]
-        self.gameProgress = GameProgress(**data["gameProgress"])
+        self.gameProgress = (
+            GameProgress(**data["gameProgress"]) if "gameProgress" in data else None
+        )
         self.gameuser = GameUser(**(data["gameuser"] if data.get("gameuser") else {}))
         if self.checkIg():
             await getRksRank.delUserRks(self.sessionToken)

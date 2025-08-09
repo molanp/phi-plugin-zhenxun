@@ -1,9 +1,10 @@
 """phigros rks 排行榜"""
 
 import contextlib
+import math
 import random
 
-from nonebot_plugin_alconna import Alconna, Args, Match, on_alconna
+from nonebot_plugin_alconna import Alconna, Args, CommandMeta, Match, on_alconna
 from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.configs.config import BotConfig
@@ -21,14 +22,22 @@ from ..model.send import send
 from ..utils import can_be_call, to_dict
 
 rankList = on_alconna(
-    Alconna(rf"re:{recmdhead}\s*(排行榜|ranklist)", Args["rank?", int]),
+    Alconna(
+        rf"re:{recmdhead}\s*(排行榜|ranklist)",
+        Args["rank?", int],
+        meta=CommandMeta(compact=True),
+    ),
     rule=can_be_call("rankList"),
     priority=5,
     block=True,
 )
 
 rankfind = on_alconna(
-    Alconna(rf"re:{recmdhead}\s*(查询排名|rankfind)", Args["q?", float]),
+    Alconna(
+        rf"re:{recmdhead}\s*(查询排名|rankfind)",
+        Args["q?", float],
+        meta=CommandMeta(compact=True),
+    ),
     rule=can_be_call("rankList"),
     priority=5,
     block=True,
@@ -141,11 +150,11 @@ async def makeLargeLine(save: Save, history: saveHistory):
     lineData = history.getRksAndDataLine()
     for index, item in enumerate(lineData.rks_date):
         item = fCompute.formatDateToNow(item)
-        lineData.rks_date[index] = item # pyright: ignore[reportCallIssue, reportArgumentType]
+        lineData.rks_date[index] = item  # pyright: ignore[reportCallIssue, reportArgumentType]
     clgHistory = []
     clgHistory.extend(
         {
-            "ChallengeMode": round(item.value / 100),
+            "ChallengeMode": math.floor(item.value / 100),
             "ChallengeModeRank": item.value % 100,
             "date": fCompute.formatDateToNow(item.date),
         }
@@ -161,11 +170,10 @@ async def makeLargeLine(save: Save, history: saveHistory):
     }
     return {
         "backgroundurl": await getInfo.getBackground(save.gameuser.background),
-        "avatar": getInfo.idgetavatar(save.saveInfo.summary.avatar)
-        or "Introduction",
+        "avatar": getInfo.idgetavatar(save.saveInfo.summary.avatar) or "Introduction",
         "playerId": fCompute.convertRichText(save.saveInfo.PlayerId),
         "rks": save.saveInfo.summary.rankingScore,
-        "ChallengeMode": round(save.saveInfo.summary.challengeModeRank / 100),
+        "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
         "ChallengeModeRank": save.saveInfo.summary.challengeModeRank % 100,
         "updated": fCompute.formatDate(save.saveInfo.modifiedAt.iso),
         "selfIntro": fCompute.convertRichText(save.gameuser.selfIntro),
@@ -183,10 +191,9 @@ async def makeSmallLine(save: Save):
         return {"playerId": "无效用户"}
     return {
         "backgroundurl": await getInfo.getBackground(save.gameuser.background),
-        "avatar": getInfo.idgetavatar(save.saveInfo.summary.avatar)
-        or "Introduction",
+        "avatar": getInfo.idgetavatar(save.saveInfo.summary.avatar) or "Introduction",
         "playerId": fCompute.convertRichText(save.saveInfo.PlayerId),
         "rks": save.saveInfo.summary.rankingScore,
-        "ChallengeMode": round(save.saveInfo.summary.challengeModeRank / 100),
+        "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
         "ChallengeModeRank": save.saveInfo.summary.challengeModeRank % 100,
     }

@@ -2,7 +2,7 @@
 phigros屁股肉段位
 """
 
-from nonebot_plugin_alconna import Alconna, Args, Image, Match, on_alconna
+from nonebot_plugin_alconna import Alconna, Args, CommandMeta, Image, Match, on_alconna
 from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.services.log import logger
@@ -35,7 +35,11 @@ danupdate = on_alconna(
 )
 
 dan = on_alconna(
-    Alconna(rf"re:{recmdhead}\s*(Dan|dan)", Args["name?", str]),
+    Alconna(
+        rf"re:{recmdhead}\s*(Dan|dan)",
+        Args["name?", str],
+        meta=CommandMeta(compact=True),
+    ),
     block=True,
     priority=5,
     rule=is_enable & can_be_call("dan"),

@@ -43,14 +43,14 @@ class picmodle:
         return await cls.common("tasks", data)
 
     @classmethod
-    async def user_info(cls, info: dict[str, Any], picversion: int) -> Image:
+    async def user_info(cls, info: dict[str, Any], picversion: Literal[1, 2]) -> Image:
         """
         个人信息
 
         :param dict info: 用户信息
         :param {1|2} picversion: 版本
         """
-        if picversion == 1 or picversion != 2:
+        if picversion == 1:
             return await cls.render(
                 "userinfo/userinfo",
                 {**info},

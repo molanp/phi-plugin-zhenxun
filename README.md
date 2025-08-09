@@ -20,9 +20,9 @@
 
 当前同步的版本
 
-[f5c95b0370d72d37536eda28f6bf531d79d7554f](https://github.com/Catrong/phi-plugin/commit/f5c95b0370d72d37536eda28f6bf531d79d7554f)
+[6fd8c98b7a1b7e8da98e22d3efea014e1202c86a](https://github.com/Catrong/phi-plugin/commit/6fd8c98b7a1b7e8da98e22d3efea014e1202c86a)
 
-[已落后的变更](https://github.com/Catrong/phi-plugin/compare/f5c95b0370d72d37536eda28f6bf531d79d7554f...main)
+[已落后的变更](https://github.com/Catrong/phi-plugin/compare/6fd8c98b7a1b7e8da98e22d3efea014e1202c86a...main)
 
 </details>
 
@@ -44,7 +44,7 @@
 - [x] 移植 `session`
 - [x] 移植 `setting` (**不支持**)
 - [x] 移植 `update` (**不支持**)
-- [ ] 移植 `user`
+- [x] 移植 `user`
 - [ ] 测试功能
 - [ ] 整理代码逻辑
 - [ ] 优化代码性能

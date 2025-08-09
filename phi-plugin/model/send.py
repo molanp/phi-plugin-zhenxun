@@ -30,7 +30,7 @@ class send:
         return recepit
 
     @classmethod
-    async def getsaveResult(cls, session: Uninfo, ver: int | None = None, send=True):
+    async def getsaveResult(cls, session: Uninfo, ver: float | None = None, send=True):
         """
         检查存档部分
 

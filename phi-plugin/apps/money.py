@@ -5,7 +5,7 @@ import math
 import random
 import time
 
-from nonebot_plugin_alconna import Alconna, Args, At, Match, on_alconna
+from nonebot_plugin_alconna import Alconna, Args, At, CommandMeta, Match, on_alconna
 from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.utils.platform import PlatformUtils
@@ -59,6 +59,7 @@ give = on_alconna(
     Alconna(
         rf"re:{recmdhead}\s*(send|送|转)",
         Args["_target?", At | int | str]["_money?", int],
+        meta=CommandMeta(compact=True),
     ),
     block=True,
     priority=5,
@@ -66,7 +67,9 @@ give = on_alconna(
 )
 
 theme = on_alconna(
-    Alconna(rf"re:{recmdhead}\*theme", Args["_aim?", int]),
+    Alconna(
+        rf"re:{recmdhead}\*theme", Args["_aim?", int], meta=CommandMeta(compact=True)
+    ),
     block=True,
     priority=5,
     rule=can_be_call("theme"),
@@ -232,7 +235,7 @@ async def _retask(session: Uninfo):
         "PlayerId": save.saveInfo.PlayerId,
         "Rks": round(save.saveInfo.summary.rankingScore, 4),
         "Date": now_time.strftime("%H:%M:%S %b.%d %Y"),
-        "ChallengeMode": round(save.saveInfo.summary.challengeModeRank / 100),
+        "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
         "ChallengeModeRank": save.saveInfo.summary.challengeModeRank % 100,
         "background": await getInfo.getill(random.choice(getInfo.illlist)),
         "task": data.plugin_data.task,
@@ -293,7 +296,7 @@ async def _tasks(session: Uninfo):
         "PlayerId": now.saveInfo.PlayerId,
         "Rks": round(now.saveInfo.summary.rankingScore, 4),
         "Date": now_time.strftime("%H:%M:%S %b.%d %Y"),
-        "ChallengeMode": round(now.saveInfo.summary.challengeModeRank / 100),
+        "ChallengeMode": math.floor(now.saveInfo.summary.challengeModeRank / 100),
         "ChallengeModeRank": now.saveInfo.summary.challengeModeRank % 100,
         "background": await getInfo.getill(random.choice(getInfo.illlist)),
         "task": data.plugin_data.task,

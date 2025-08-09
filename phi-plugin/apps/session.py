@@ -7,7 +7,7 @@ import random
 import re
 import time
 
-from nonebot_plugin_alconna import Alconna, Args, Match, on_alconna
+from nonebot_plugin_alconna import Alconna, Args, CommandMeta, Match, on_alconna
 from nonebot_plugin_uninfo import Uninfo
 from nonebot_plugin_waiter import prompt
 
@@ -32,7 +32,11 @@ from ..models import qrCode
 from ..utils import Date, can_be_call, to_dict
 
 bind = on_alconna(
-    Alconna(rf"re:{recmdhead}\s*(绑定|bind)", Args["sessionToken?", str | int, ""]),
+    Alconna(
+        rf"re:{recmdhead}\s*(绑定|bind)",
+        Args["sessionToken?", str],
+        meta=CommandMeta(compact=True),
+    ),
     rule=can_be_call("bind"),
     block=True,
     priority=5,
@@ -155,7 +159,7 @@ async def _(bot, session: Uninfo, sstk: Match[str]):
     )
     updateData = await getUpdateSave.getNewSaveFromLocal(session, sessionToken)
     history = await getSave.getHistory(session.user.id)
-    await build(session, updateData, history)
+    await build(session, to_dict(updateData), history)
 
 
 @update.handle()
@@ -173,7 +177,7 @@ async def _(session: Uninfo):
     try:
         updateData = await getUpdateSave.getNewSaveFromLocal(session, sessionToken)
         history = await getSave.getHistory(session.user.id)
-        await build(session, updateData, history)
+        await build(session, to_dict(updateData), history)
     except Exception as e:
         logger.error("更新信息失败", "phi-plugin", e=e)
         await send.sendWithAt(
@@ -406,9 +410,9 @@ async def build(
         flag = True
         if not tot_update[0].get("song"):
             box_line[-1][-1]["update_num"] = tot_update[0]["update_num"]
-            tot_update.pop(0)
+            del tot_update[0]
             flag = False
-        tot_update.pop(0)
+        del tot_update[0]
     # 添加任务信息
     task_data = pluginData.plugin_data.task
     task_time = fCompute.date_to_string(pluginData.plugin_data.task_time)

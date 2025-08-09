@@ -2,10 +2,11 @@
 phigros屁股肉管理
 """
 
+from pathlib import Path
 from typing import Literal
 
 from nonebot.permission import SUPERUSER
-from nonebot_plugin_alconna import Alconna, Args, Match, on_alconna
+from nonebot_plugin_alconna import Alconna, Args, CommandMeta, Match, on_alconna
 from nonebot_plugin_htmlrender import shutdown_browser, start_browser
 from nonebot_plugin_uninfo import Uninfo
 from nonebot_plugin_waiter import prompt
@@ -59,7 +60,11 @@ restartpu = on_alconna(
 )
 
 backup = on_alconna(
-    Alconna(rf"re:{recmdhead}\s*backup", Args["extra?", str, ""]),
+    Alconna(
+        rf"re:{recmdhead}\s*backup",
+        Args["extra?", str, ""],
+        meta=CommandMeta(compact=True),
+    ),
     priority=5,
     block=True,
     permission=SUPERUSER,
@@ -70,35 +75,45 @@ restore = on_alconna(
 )
 
 get = on_alconna(
-    Alconna(rf"re:{recmdhead}\s*get", Args["rank", int]),
+    Alconna(
+        rf"re:{recmdhead}\s*get", Args["rank", int], meta=CommandMeta(compact=True)
+    ),
     priority=5,
     block=True,
     permission=SUPERUSER,
 )
 
 delete = on_alconna(
-    Alconna(rf"re:{recmdhead}\s*del", Args["sstk", str]),
+    Alconna(
+        rf"re:{recmdhead}\s*del", Args["sstk", str], meta=CommandMeta(compact=True)
+    ),
     priority=5,
     block=True,
     permission=SUPERUSER,
 )
 
 allow = on_alconna(
-    Alconna(rf"re:{recmdhead}\s*allow", Args["sstk", str]),
+    Alconna(
+        rf"re:{recmdhead}\s*allow", Args["sstk", str], meta=CommandMeta(compact=True)
+    ),
     priority=5,
     block=True,
     permission=SUPERUSER,
 )
 
 ban = on_alconna(
-    Alconna(rf"re:{recmdhead}\s*ban", Args["func", str]),
+    Alconna(
+        rf"re:{recmdhead}\s*ban", Args["func", str], meta=CommandMeta(compact=True)
+    ),
     priority=5,
     block=True,
     rule=admin_check(5),
 )
 
 unban = on_alconna(
-    Alconna(rf"re:{recmdhead}\s*unban", Args["func", str]),
+    Alconna(
+        rf"re:{recmdhead}\s*unban", Args["func", str], meta=CommandMeta(compact=True)
+    ),
     priority=5,
     block=True,
     rule=admin_check(5),
@@ -132,7 +147,7 @@ async def _(extra: Match[str]):
 @restore.handle()
 async def _():
     msg = "请选择要恢复的备份：\n"
-    file_list = {}
+    file_list: dict[int, Path] = {}
     try:
         for i, path in enumerate(backupPath.iterdir()):
             msg += f"[{i}]{path}\n"
@@ -148,7 +163,7 @@ async def _():
         return
 
 
-async def doRestore(file_list: dict, r: str):
+async def doRestore(file_list: dict[int, Path], r: str):
     try:
         filePath = file_list[int(r)]
         await getBackup.restore(filePath)

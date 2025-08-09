@@ -28,7 +28,7 @@ def merge(m: list, n: list) -> list:
         if checkValue(t[i]["value"], t[i - 1]["value"]) and checkValue(
             t[i]["value"], t[i + 1]["value"]
         ):
-            t.pop(i)
+            del t[i]
         else:
             i += 1
     return t
@@ -172,7 +172,7 @@ class saveHistory:
                         and last.acc == now.acc
                         and last.fc == now.fc
                     ):
-                        self.scoreHistory[song][dif].pop(i)
+                        del self.scoreHistory[song][dif][i]
                     else:
                         i += 1
         return self
@@ -256,7 +256,7 @@ class saveHistory:
                             and last.acc == now.acc
                             and last.fc == now.fc
                         ):
-                            self.scoreHistory[id][level].pop(j)
+                            del self.scoreHistory[id][level][j]
                         else:
                             j += 1
         # 更新rks记录
@@ -290,10 +290,12 @@ class saveHistory:
         for i in range(len(self.data) - 1, -1, -1):
             if save.saveInfo.modifiedAt.iso > self.data[i].date:
                 if i + 1 >= len(self.data) or (
-                    checkValue(self.data[i].value, save.gameProgress.money)
+                    checkValue(
+                        self.data[i].value, getattr(save.gameProgress, "money", [0])
+                    )
                     and checkValue(
                         self.data[i + 1].value if i + 1 < len(self.data) else None,
-                        save.gameProgress.money,
+                        getattr(save.gameProgress, "money", [0]),
                     )
                 ):
                     self.data.insert(
@@ -301,7 +303,7 @@ class saveHistory:
                         RecordModel(
                             **{
                                 "date": save.saveInfo.modifiedAt.iso,
-                                "value": save.gameProgress.money,
+                                "value": getattr(save.gameProgress, "money", [0]),
                             }
                         ),
                     )
@@ -311,7 +313,7 @@ class saveHistory:
                 RecordModel(
                     **{
                         "date": save.saveInfo.modifiedAt.iso,
-                        "value": save.gameProgress.money,
+                        "value": getattr(save.gameProgress, "money", [0]),
                     }
                 )
             )

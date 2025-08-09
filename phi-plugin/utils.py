@@ -119,7 +119,6 @@ def can_be_call(
         "list",
         "singlescore",
         "lvscore",
-        "bestn",
         "data",
         "chap",
         "suggest",

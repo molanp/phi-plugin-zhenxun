@@ -8,12 +8,12 @@ import random
 import re
 from typing import Literal
 
+from arclet.alconna import StrMulti
 from nonebot_plugin_alconna import (
     Alconna,
     Args,
     CommandMeta,
     Match,
-    MultiVar,
     on_alconna,
 )
 from nonebot_plugin_uninfo import Uninfo
@@ -39,7 +39,7 @@ ChallengeModeName = ["白", "绿", "蓝", "红", "金", "彩"]
 b19 = on_alconna(
     Alconna(
         rf"re:{recmdhead}\s*(b|rks|pgr|PGR|B|RKS)",
-        Args["nnum", int, 33],
+        Args["nnum?", int, 33],
         meta=CommandMeta(compact=True),
     ),
     rule=can_be_call("b19"),
@@ -50,7 +50,7 @@ b19 = on_alconna(
 p30 = on_alconna(
     Alconna(
         rf"re:{recmdhead}\s*(p|P)",
-        Args["nnum", int, 33],
+        Args["nnum?", int, 33],
         meta=CommandMeta(compact=True),
     ),
     rule=can_be_call("p30"),
@@ -61,7 +61,7 @@ p30 = on_alconna(
 arcgrosB19 = on_alconna(
     Alconna(
         rf"re:{recmdhead}\s*(a|arc|啊|阿|批|屁|劈)",
-        Args["nnum", str, "b32"],
+        Args["nnum?", str, "b32"],
         meta=CommandMeta(compact=True),
     ),
     rule=can_be_call("arcgrosB19"),
@@ -72,7 +72,7 @@ arcgrosB19 = on_alconna(
 lmtAcc = on_alconna(
     Alconna(
         rf"re:{recmdhead}\s*lmtacc",
-        Args["acc", float, None],
+        Args["acc?", float],
         meta=CommandMeta(compact=True),
     ),
     rule=can_be_call("lmtAcc"),
@@ -83,8 +83,8 @@ lmtAcc = on_alconna(
 singlescore = on_alconna(
     Alconna(
         rf"re:{recmdhead}\s*(score|单曲成绩)",
-        Args["picversion", Literal[1, 2], 1],
-        Args["song", str, None],
+        Args["picversion?", Literal[1, 2], 1],
+        Args["song?", str],
         meta=CommandMeta(compact=True),
     ),
     rule=can_be_call("singlescore"),
@@ -95,7 +95,7 @@ singlescore = on_alconna(
 suggest = on_alconna(
     Alconna(
         rf"re:{recmdhead}\s*(suggest|推分(建议)?)",
-        Args["input", MultiVar(str)],
+        Args["input", StrMulti],
         meta=CommandMeta(compact=True),
     ),
     rule=can_be_call("suggest"),
@@ -106,7 +106,7 @@ suggest = on_alconna(
 chap__ = on_alconna(
     Alconna(
         rf"re:{recmdhead}\s*chap",
-        Args["song", MultiVar(str), ("help",)],
+        Args["song", StrMulti],
         meta=CommandMeta(compact=True),
     ),
     rule=can_be_call("chap"),
@@ -133,7 +133,7 @@ async def _(session: Uninfo, nnum: Match[int]):
         )
     save_b19 = await save.getB19(num)
     stats = save.getStats()
-    money = save.gameProgress.money
+    money = getattr(save.gameProgress, "money", [0])
     gameuser = {
         "avatar": getdata.idgetavatar(save.gameuser.avatar),
         "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
@@ -192,7 +192,7 @@ async def _(session: Uninfo, nnum: Match[int]):
         return
     save_b19 = await save.getBestWithLimit(num, [{"type": "acc", "value": [100, 100]}])
     stats = save.getStats()
-    money = save.gameProgress.money
+    money = getattr(save.gameProgress, "money", [0])
     gameuser = {
         "avatar": getdata.idgetavatar(save.gameuser.avatar),
         "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
@@ -246,7 +246,7 @@ async def _(session: Uninfo, nnum: Match[str]):
     num = min(num, PluginConfig.get("B19MaxNum"))
     plugin_data = await getNotes.getNotesData(session.user.id)
     save_b19 = await save.getB19(num)
-    money = save.gameProgress.money
+    money = getattr(save.gameProgress, "money", [0])
     gameuser = {
         "avatar": getdata.idgetavatar(save.gameuser.avatar),
         "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
@@ -301,7 +301,7 @@ async def _(session: Uninfo, acc: Match[float]):
         nnum, [{"type": "acc", "value": [_acc, 100]}]
     )
     stats = save.getStats()
-    money = save.gameProgress.money
+    money = getattr(save.gameProgress, "money", [0])
     gameuser = {
         "avatar": getdata.idgetavatar(save.gameuser.avatar),
         "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
@@ -362,7 +362,6 @@ async def _(session: Uninfo, picversion: Match[int], song: Match[str]):
         )
         return
     dan = await getdata.getDan(session.user.id)
-    assert isinstance(dan, dict)
     data = {
         "songName": _song,
         "PlayerId": save.saveInfo.PlayerId,
@@ -422,16 +421,16 @@ async def _(session: Uninfo, picversion: Match[int], song: Match[str]):
 
 # NOTE: 推分建议，建议的是RKS+0.01的所需值
 @suggest.handle()
-async def _(session: Uninfo, input: Match[tuple[str]]):
+async def _(session: Uninfo, input: Match):
     save = await send.getsaveResult(session)
     if not save:
         return
-    input_ = " ".join(input.result if input.available else [])
+    input_ = input.result if input.available else ""
     # 处理范围请求
     req = fCompute.match_request(input_)
-    range_ = req["range"]
-    isask = req["isask"]
-    scoreAsk = req["scoreAsk"]
+    range_ = req.range
+    isask = req.isask
+    scoreAsk = req.scoreAsk
     # 取出信息
     Record = save.gameRecord
     # 计算
@@ -452,9 +451,9 @@ async def _(session: Uninfo, input: Match[tuple[str]]):
             if range_[0] <= difficulty and difficulty <= range_[1] and isask[lv]:
                 level = LevelNum[lv]
                 rlv = record[level]
-                if not rlv and not scoreAsk["NEW"]:
+                if not rlv and not scoreAsk.NEW:
                     continue
-                if rlv and not scoreAsk[rlv.Rating.upper()]:
+                if rlv and not getattr(scoreAsk, rlv.Rating.upper()):
                     continue
                 if not rlv:
                     rlv = LevelRecordInfo()
@@ -501,7 +500,7 @@ async def _(session: Uninfo, input: Match[tuple[str]]):
 
 @chap__.handle()
 async def _(session: Uninfo, song: Match):
-    msg = " ".join(song.result if song.available else [])
+    msg = song.result if song.available else ""
     if msg.upper() == "HELP" or not msg:
         await send.sendWithAt(pic.getimg("chapHelp"))
         return

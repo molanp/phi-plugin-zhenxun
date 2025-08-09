@@ -316,7 +316,7 @@ class getdata:
         return await picmodle.tasks(data)
 
     @staticmethod
-    async def getuser_info(data: dict, kind: int):
+    async def getuser_info(data: dict, kind: Literal[1, 2]):
         """获取个人信息图片"""
         return await picmodle.user_info(data, kind)
 

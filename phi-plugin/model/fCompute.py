@@ -2,10 +2,11 @@ from datetime import datetime
 from pathlib import Path
 import random
 import re
-from typing import Literal, TypedDict
+from typing import Literal
 
 from nonebot_plugin_alconna import File, UniMessage
 from nonebot_plugin_uninfo import Uninfo
+from pydantic import BaseModel
 
 from zhenxun.models.level_user import LevelUser
 from zhenxun.services.log import logger
@@ -15,7 +16,7 @@ from ..utils import Date
 from .constNum import MAX_DIFFICULTY
 
 
-class match_request_return_2(TypedDict):
+class match_request_return_2(BaseModel):
     NEW: bool
     F: bool
     C: bool
@@ -27,9 +28,11 @@ class match_request_return_2(TypedDict):
     PHI: bool
 
 
-class match_request_return(TypedDict):
+class match_request_return(BaseModel):
     range: list[float]
+    """[min, max]"""
     isask: list[bool]
+    """[EZ, HD, IN, AT]"""
     scoreAsk: match_request_return_2
 
 
@@ -289,65 +292,50 @@ class fCompute:
 
         :param msg: 用户输入的原始消息
         :param max_range: 最大难度范围
-        :return: 包含筛选条件的字典 {range, isask, scoreAsk}
+        :return: 包含筛选条件的模型
         ```
-        {
-            "range": [min_range, max_range],
-            "isask": [bool, bool, bool, bool], // [EZ, HD, IN, AT]
-            "scoreAsk": {
-                "NEW": bool,
-                "F": bool,
-                "C": bool,
-                "B": bool,
-                "A": bool,
-                "S": bool,
-                "V": bool,
-                "FC": bool,
-                "PHI": bool,
-            },
-        }
         """
-        result: match_request_return = {
-            "range": [0, max_range or MAX_DIFFICULTY],
-            "isask": [True, True, True, True],  # [EZ, HD, IN, AT]
-            "scoreAsk": {
-                "NEW": True,
-                "F": True,
-                "C": True,
-                "B": True,
-                "A": True,
-                "S": True,
-                "V": True,
-                "FC": True,
-                "PHI": True,
-            },
-        }
+        result = match_request_return(
+            **{
+                "range": [0, max_range or MAX_DIFFICULTY],
+                "isask": [False, False, False, False],
+                "scoreAsk": {
+                    "NEW": False,
+                    "F": False,
+                    "C": False,
+                    "B": False,
+                    "A": False,
+                    "S": False,
+                    "V": False,
+                    "FC": False,
+                    "PHI": False,
+                },
+            }
+        )
 
-        # 移除命令前缀（如 /list 或 #lvscore 等）
-        clean_msg = re.sub(r"^[#/].*?(lvscore?)?$\s*", "", msg).upper()
+        clean_msg = msg.upper()
 
         # 处理难度模式筛选：EZ HD IN AT
         modes = ["EZ", "HD", "IN", "AT"]
-        if mode_indices := [i for i, mode in enumerate(modes) if mode in clean_msg]:
-            result["isask"] = [False, False, False, False]
+        if mode_indices := [
+            index for index, mode in enumerate(modes) if mode in clean_msg
+        ]:
             for i in mode_indices:
-                result["isask"][i] = True
+                result.isask[i] = True
 
         # 处理成绩等级筛选：NEW F C B A S V FC PHI AP
         rating_keys = ["NEW", "F", "C", "B", "A", "S", "V", "FC", "PHI"]
         has_rating = any(f" {r}" in clean_msg for r in [*rating_keys, "AP"])
 
         if has_rating:
-            for k in result["scoreAsk"]:
-                result["scoreAsk"][k] = False
             for rating in rating_keys:
                 if f" {rating}" in clean_msg:
-                    result["scoreAsk"][rating] = True
+                    setattr(result.scoreAsk, rating, True)
             if " AP" in clean_msg:
-                result["scoreAsk"]["PHI"] = True
+                result.scoreAsk.PHI = True
 
         # 提取难度范围
-        result["range"] = fCompute.match_range(msg, result["range"])
+        result.range = fCompute.match_range(msg, result.range)
 
         return result
 
