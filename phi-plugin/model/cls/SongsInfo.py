@@ -9,9 +9,9 @@ from .Chart import Chart
 
 class SongsInfoObject(BaseModel):
     id: str = ""
-    """id"""
+    """曲目id"""
     song: str = ""
-    """曲目"""
+    """曲目名称"""
     illustration: str | Path = ""
     """曲绘略缩图"""
     can_t_be_letter: bool = False
@@ -21,7 +21,7 @@ class SongsInfoObject(BaseModel):
     chapter: str = ""
     """章节"""
     bpm: str = ""
-    """bpm"""
+    """BPM"""
     composer: str = ""
     """作曲"""
     length: str = ""

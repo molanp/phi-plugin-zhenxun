@@ -87,7 +87,7 @@ class getInfo:
     """章节别名， 以别名为key"""
     word: dict[str, list[str]] = {}  # noqa: RUF012
     """jrrp"""
-    info_by_difficulty: dict[float | str, list[dict]] = {}  # noqa: RUF012
+    info_by_difficulty: dict[float, list[Chart]] = {}  # noqa: RUF012
     """按dif分的info"""
 
     @classmethod
@@ -104,7 +104,7 @@ class getInfo:
             cls.avatarid[item["id"]] = item["id"]
 
         cls.Tips = await readFile.FileReader(infoPath / "tips.yaml")
-        user_song = await readFile.FileReader(configPath / "nickconfig.yaml", "TXT")
+        user_song = await readFile.FileReader(configPath / "nickconfig.yaml")
         if PluginConfig.get("otherinfo"):
             for item in user_song.values():
                 if item.get("illustration_big"):
@@ -298,17 +298,14 @@ class getInfo:
                     continue  # 跳过无定数的数据
 
                 # 构造要插入的数据项
-                entry = {
-                    "id": song_data.id,
-                    "rank": level,
-                    **to_dict(chart_data),
-                }
+                chart_data.id = song_data.id
+                chart_data.rank = level
 
                 # 插入到对应难度的列表中
                 if difficulty in cls.info_by_difficulty:
-                    cls.info_by_difficulty[difficulty].append(entry)
+                    cls.info_by_difficulty[difficulty].append(chart_data)
                 else:
-                    cls.info_by_difficulty[difficulty] = [entry]
+                    cls.info_by_difficulty[difficulty] = [chart_data]
         cls.inited = True
         logger.info("初始化曲目信息完成", "phi-plugin")
         return cls
@@ -486,7 +483,7 @@ class getInfo:
         elif cls.ori_info.get(song) or cls.sp_info.get(song):
             if cls.ori_info.get(song):
                 SongId = cls.SongGetId(song)
-                assert SongId is not None
+                assert SongId
                 if kind == "common":
                     ans = f"{onLinePhiIllUrl}/ill/" + re.sub(r"\.0$", ".png", SongId)
                 elif kind == "blur":
@@ -565,9 +562,7 @@ class getInfo:
                     save_background = "ENERGY SYNERGY MATRIX"
                 case "Le temps perdu-":
                     save_background = "Le temps perdu"
-            return await cls.getill(
-                cls.idgetsong(save_background) or save_background
-            )
+            return await cls.getill(cls.idgetsong(save_background) or save_background)
         except Exception as e:
             logger.error("获取背景曲绘错误", "phi-plugin", e=e)
             return False

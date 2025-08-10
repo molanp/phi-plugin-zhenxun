@@ -675,7 +675,7 @@ class Save:
                     continue
                 stats[lv].unlock += 1
                 rlv = record[level]
-                assert rlv is not None
+                assert rlv
                 if rlv.score > 700000:
                     stats[lv].cleared += 1
                 if rlv.fc or rlv.score == 1000000:

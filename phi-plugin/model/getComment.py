@@ -1,134 +1,67 @@
-"""
-评论对象字典
-* **str** sessionToken
-* **str** userObjectId 用户ObjectId
-* **float** rks
-* **Level** rank
-* **int** score
-* **float** acc
-* **bool** fc
-* **str|None** spInfo
-* **int** challenge
-* **datetime** time
-* **str** comment
-* **str|None** thisId 在add时添加
-* **str|None** songId 仅在getByCommentId时添加
-* **str|None** PlayerId 仅在查询时添加
-* **str|None** avatar 仅在查询时添加
-"""
+"""评论操作相关"""
 
-import secrets
+from typing import TypedDict
 
-from .getFile import readFile as getFile
-from .path import otherDataPath
+from ..models import Comment
 
-dataPath = otherDataPath / "commentData.json"
+
+class CommentDict(TypedDict):
+    sessionToken: str
+    """评论者sessionToken"""
+    ObjectId: str
+    """评论者ObjectId"""
+    PlayerId: str
+    """评论者PlayerId"""
+    avatar: str
+    """评论者头像"""
+    rks: float
+    """评论者rankingScore"""
+    challenge: float
+    """评论者challengeModeRank"""
+    rank: str
+    """曲目难度"""
+    score: int
+    """评论者分数"""
+    acc: float
+    """评论者准确率"""
+    fc: bool
+    """评论者是否fc"""
+    spInfo: str
+    """评论者谱面信息"""
+    comment: str
+    """评论内容"""
 
 
 class getComment:
-    data: dict[str, list[dict]] = {}  # noqa: RUF012
-    """
-    评论对象字典
-    * **str** sessionToken
-    * **str** userObjectId 用户ObjectId
-    * **float** rks
-    * **Level** rank
-    * **int** score
-    * **float** acc
-    * **bool** fc
-    * **str|None** spInfo
-    * **int** challenge
-    * **datetime** time
-    * **str** comment
-    * **str|None** thisId 在add时添加
-    * **str|None** songId 仅在getByCommentId时添加
-    * **str|None** PlayerId 仅在查询时添加
-    * **str|None** avatar 仅在查询时添加
-    """
-
-    @classmethod
-    async def load(cls):
-        """初始化评论数据"""
-        # 评论数据
-        cls.data = await getFile.FileReader(dataPath)
-        # 评论id映射曲目id
-        cls.map = {}
-        if not cls.data:
-            cls.data = {}
-            await getFile.SetFile(dataPath, cls.data)
-        # 遍历所有曲目评论数据
-        updated_data = {}
-        for song_id, comments in cls.data.items():
-            updated_comments = []
-            for comment in comments:
-                # 检查是否存在 thisId
-                if not comment.get("thisId"):
-                    continue
-                # 建立 thisId 到曲目ID的映射
-                cls.map[comment["thisId"]] = song_id
-                updated_comments.append(comment)
-            updated_data[song_id] = updated_comments
-
-        cls.data = updated_data
-        await getFile.SetFile(dataPath, cls.data)
-
-    @classmethod
-    async def get(cls, songId: str):
+    @staticmethod
+    async def getBySongId(songId: str):
         """获取对应曲目的所有评论"""
-        if cls.data is None:
-            await cls.load()
-            assert cls.data is not None
-        return cls.data.get(songId, [])
+        return await Comment.filter(songId=songId).order_by("-created_at")
 
-    @classmethod
-    async def getByCommentId(cls, commentId: str):
-        """获取对应评论id的评论"""
-        if cls.data is None:
-            await cls.load()
-            assert cls.data is not None
-        songId = cls.data.get(commentId)
-        if not songId:
-            return None
-        for comment in songId:
-            if comment.get("thisId") == commentId:
-                comment["songId"] = songId
-                return comment
-        return None
+    @staticmethod
+    async def getByCommentId(commentId: str):
+        """获取CommentId对应评论"""
+        return await Comment.get_or_none(commentId=commentId)
 
-    @classmethod
-    async def add(cls, id: str, comment: dict):
-        """添加评论"""
-        comment["thisId"] = str(secrets.randbits(32))
-        if cls.data is None:
-            await cls.load()
-            assert cls.data is not None
-        if id in cls.data:
-            cls.data[id].append(comment)
-        else:
-            cls.data[id] = [comment]
-        cls.map[comment["thisId"]] = id
-        await getFile.SetFile(dataPath, cls.data)
+    @staticmethod
+    async def getByPlayerId(PlayerId: str):
+        """获取PlayerId的全部评论"""
+        return await Comment.filter(PlayerId=PlayerId).order_by("-created_at")
 
-    @classmethod
-    async def delete(cls, commentId: str):
-        """删除评论id对应的评论"""
-        if cls.data is None:
-            await cls.load()
-            assert cls.data is not None
-
-        songId = cls.map.get(commentId)
-        if not songId:
-            return False
-
-        comments = cls.data.get(songId, [])
-        for i, comment in enumerate(comments):
-            if comment.get("thisId") == commentId:
-                del comments[i]
-                if commentId in cls.map:
-                    del cls.map[commentId]
-                await getFile.SetFile(dataPath, cls.data)
-                return True
-
-        if commentId in cls.map:
-            del cls.map[commentId]
+    @staticmethod
+    async def update(commentId: str, comment: CommentDict):
+        """更新评论"""
+        if Comment.exists(commentId=commentId):
+            await Comment.filter(commentId=commentId).update(**comment)
+            return True
         return False
+
+    @staticmethod
+    async def add(songId: str, comment: CommentDict):
+        """添加评论"""
+        await Comment.create(songId=songId, **comment)
+
+    @staticmethod
+    async def delete(commentId: int):
+        """删除评论"""
+        return bool(await Comment.filter(commentId=commentId).delete())

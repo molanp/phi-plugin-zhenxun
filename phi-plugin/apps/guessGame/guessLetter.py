@@ -181,7 +181,7 @@ class guessLetter:
             # 防止抽到重复的曲目
             cnnt = 0
             songinfo = await getInfo.info(randsong)
-            assert songinfo is not None
+            assert songinfo
             while randsong in chose or songinfo.can_t_be_letter:
                 cnnt += 1
                 if cnnt >= 50:

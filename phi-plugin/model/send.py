@@ -1,11 +1,9 @@
 from typing import Any
 
 from nonebot.matcher import current_bot
-from nonebot_plugin_alconna import Image, Text, UniMessage
+from nonebot_plugin_alconna import UniMessage
 from nonebot_plugin_uninfo import Uninfo
 
-from zhenxun.services.log import logger
-from zhenxun.utils.message import MessageUtils
 from zhenxun.utils.withdraw_manage import WithdrawManager
 
 from ..config import cmdhead
@@ -69,23 +67,3 @@ class send:
             return None
 
         return await Save().constructor(to_dict(user_save))
-
-    @classmethod
-    async def pickSend(cls, matcher, msg: list[Text | Image]):
-        """
-        转发到私聊
-
-        :param session: 会话对象
-        :param list[Text | Image] | Text msg: 消息内容
-        """
-        try:
-            await matcher.send(
-                MessageUtils.alc_forward_msg(
-                    msg,
-                    "80000000",
-                    "匿名消息",
-                )
-            )
-        except Exception as err:
-            logger.error("消息转发失败", "phi-plugin:pickSend", e=err)
-            await cls.sendWithAt("转发失败QAQ！请尝试在私聊触发命令！")

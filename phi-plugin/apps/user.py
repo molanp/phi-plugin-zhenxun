@@ -250,7 +250,7 @@ async def _(session: Uninfo, _input: Match):
     save = await send.getsaveResult(session)
     if not save:
         return
-    input = (_input.result) if _input.available else ""
+    input = _input.result if _input.available else ""
     result = fCompute.match_request(input, getInfo.MAX_DIFFICULTY)
     _range, isask = result.range, result.isask
     _range[1] = min(_range[1], getInfo.MAX_DIFFICULTY)
@@ -336,7 +336,7 @@ async def _(session: Uninfo, _input: Match):
                 if lv not in record or not record[lv]:
                     continue
                 rlv = record[lv]
-                assert rlv is not None
+                assert rlv
                 unlockcharts += 1
                 unlockRank[lv] += 1
                 if not vis:

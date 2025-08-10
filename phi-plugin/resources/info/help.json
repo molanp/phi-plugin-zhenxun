@@ -115,12 +115,12 @@
             {
                 "title": "/mycmt",
                 "eg": "/mycmt",
-                "desc": "查看自己的云端评论"
+                "desc": "查看自己的全部评论"
             },
             {
                 "title": "/recmt",
                 "eg": "/recmt <评论ID>",
-                "desc": "查看并确认是否删评，仅发送者和主人权限，云端仅可以删除自己的评论"
+                "desc": "查看并确认是否删评，仅发送者和主人权限"
             },
             {
                 "title": "/table",
@@ -252,8 +252,8 @@
             },
             {
                 "title": "/设置别名<br>/setnick",
-                "eg": "/setnick <原名>---><别名>",
-                "desc": "设置某一歌曲的别名<br>eg: /setnick 996--->福报"
+                "eg": "/setnick <原名> <别名>",
+                "desc": "设置某一歌曲的别名<br>eg: /setnick 996 福报"
             },
             {
                 "title": "/删除别名<br>/delnick",

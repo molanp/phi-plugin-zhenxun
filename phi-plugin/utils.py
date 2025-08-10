@@ -128,6 +128,7 @@ def can_be_call(
         "ill",
         "chart",
         "addtag",
+        "subtag",
         "retag",
         "search",
         "alias",
@@ -135,7 +136,8 @@ def can_be_call(
         "randClg",
         "table",
         "comment",
-        "recallCommenttokenManage",
+        "recallComment",
+        "myComment",
         "rankList",
         "godList",
         "comrks",
@@ -164,7 +166,9 @@ def can_be_call(
         Rule: Rule
     """
 
-    async def _rule(session: Uninfo) -> bool:
+    async def _rule(bot, session: Uninfo) -> bool:
+        if session.user.id in bot.config.superusers:
+            return True
         if await getBanGroup.get(session, key):
             await UniMessage("这里被管理员禁止使用这个功能了呐QAQ！").send(
                 reply_to=True

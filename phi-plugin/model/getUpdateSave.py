@@ -58,7 +58,6 @@ class getUpdateSave:
             old = await getSave.getSave(session.user.id)
         # await now.init()
         history = await getSave.getHistory(session.user.id)
-        assert history is not None
         history.update(now)
         await getSave.putHistory(session.user.id, to_dict(history))
         added_rks_notes = await cls.buildingRecord(old, now, session)

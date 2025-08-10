@@ -2,7 +2,7 @@ from pathlib import Path
 
 from nonebot_plugin_htmlrender import template_to_pic
 
-from ..config import VERSION
+from ..config import Version
 from .path import imgPath, pluginResources
 
 
@@ -34,10 +34,12 @@ class Puppeteer:
             "sys": {
                 "scale": f'style="transform:scale({params.get("scale", 1)})"',
                 "copyright": (
-                    f"Created By phi-Plugin<span class='version'>{VERSION}</span>"
+                    'Created By NoneBot<span class="version">'
+                    f"{Version['nonebot']}</span> & phi-Plugin"
+                    f'<span class="version">{Version["ver"]}</span>'
                 ),
             },
-            "Version": {"ver": VERSION},
+            "Version": Version,
             "_plugin": "phi-plugin",
         }
 

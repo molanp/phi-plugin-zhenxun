@@ -19,7 +19,6 @@ from .getInfo import getInfo
 from .getNotes import getNotes
 from .getPic import SongsIllAtlasData, pic
 from .getSave import getSave
-from .path import pluginDataPath
 from .picmodle import picmodle
 from .send import send
 
@@ -126,43 +125,34 @@ class getdata:
         return await getSave.delSave(id)
 
     @staticmethod
-    async def delpluginData(id: str):
+    async def delNotesData(user_id: str):
         """
         删除user_id对应的娱乐数据
 
-        :param id: user_id
+        :param user_id: user_id
         """
-        return await getdata.delData(f"{id}.json", pluginDataPath)
+        return await getNotes.delNotesData(user_id)
 
     @staticmethod
-    async def getpluginData(id: str):
+    async def getNotesData(user_id: str, islock: bool = False):
         """
         获取user_id对应的娱乐数据
 
-        :param id: user_id
+        :param user_id: user_id
+        :param islock:  是否锁定
+        :return: 娱乐数据
         """
-        return await getNotes.getPluginData(id)
+        return await getNotes.getNotesData(user_id, islock)
 
     @staticmethod
-    async def putpluginData(id: str, data: dict):
+    async def putNotesData(user_id: str, data: dict):
         """
         保存user_id对应的娱乐数据
 
         :param id: user_id
         :param data: 娱乐数据
         """
-        return await getNotes.putPluginData(id, data)
-
-    @staticmethod
-    async def getNotesData(id: str, islock: bool = False):
-        """
-        获取并初始化 id 插件相关数据
-
-        :param id: user_id
-        :param islock:  是否锁定
-        :return: 整个data对象
-        """
-        return await getNotes.getNotesData(id, islock)
+        return await getNotes.putNotesData(user_id, data)
 
     @staticmethod
     def getimg(img: str, style: str = "png"):
@@ -291,7 +281,7 @@ class getdata:
                                     t.finished = True
                                     pluginData.plugin_data.money += t.reward
                                     add_money += t.reward
-        await getdata.putpluginData(session.user.id, to_dict(pluginData))
+        await getNotes.putNotesData(session.user.id, to_dict(pluginData))
         # rks变化
         add_rks = (
             now.saveInfo.summary.rankingScore - old.saveInfo.summary.rankingScore

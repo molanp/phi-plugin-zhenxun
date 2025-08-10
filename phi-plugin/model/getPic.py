@@ -76,7 +76,9 @@ class pic:
         return False
 
     @staticmethod
-    async def getIll(name, kind: Literal["common", "blur", "low"] = "common") -> Image:
+    async def getIll(
+        name: str, kind: Literal["common", "blur", "low"] = "common"
+    ) -> Image:
         """
         获取曲绘，返回图片消息段
 

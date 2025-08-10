@@ -109,7 +109,7 @@ class getSave:
         if await cls.isBanSessionToken(sstk):
             raise ValueError(f"{sstk} 已被禁用")
         result = await readFile.FileReader(savePath / sstk / "history.json")
-        return saveHistory(result)
+        return saveHistory(result) if result else saveHistory({})
 
     @classmethod
     async def putHistory(cls, user_id: str, data: dict):

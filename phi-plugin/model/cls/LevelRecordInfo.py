@@ -19,7 +19,7 @@ class LevelRecordInfo(BaseModel):
     """准确率"""
     id: str = ""
     """曲目id"""
-    rank: LevelItem = "EZ"
+    rank: LevelItem | None = None
     """Level"""
     Rating: Literal[
         "phi",

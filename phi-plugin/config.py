@@ -1,13 +1,38 @@
+import contextlib
 from pathlib import Path
 import re
-from typing import Any
+from typing import Any, Literal
+
+from nonebot import __version__
 
 from zhenxun.configs.config import Config
 from zhenxun.configs.utils import RegisterConfig
 
 PATH = Path(__file__).parent
 
-VERSION = "0.1.0"
+VERSION_PATTERN = re.compile(
+    r"https://img\.shields\.io/badge/(?P<type>插件版本|Phigros)-(?P<version>(.*))-9cf"
+)
+currentVersion = ""
+phigros_ver = ""
+with contextlib.suppress(Exception):
+    if (PATH / "README.md").exists():
+        with open(PATH / "README.md", encoding="utf-8") as f:
+            README = f.read()
+        for match in VERSION_PATTERN.finditer(README):
+            ver_type = match["type"]
+            version = match["version"]
+
+            if ver_type == "插件版本":
+                currentVersion = f"v{version}"
+            elif ver_type == "Phigros":
+                phigros_ver = version
+
+Version: dict[Literal["ver", "phigros", "nonebot"], str] = {
+    "ver": currentVersion,
+    "phigros": phigros_ver,
+    "nonebot": __version__,
+}
 
 CONFIG = (
     [

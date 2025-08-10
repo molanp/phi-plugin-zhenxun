@@ -53,6 +53,7 @@ class getBanGroup:
             "ill",
             "chart",
             "addtag",
+            "subtag",
             "retag",
             "search",
             "alias",
@@ -60,7 +61,8 @@ class getBanGroup:
             "randClg",
             "table",
             "comment",
-            "recallCommenttokenManage",
+            "recallComment",
+            "myComment",
             "rankList",
             "godList",
             "comrks",
@@ -113,6 +115,7 @@ class getBanGroup:
                 | "chart"
                 | "addtag"
                 | "retag"
+                | "subtag"
                 | "search"
                 | "alias"
                 | "randmic"
@@ -139,5 +142,3 @@ class getBanGroup:
                 return await getBanGroup.redis(group_id, "setting")
             case "dan" | "danupdate":
                 return await getBanGroup.redis(group_id, "dan")
-            case _:
-                return False

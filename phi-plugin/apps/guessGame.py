@@ -37,7 +37,7 @@ def is_started() -> Rule:
 start = on_alconna(
     Alconna(
         rf"re:{recmdhead}",
-        Args["gameType", games]["songname?", str, None],
+        Args["gameType", games]["songname?", str],
         meta=CommandMeta(compact=True),
     ),
     priority=5,
@@ -51,7 +51,7 @@ guess = on_message(
 reveal = on_alconna(
     Alconna(
         r"re:(出|开|翻|揭|看|翻开|打开|揭开|open)",
-        Args["content", r"re:[a-zA-Z\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\d\S]"],
+        Args["content", str],
         meta=CommandMeta(compact=True),
     ),
     rule=is_started(),

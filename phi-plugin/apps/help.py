@@ -37,7 +37,7 @@ tkhelp = on_alconna(
 
 @help.handle()
 async def _(session: Uninfo):
-    pluginData = await getdata.getpluginData(session.user.id)
+    pluginData = await getdata.getNotesData(session.user.id)
     helpGroup = await readFile.FileReader(infoPath / "help.json")
     await send.sendWithAt(
         await picmodle.help(
@@ -46,7 +46,7 @@ async def _(session: Uninfo):
                 "cmdHead": cmdhead,
                 "isMaster": await fCompute.is_superuser(session),
                 "background": await getdata.getill(random.choice(getInfo.illlist)),
-                "theme": pluginData.get("plugin_data", {}).get("theme") or "star",
+                "theme": pluginData.plugin_data.theme,
             }
         ),
     )

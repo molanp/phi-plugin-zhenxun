@@ -9,13 +9,7 @@ import re
 from typing import Literal
 
 from arclet.alconna import StrMulti
-from nonebot_plugin_alconna import (
-    Alconna,
-    Args,
-    CommandMeta,
-    Match,
-    on_alconna,
-)
+from nonebot_plugin_alconna import Alconna, Args, CommandMeta, Match, on_alconna
 from nonebot_plugin_uninfo import Uninfo
 
 from zhenxun.services.log import logger
@@ -27,7 +21,6 @@ from ..model.constNum import Level, LevelNum
 from ..model.fCompute import fCompute
 from ..model.getdata import getdata
 from ..model.getInfo import getInfo
-from ..model.getNotes import getNotes
 from ..model.getPic import pic
 from ..model.picmodle import picmodle
 from ..model.send import send
@@ -39,7 +32,7 @@ ChallengeModeName = ["白", "绿", "蓝", "红", "金", "彩"]
 b19 = on_alconna(
     Alconna(
         rf"re:{recmdhead}\s*(b|rks|pgr|PGR|B|RKS)",
-        Args["nnum?", int, 33],
+        Args["nnum?", int],
         meta=CommandMeta(compact=True),
     ),
     rule=can_be_call("b19"),
@@ -50,7 +43,7 @@ b19 = on_alconna(
 p30 = on_alconna(
     Alconna(
         rf"re:{recmdhead}\s*(p|P)",
-        Args["nnum?", int, 33],
+        Args["nnum?", int],
         meta=CommandMeta(compact=True),
     ),
     rule=can_be_call("p30"),
@@ -61,7 +54,7 @@ p30 = on_alconna(
 arcgrosB19 = on_alconna(
     Alconna(
         rf"re:{recmdhead}\s*(a|arc|啊|阿|批|屁|劈)",
-        Args["nnum?", str, "b32"],
+        Args["nnum?", str],
         meta=CommandMeta(compact=True),
     ),
     rule=can_be_call("arcgrosB19"),
@@ -83,7 +76,7 @@ lmtAcc = on_alconna(
 singlescore = on_alconna(
     Alconna(
         rf"re:{recmdhead}\s*(score|单曲成绩)",
-        Args["picversion?", Literal[1, 2], 1],
+        Args["picversion?", Literal[1, 2]],
         Args["song?", str],
         meta=CommandMeta(compact=True),
     ),
@@ -126,7 +119,7 @@ async def _(session: Uninfo, nnum: Match[int]):
     num = max(num, 33)
     num = min(num, PluginConfig.get("B19MaxNum"))
     # NOTE: 因响应器限制，暂时无法实现匹配中间消息(bksong)(取消息不可预料)
-    plugin_data = await getNotes.getNotesData(session.user.id)
+    plugin_data = await getdata.getNotesData(session.user.id)
     if not PluginConfig.get("isGuild"):
         await send.sendWithAt(
             "正在生成图片，请稍等一下哦！\n//·/w\\·\\\\", recallTime=5
@@ -179,7 +172,7 @@ async def _(session: Uninfo, nnum: Match[int]):
     num = max(num, 33)
     num = min(num, PluginConfig.get("B19MaxNum"))
     # NOTE: 因响应器限制，暂时无法实现匹配中间消息(bksong)(取消息不可预料)
-    plugin_data = await getNotes.getNotesData(session.user.id)
+    plugin_data = await getdata.getNotesData(session.user.id)
     if not PluginConfig.get("isGuild"):
         await send.sendWithAt(
             "正在生成图片，请稍等一下哦！\n//·/w\\·\\\\", recallTime=5
@@ -244,7 +237,7 @@ async def _(session: Uninfo, nnum: Match[str]):
         num = int(num)  # 确保为整数
     num = max(num, 30)
     num = min(num, PluginConfig.get("B19MaxNum"))
-    plugin_data = await getNotes.getNotesData(session.user.id)
+    plugin_data = await getdata.getNotesData(session.user.id)
     save_b19 = await save.getB19(num)
     money = getattr(save.gameProgress, "money", [0])
     gameuser = {
@@ -292,7 +285,7 @@ async def _(session: Uninfo, acc: Match[float]):
     if err := await save.checkNoInfo():
         await send.sendWithAt("以下曲目无信息，可能导致b19显示错误\n" + "\n".join(err))
     nnum = 33
-    plugin_data = await getdata.getpluginData(session.user.id)
+    plugin_data = await getdata.getNotesData(session.user.id)
     if not PluginConfig.get("isGuild"):
         await send.sendWithAt(
             "正在生成图片，请稍等一下哦！\n//·/w\\·\\\\", recallTime=5
@@ -321,7 +314,7 @@ async def _(session: Uninfo, acc: Match[float]):
         "b19_list": save_b19["b19_list"],
         "Date": save.saveInfo.summary.updatedAt,
         "background": await getInfo.getill(random.choice(getInfo.illlist)),
-        "theme": plugin_data.get("plugin_data", {}).get("theme", "star"),
+        "theme": plugin_data.plugin_data.theme,
         "gameuser": gameuser,
         "stats": stats,
         "spInfo": f"ACC is limited to {_acc}%",
@@ -375,7 +368,7 @@ async def _(session: Uninfo, picversion: Match[int], song: Match[str]):
     }
     data["illustration"] = await getInfo.getill(_song)
     songsinfo = await getInfo.info(_song, True)
-    assert songsinfo is not None
+    assert songsinfo
     match _picversion:
         case 2:
             for level, a in ans.items():
@@ -441,7 +434,7 @@ async def _(session: Uninfo, input: Match):
             logger.warning(f"曲目无信息: {id}", "phi-plugin")
             continue
         info = await getdata.info(song, True)
-        assert info is not None
+        assert info
         record = Record[id]
         for lv in range(4):
             if not info.chart.get(Level[lv]):
@@ -476,14 +469,14 @@ async def _(session: Uninfo, input: Match):
         )
     data = data[:limitnum]
     data = sorted(data, key=cmp_to_key(cmpsugg))
-    plugin_data = await getdata.getpluginData(session.user.id)
+    plugin_data = await getdata.getNotesData(session.user.id)
     await send.sendWithAt(
         await picmodle.list(
             {
                 "head_title": "推分建议",
                 "song": data,
                 "background": await getdata.getill(random.choice(getInfo.illlist)),
-                "theme": plugin_data.get("plugin_data", {}).get("theme", "star"),
+                "theme": plugin_data.plugin_data.theme,
                 "PlayerId": save.saveInfo.PlayerId,
                 "Rks": round(save.saveInfo.summary.rankingScore, 4),
                 "Date": save.saveInfo.summary.updatedAt,
@@ -543,7 +536,7 @@ async def _(session: Uninfo, song: Match):
             # 曲目成绩对象
             songRecord = save.getSongsRecord(id)
             info = await getInfo.info(_song, True)
-            assert info is not None
+            assert info
             for level in info.chart:
                 # 跳过旧谱
                 if not level:
@@ -566,7 +559,7 @@ async def _(session: Uninfo, song: Match):
                     song_box[_song]["chart"][level]["fc"] = Record.fc
                 count["tot"] += 1
                 if getattr(Record, "Rating", None):
-                    assert Record is not None
+                    assert Record
                     count[Record.Rating] += 1
                     rankAcc[level] += Record.acc
                 else:

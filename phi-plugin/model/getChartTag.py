@@ -44,7 +44,7 @@ class getChartTag(BaseModel):
         """
         if cls.data is None:
             await cls.init()
-            assert cls.data is not None
+            assert cls.data
         d = cls.data.get(songId, {}).get(rank)
         if d is None:
             return []
@@ -74,7 +74,7 @@ class getChartTag(BaseModel):
         """
         if cls.data is None:
             await cls.init()
-            assert cls.data is not None
+            assert cls.data
         if not cls.data.get(id):
             cls.data[id] = {}
         if not cls.data[id].get(rank):
@@ -108,7 +108,7 @@ class getChartTag(BaseModel):
         """
         if cls.data is None:
             await cls.init()
-            assert cls.data is not None
+            assert cls.data
         if not cls.data.get(id):
             cls.data[id] = {}
         if not cls.data[id].get(rank):

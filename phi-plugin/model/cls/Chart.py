@@ -1,10 +1,12 @@
 from pydantic import BaseModel
 
+from ..constNum import LevelItem
+
 
 class Chart(BaseModel):
-    id: str = ""
+    id: str | None = None
     """idString"""
-    rank: str = ""
+    rank: LevelItem | None = None
     """Level"""
     charter: str = ""
     """谱师"""

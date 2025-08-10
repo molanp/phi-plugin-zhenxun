@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import secrets
 from typing import Any, ClassVar, Literal
 
 from tortoise import fields
@@ -125,7 +126,7 @@ class RksRank(Model):
     rks = fields.FloatField(description="用户RKS分数")
     """用户的RKS数值"""
     created_at = fields.DatetimeField(auto_now_add=True)
-    """记录创建时间"""
+    """创建时间"""
     updated_at = fields.DatetimeField(auto_now=True)
     """最后更新时间"""
 
@@ -440,3 +441,47 @@ class qrCode(Model):
     async def del_qecode(cls, user_id: str) -> bool:
         deleted = await cls.filter(uid=user_id).delete()
         return deleted > 0
+
+
+class Comment(Model):
+    id = fields.IntField(pk=True, generated=True, auto_increment=True)
+    """自增id"""
+    songId = fields.CharField(255, description="歌曲id")
+    """歌曲id"""
+    commentId = fields.IntField(10, description="评论id", default=secrets.randbits(32))
+    """评论id"""
+    sessionToken = fields.CharField(255, description="评论者SessionToken")
+    """评论者sessionToken"""
+    ObjectId = fields.CharField(255, description="评论者ObjectId")
+    """评论者ObjectId"""
+    PlayerId = fields.CharField(255, description="评论者PlayerId")
+    """评论者PlayerId"""
+    avatar = fields.CharField(255, description="评论者头像")
+    """评论者头像"""
+    rks = fields.FloatField(description="评论者rankingScore")
+    """评论者rankingScore"""
+    challenge = fields.FloatField(description="评论者challengeModeRank")
+    """评论者challengeModeRank"""
+    rank = fields.CharField(255, description="曲目难度")
+    """曲目难度"""
+    score = fields.IntField(description="评论者分数")
+    """评论者分数"""
+    acc = fields.FloatField(description="评论者准确率")
+    """评论者准确率"""
+    fc = fields.BooleanField(description="评论者是否fc")
+    """评论者是否fc"""
+    spInfo = fields.CharField(255, description="评论者谱面信息")
+    """评论者谱面信息"""
+    comment = fields.TextField(description="评论内容")
+    """评论内容"""
+    created_at = fields.DatetimeField(auto_now_add=True)
+    """创建时间"""
+    updated_at = fields.DatetimeField(auto_now=True)
+    """最后更新时间"""
+
+    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
+        table = "phiPlugin_comment"
+        table_description = "Phi 评论数据"
+        indexes: ClassVar = [
+            ("commentId", "PlayerId", "songId"),
+        ]

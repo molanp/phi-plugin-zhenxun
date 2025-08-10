@@ -4,11 +4,9 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
-from ..utils import to_dict
 from .constNum import LevelItem
 from .getFile import readFile
-from .getSave import getSave
-from .path import pluginDataPath, savePath
+from .path import pluginDataPath
 
 
 class taskDataDetail(BaseModel):
@@ -38,37 +36,6 @@ class NotesData(BaseModel):
 
 
 class getNotes:
-    @staticmethod
-    async def getPluginData(user_id: str) -> dict[str, Any]:
-        """
-        获取uid对应的娱乐数据
-
-        :param str user_id: 用户id
-        """
-        session = await getSave.get_user_token(user_id)
-        if session is not None:
-            return {
-                **to_dict(await getNotes.getNotesData(user_id)),
-                **to_dict(await getSave.getHistory(user_id)),
-            }
-        return {}
-
-    @staticmethod
-    async def putPluginData(user_id: str, data: dict[str, Any]) -> bool:
-        """保存 user_id 对应的娱乐数据"""
-        session = await getSave.get_user_token(user_id)
-        if data.get("rks") is not None:
-            assert session is not None
-            # 分流
-            history = {
-                "data": data.get("data"),
-                "rks": data.get("rks"),
-                "scoreHistory": data.get("scoreHistory"),
-                "dan": data.get("plugin_data", {}).get("CLGMOD"),
-                "version": data.get("version"),
-            }
-            return await readFile.SetFile(savePath / session / "history.json", history)
-        return await readFile.SetFile(pluginDataPath / f"{user_id}_.json", data)
 
     @staticmethod
     async def getNotesData(user_id: str, islock: bool = False) -> NotesData:
