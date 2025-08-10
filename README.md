@@ -91,7 +91,7 @@
 | `/phi (addtag\|subtag\|retag) <曲名> <难度> <标签>`                   | 对某个标签赞成、反对或撤销表态，难度默认为 IN                                                                   |
 | `/phi (comment\|cmt\|评论\|评价) <曲名> <难度?>(换行)<内容>`          | 评论曲目，难度默认为 IN                                                                                         |
 | `/phi recmt <评论ID>`                                                 | 查看并确认是否删评，仅发送者和主人权限，需要二次确认                                                            |
-| `/phi mycmt`                                                          | 查看自己的云端评论                                                                                              |
+| `/phi mycmt`                                                          | 查看自己的全部评论                                                                                              |
 | `/phi (table\|定数表) <定数>`                                         | 查询 phigros 定数表（B 站[@yuhao7370](space.bilibili.com/275661582)）                                           |
 | `/phi new`                                                            | 查询更新的曲目                                                                                                  |
 | `/phi tips`                                                           | 随机 tips                                                                                                       |
