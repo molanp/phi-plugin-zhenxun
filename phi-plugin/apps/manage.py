@@ -220,7 +220,7 @@ async def _(session: Uninfo, func: Match[str]):
                 await banGroup.add(group_id, i)
         case _:
             if f in banSetting:
-                return await banGroup.add(
+                await banGroup.add(
                     group_id,
                     f,
                 )

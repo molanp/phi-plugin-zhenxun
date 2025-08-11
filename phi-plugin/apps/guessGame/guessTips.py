@@ -1,3 +1,4 @@
+import random
 import time
 from typing import Any
 
@@ -56,7 +57,7 @@ class guessTips:
                     f"这首曲目的⌈{level}⌋难度⌈谱师⌋为 {info.chart[level].charter}",
                 )
             )
-        tip = fCompute.randArray(tip)
+        random.shuffle(tip)
         tip = tip[: PluginConfig.get("GuessTipsTipNum")]
         # 曲绘区域
         # width

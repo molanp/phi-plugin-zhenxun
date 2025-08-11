@@ -39,17 +39,19 @@ class getComment:
         return await Comment.filter(songId=songId).order_by("-created_at")
 
     @staticmethod
-    async def getByCommentId(commentId: str):
+    async def getByCommentId(commentId: int):
         """获取CommentId对应评论"""
         return await Comment.get_or_none(commentId=commentId)
 
     @staticmethod
-    async def getByPlayerId(PlayerId: str):
-        """获取PlayerId的全部评论"""
-        return await Comment.filter(PlayerId=PlayerId).order_by("-created_at")
+    async def getBySstkAndObjectId(sessionToken: str, ObjectId: str):
+        """获取sessionToken和ObjectId的全部评论"""
+        return await Comment.filter(
+            sessionToken=sessionToken, ObjectId=ObjectId
+        ).order_by("-created_at")
 
     @staticmethod
-    async def update(commentId: str, comment: CommentDict):
+    async def update(commentId: int, comment: CommentDict):
         """更新评论"""
         if Comment.exists(commentId=commentId):
             await Comment.filter(commentId=commentId).update(**comment)
@@ -59,7 +61,7 @@ class getComment:
     @staticmethod
     async def add(songId: str, comment: CommentDict):
         """添加评论"""
-        await Comment.create(songId=songId, **comment)
+        return bool(await Comment.create(songId=songId, **comment))
 
     @staticmethod
     async def delete(commentId: int):

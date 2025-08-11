@@ -53,8 +53,6 @@ class getBanGroup:
             "ill",
             "chart",
             "addtag",
-            "subtag",
-            "retag",
             "search",
             "alias",
             "randmic",
@@ -114,8 +112,6 @@ class getBanGroup:
                 | "ill"
                 | "chart"
                 | "addtag"
-                | "retag"
-                | "subtag"
                 | "search"
                 | "alias"
                 | "randmic"

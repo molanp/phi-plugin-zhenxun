@@ -22,7 +22,7 @@ class LimitObject(TypedDict):
 
 
 class B19Result(TypedDict):
-    phi: list[LevelRecordInfo | bool]
+    phi: list[LevelRecordInfo | None]
     b19_list: list[LevelRecordInfo]
     com_rks: float
 
@@ -428,17 +428,17 @@ class Save:
         # 满分且 rks 最高的成绩数组
         philist = self.findAccRecord(100)
         # p3
-        phi: list[LevelRecordInfo | bool] = [
+        phi: list[LevelRecordInfo | None] = [
             philist.pop(0) for _ in range(min(3, len(philist)))
         ]
         # logger.info(phi, "phi-plugin")
         if len(phi) < 3:
             # 在末尾补到3位
-            phi += [False] * (3 - len(phi))
+            phi += [None] * (3 - len(phi))
         # 处理数据
         for i in range(3):
             record = phi[i]
-            if isinstance(record, bool):
+            if not record:
                 continue
 
             if record.rks:
@@ -489,7 +489,7 @@ class Save:
             b19_list.append(record)
         com_rks = sum_rks / 30
         self.B19List = {
-            "phi": phi,  # type: ignore
+            "phi": phi,
             "b19_list": b19_list,
             "com_rks": com_rks,
         }
@@ -516,17 +516,17 @@ class Save:
                 philist.pop(i)
             i -= 1
         # p3
-        phi: list[LevelRecordInfo | bool] = [
+        phi: list[LevelRecordInfo | None] = [
             philist.pop(0) for _ in range(min(3, len(philist)))
         ]
         # logger.info(phi, "phi-plugin")
         if len(phi) < 3:
             # 在末尾补到3位
-            phi += [False] * (3 - len(phi))
+            phi += [None] * (3 - len(phi))
         # 处理数据
         for i in range(3):
             record = phi[i]
-            if isinstance(record, bool):
+            if not record:
                 continue
             if record.rks:
                 temp = copy.deepcopy(record)  # 防止污染原数据

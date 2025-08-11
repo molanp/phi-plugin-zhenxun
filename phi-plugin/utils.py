@@ -9,7 +9,7 @@ from nonebot_plugin_uninfo import Uninfo
 from .model.getBanGroup import getBanGroup
 
 
-def to_dict(c: Any) -> dict:
+def to_dict(c: Any) -> dict[Any, Any]:
     if c is None:
         return {}
 
@@ -128,8 +128,6 @@ def can_be_call(
         "ill",
         "chart",
         "addtag",
-        "subtag",
-        "retag",
         "search",
         "alias",
         "randmic",

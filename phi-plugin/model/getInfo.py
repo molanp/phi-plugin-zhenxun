@@ -8,9 +8,9 @@ from zhenxun.services.log import logger
 
 from ..config import PluginConfig, onLinePhiIllUrl
 from ..utils import to_dict
-from .cls.Chart import Chart
+from .cls.Chart import Chart, UpdateChart
 from .cls.SongsInfo import SongsInfo, SongsInfoObject
-from .constNum import MAX_DIFFICULTY, Level
+from .constNum import MAX_DIFFICULTY, Level, LevelItem
 from .fCompute import fCompute
 from .getFile import readFile
 from .path import DlcInfoPath, configPath, imgPath, infoPath, oldInfoPath, ortherIllPath
@@ -71,12 +71,14 @@ class getInfo:
     """SP信息"""
     Level = Level
     """难度映射"""
-    MAX_DIFFICULTY: float = 0
+    MAX_DIFFICULTY: float = 0.0
     """最高定数"""
     songlist: list[str] = []  # noqa: RUF012
     """所有曲目曲名列表"""
     updatedSong: list[str] = []  # noqa: RUF012
-    updatedChart: dict[str, dict[str, Chart]] = {}  # noqa: RUF012
+    """新曲速递"""
+    updatedChart: dict[str, dict[LevelItem, UpdateChart]] = {}  # noqa: RUF012
+    """谱面修改"""
     nicklist: dict[str, list[str]] = {}  # noqa: RUF012
     """默认别名,以曲名为key"""
     songnick: dict[str, list[str]] = {}  # noqa: RUF012
@@ -185,7 +187,7 @@ class getInfo:
                 # 获取新旧数据
                 new_dif = (
                     float(Csvdif[i][level])
-                    if isinstance(Csvdif[i], dict) and Csvdif[i].get(level)
+                    if isinstance(Csvdif[i], dict) and level in Csvdif[i]
                     else 0
                 )
                 new_notes: levelDetail = getattr(noteInfo[id_key], level, levelDetail())
@@ -196,17 +198,16 @@ class getInfo:
 
                 # 判断是否发生变化
                 is_new_chart = False
-                update_difficulty = None
-                update_tap = update_drag = update_hold = update_flick = update_combo = (
-                    None
-                )
+                update_difficulty = update_tap = update_drag = update_hold = (
+                    update_flick
+                ) = update_combo = [0.0, 0.0]
 
                 if OldDifList.get(id_key):
                     if not old_level_data or old_level_data != Csvdif[i][level]:
                         update_difficulty = (
                             [old_level_data, new_dif]
                             if old_level_data
-                            else [None, new_dif]
+                            else [0, new_dif]
                         )
                         is_new_chart = True
                     if old_note_data and new_notes and old_note_data.t != new_notes.t:
@@ -230,7 +231,7 @@ class getInfo:
                 if is_new_chart:
                     if song_name not in cls.updatedChart:
                         cls.updatedChart[song_name] = {}
-                    cls.updatedChart[song_name][level] = Chart(
+                    cls.updatedChart[song_name][level] = UpdateChart(
                         **{
                             "difficulty": update_difficulty,
                             "tap": update_tap,
@@ -238,7 +239,7 @@ class getInfo:
                             "hold": update_hold,
                             "flick": update_flick,
                             "combo": update_combo,
-                            "isNew": not old_level_data,  # 如果没有旧难度就是全新
+                            "isNew": not old_level_data,
                         }
                     )
 
@@ -500,8 +501,13 @@ class getInfo:
         return ans
 
     @staticmethod
-    def getTableImg(dif: str) -> str:
-        return f"{onLinePhiIllUrl}/table/" + f"{dif}.png"
+    def getTableImg(dif: float) -> str:
+        """
+        返回定数图片地址
+
+        :param dif: 定数
+        """
+        return f"{onLinePhiIllUrl}/table/" + f"{int(dif)}.png"
 
     @staticmethod
     def getChapIll(name: str) -> str:

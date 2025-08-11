@@ -20,13 +20,15 @@
 
 当前同步的版本
 
-[6fd8c98b7a1b7e8da98e22d3efea014e1202c86a](https://github.com/Catrong/phi-plugin/commit/6fd8c98b7a1b7e8da98e22d3efea014e1202c86a)
+[9a34bf433c341a2159c6eeb16426cd95d77e6a97](https://github.com/Catrong/phi-plugin/commit/9a34bf433c341a2159c6eeb16426cd95d77e6a97)
 
-[已落后的变更](https://github.com/Catrong/phi-plugin/compare/6fd8c98b7a1b7e8da98e22d3efea014e1202c86a...main)
+[已落后的变更](https://github.com/Catrong/phi-plugin/compare/9a34bf433c341a2159c6eeb16426cd95d77e6a97...main)
 
 </details>
 
 ## 长期寻求合作者共同开发
+
+当前插件功能全部移植完成，正在逐步**测试**各个功能，全部测试通过后将会正式上架插件商店
 
 ## 任务列表
 
@@ -39,13 +41,24 @@
 - [x] 移植 `jrrp`
 - [x] 移植 `manage`
 - [x] 移植 `money`
-- [ ] 移植 `phisong`
+- [x] 移植 `phisong`
 - [x] 移植 `RankList`
 - [x] 移植 `session`
 - [x] 移植 `setting` (**不支持**)
 - [x] 移植 `update` (**不支持**)
 - [x] 移植 `user`
 - [ ] 测试功能
+  - [ ] `b19`
+  - [ ] `Dan`
+  - [ ] `guessGame`
+  - [ ] `help`
+  - [ ] `jrrp`
+  - [ ] `manage`
+  - [ ] `money`
+  - [ ] `phisong`
+  - [ ] `RankList`
+  - [ ] `session`
+  - [ ] `user`
 - [ ] 整理代码逻辑
 - [ ] 优化代码性能
 

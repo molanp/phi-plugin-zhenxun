@@ -3,6 +3,8 @@ import secrets
 from typing import Any, ClassVar, Literal
 
 from tortoise import fields
+from tortoise.expressions import Q
+from tortoise.functions import Count
 
 from zhenxun.services.db_context import Model
 
@@ -133,9 +135,7 @@ class RksRank(Model):
     class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
         table = "phiPlugin_rksRank"
         table_description = "Phi RKS数据表"
-        indexes: ClassVar = [
-            ("sessionToken", "rks"),
-        ]
+        indexes: ClassVar = [("sessionToken", "rks")]
 
     @classmethod
     async def get_user_rks(cls, sessionToken: str) -> float | None:
@@ -163,15 +163,13 @@ class RksRank(Model):
         return True
 
     @classmethod
-    async def delete_user_rks(cls, sessionToken: str) -> bool:
+    async def delete_user_rks(cls, sessionToken: str):
         """
         删除用户RKS
 
         :param sessionToken: 用户SessionToken
-        :return: 是否删除成功
         """
-        deleted = await cls.filter(sessionToken=sessionToken).delete()
-        return deleted > 0
+        await cls.filter(sessionToken=sessionToken).delete()
 
     @classmethod
     async def getAllRank(cls) -> int:
@@ -234,6 +232,7 @@ class banGroup(Model):
     class Meta:  # type: ignore
         table = "phiPlugin_banGroup"
         table_description = "Phi 群组封禁功能表"
+        indexes: ClassVar = [("group_id",)]
 
     @classmethod
     async def getStatus(
@@ -276,11 +275,9 @@ class banGroup(Model):
             "setting",
             "dan",
         ],
-    ) -> bool:
-        if await cls.getStatus(group_id, func):
-            return False
-        await cls.create(group_id=group_id, func=func)
-        return True
+    ):
+        if not await cls.filter(group_id=group_id, func=func).exists():
+            await cls.create(group_id=group_id, func=func)
 
     @classmethod
     async def show(cls, group_id: str) -> list[str]:
@@ -305,9 +302,8 @@ class banGroup(Model):
             "setting",
             "dan",
         ],
-    ) -> bool:
-        deleted = await cls.filter(group_id=group_id, func=func).delete()
-        return deleted > 0
+    ):
+        await cls.filter(group_id=group_id, func=func).delete()
 
 
 def calculate_jrrp_expiration():
@@ -478,10 +474,53 @@ class Comment(Model):
     """创建时间"""
     updated_at = fields.DatetimeField(auto_now=True)
     """最后更新时间"""
-
     class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
         table = "phiPlugin_comment"
         table_description = "Phi 评论数据"
-        indexes: ClassVar = [
-            ("commentId", "PlayerId", "songId"),
-        ]
+        indexes: ClassVar = [("commentId", "PlayerId", "songId")]
+
+
+class ChartTag(Model):
+    id = fields.IntField(pk=True, generated=True, auto_increment=True)
+    """自增id"""
+    songId = fields.CharField(255, description="歌曲Id")
+    """歌曲Id"""
+    tag = fields.CharField(255, description="曲目Tag")
+    """曲目Tag"""
+    rank = fields.CharField(255, description="难度")
+    """曲目难度"""
+    is_agree = fields.BooleanField(description="是否同意")
+    """是否同意"""
+    userId = fields.CharField(255, description="用户Id")
+    """用户Id"""
+    created_at = fields.DatetimeField(auto_now_add=True)
+    """创建时间"""
+
+    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
+        table = "phiPlugin_chartTag"
+        table_description = "Phi 谱面标签数据"
+        indexes: ClassVar = [("userId", "rank", "songId", "is_agree")]
+
+    @classmethod
+    async def get_tag_stats(cls, song_id: str, rank: str) -> dict[str, tuple[int, int]]:
+        """
+        获取指定歌曲和难度的标签统计
+
+        :param song_id: 歌曲id
+        :param rank: 难度
+
+        :return: tag: (同意数, 不同意数)
+        """
+        data = (
+            await ChartTag.filter(songId=song_id, rank=rank)
+            .group_by("tag")
+            .annotate(
+                agree=Count("id", _filter=Q(is_agree=True)),
+                disagree=Count("id", _filter=Q(is_agree=False)),
+            )
+            .values("tag", "agree", "disagree")
+        )
+
+        return {
+            item["tag"]: (item["agree"] or 0, item["disagree"] or 0) for item in data
+        }

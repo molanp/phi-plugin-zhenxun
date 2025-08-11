@@ -377,7 +377,7 @@ class getdata:
         return getInfo.SongGetId(song)
 
     @staticmethod
-    def getrks(acc: float, difficulty: int):
+    def getrks(acc: float, difficulty: float):
         """
         计算等效rks
 
@@ -396,7 +396,7 @@ class getdata:
             return difficulty * (((acc - 55) / 45) ** 2)
 
     @staticmethod
-    def comsuggest(rks: float, difficulty: int, count: int | None = None):
+    def comsuggest(rks: float, difficulty: float, count: int | None = None):
         """
         计算所需acc
 

@@ -8,7 +8,6 @@ from nonebot_plugin_alconna import Alconna, on_alconna
 from nonebot_plugin_uninfo import Uninfo
 
 from ..config import cmdhead, recmdhead
-from ..model.fCompute import fCompute
 from ..model.getdata import getdata
 from ..model.getFile import readFile
 from ..model.getInfo import getInfo
@@ -36,7 +35,7 @@ tkhelp = on_alconna(
 
 
 @help.handle()
-async def _(session: Uninfo):
+async def _(bot, session: Uninfo):
     pluginData = await getdata.getNotesData(session.user.id)
     helpGroup = await readFile.FileReader(infoPath / "help.json")
     await send.sendWithAt(
@@ -44,7 +43,7 @@ async def _(session: Uninfo):
             {
                 "helpGroup": helpGroup,
                 "cmdHead": cmdhead,
-                "isMaster": await fCompute.is_superuser(session),
+                "isMaster": session.user.id in bot.config.superusers,
                 "background": await getdata.getill(random.choice(getInfo.illlist)),
                 "theme": pluginData.plugin_data.theme,
             }

@@ -2,7 +2,7 @@ from datetime import datetime
 from pathlib import Path
 import random
 import re
-from typing import Literal
+from typing import Literal, TypeVar
 
 from nonebot_plugin_alconna import File, UniMessage
 from nonebot_plugin_uninfo import Uninfo
@@ -14,6 +14,8 @@ from zhenxun.utils.rules import ensure_group
 
 from ..utils import Date
 from .constNum import MAX_DIFFICULTY
+
+T = TypeVar("T")
 
 
 class match_request_return_2(BaseModel):
@@ -135,20 +137,6 @@ class fCompute:
         return random.randint(min, max)
 
     @staticmethod
-    def randArray(arr: list) -> list:
-        """
-        随机打乱数组
-
-        :param arr: 数组
-        """
-        arr = arr.copy()
-        new_arr = []
-        while arr:
-            index = random.randint(0, len(arr) - 1)
-            new_arr.append(arr.pop(index))
-        return new_arr
-
-    @staticmethod
     def formatDate(date: datetime | str | float | None) -> str:
         """
         转换时间格式
@@ -232,17 +220,6 @@ class fCompute:
             rich_text = rich_text.replace("&lt;", "<").replace("&gt;", ">")
 
         return rich_text
-
-    @staticmethod
-    async def is_superuser(session: Uninfo) -> bool:
-        """是否是超级管理员"""
-        if not ensure_group(session):
-            return False
-        level = await LevelUser.get_user_level(
-            session.user.id,
-            session.scene.id,
-        )
-        return level >= 9
 
     @staticmethod
     def match_range(msg: str, r: list | None = None) -> list[float]:
