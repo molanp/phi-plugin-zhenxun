@@ -13,8 +13,8 @@ PATH = Path(__file__).parent
 VERSION_PATTERN = re.compile(
     r"https://img\.shields\.io/badge/(?P<type>插件版本|Phigros)-(?P<version>(.*))-9cf"
 )
-currentVersion = "未知"
-phigros_ver = "未知"
+currentVersion = ""
+phigros_ver = ""
 with contextlib.suppress(Exception):
     if (PATH / "README.md").exists():
         with open(PATH / "README.md", encoding="utf-8") as f:
@@ -24,9 +24,9 @@ with contextlib.suppress(Exception):
             version = match["version"]
 
             if ver_type == "插件版本":
-                currentVersion = f"v{version}"
+                currentVersion = f" v{version}"
             elif ver_type == "Phigros":
-                phigros_ver = version
+                phigros_ver = f" {version}"
 
 Version: dict[Literal["ver", "phigros", "nonebot"], str] = {
     "ver": currentVersion,
