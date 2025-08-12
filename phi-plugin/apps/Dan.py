@@ -12,7 +12,8 @@ from ..model.getdata import getdata
 from ..model.getSave import getSave
 from ..model.send import send
 from ..model.Vika import Vika
-from ..utils import can_be_call, to_dict
+from ..rule import can_be_call
+from ..utils import to_dict
 
 read = "https://www.bilibili.com/read/cv27354116"
 sheet = "https://f.kdocs.cn/g/fxsg4EM2/"
@@ -20,7 +21,7 @@ word = getdata.getimg("dan_code")
 cancanneed = bool(Vika.PhigrosDan)
 
 if not cancanneed:
-    logger.info("未填写 Vika Token ，将禁用段位认证。", "phi-plugin:Dan")
+    logger.warning("未填写 Vika Token ，将禁用段位认证", "phi-plugin:Dan")
 
 
 async def is_enable() -> bool:
@@ -56,7 +57,7 @@ async def _(session: Uninfo, name: Match[str]):
             for i in dan:
                 resmsg.extend(
                     (
-                        f"\n{i['Dan'].replace('/', ' ')} {'EX' if i.get('EX') else ''}",
+                        f"\n{i['Dan'].replace('/', ' ')} {'EX' if 'EX' in i else ''}",
                         Image(
                             url=i["img"]
                         ),  # BUG: 这里不知道vika表内此字段具体的图片资源是用什么表示的
@@ -78,7 +79,7 @@ async def _(session: Uninfo, name: Match[str]):
             if not dan:
                 await send.sendWithAt(
                     [
-                        f"唔，暂时没有在审核通过列表里找到{name}哦！如果提交过审核的话，请耐心等待审核通过哦！",
+                        f"唔，暂时没有在审核通过列表里找到{_name}哦！如果提交过审核的话，请耐心等待审核通过哦！",
                         word,
                     ]
                 )
@@ -87,7 +88,7 @@ async def _(session: Uninfo, name: Match[str]):
             for i in dan:
                 resmsg.extend(
                     (
-                        f"\n{i['Dan'].replace('/', ' ')} {'EX' if i.get('EX') else ''}",
+                        f"\n{i['Dan'].replace('/', ' ')} {'EX' if 'EX' in i else ''}",
                         Image(
                             url=i["img"]
                         ),  # BUG: 这里不知道vika表内此字段具体的图片资源是用什么表示的

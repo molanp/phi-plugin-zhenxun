@@ -136,7 +136,7 @@ class guessIll:
         for song in songsname:
             songweights[group_id][song] = 1
         song = getRandomSong(group_id)
-        songs_info = await getInfo.info(song)
+        songs_info = getInfo.info(song)
         cnnt = 0
         while songs_info and songs_info.can_t_be_guessill:
             cnnt += 1
@@ -145,7 +145,7 @@ class guessIll:
                 await send.sendWithAt("抽取曲目失败，请检查曲库设置")
                 return
             song = getRandomSong(group_id)
-            songs_info = await getInfo.info(song)
+            songs_info = getInfo.info(song)
         if songs_info is None:
             await send.sendWithAt(f"无法获取歌曲 {song} 的信息")
             return
@@ -157,7 +157,7 @@ class guessIll:
         y_ = random.randint(0, 1080 - h_)
         blur_ = random.randint(9, 14)
         data = {
-            "illustration": await getInfo.getill(songs_info.song),
+            "illustration": getInfo.getill(songs_info.song),
             "width": w_,
             "height": h_,
             "x": x_,
@@ -261,7 +261,7 @@ class guessIll:
         """玩家猜测"""
         group_id = session.scene.id
         if group_id in gamelist:
-            song = await getdata.fuzzysongsnick(msg, 0.95)
+            song = getdata.fuzzysongsnick(msg, 0.95)
             if song and song[0]:
                 for i in song:
                     if gamelist[group_id] == i:

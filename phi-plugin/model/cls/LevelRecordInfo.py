@@ -19,7 +19,7 @@ class LevelRecordInfo(BaseModel):
     """准确率"""
     id: str = ""
     """曲目id"""
-    rank: LevelItem | None = None
+    rank: LevelItem | str = ""
     """Level"""
     Rating: Literal[
         "phi",
@@ -37,7 +37,7 @@ class LevelRecordInfo(BaseModel):
     illustration: str | Path = ""
     """曲绘链接"""
     difficulty: float = 0.0
-    """难度"""
+    """定数"""
     rks: float = 0.0
     """等效RKS"""
     suggest: str = ""
@@ -48,7 +48,7 @@ class LevelRecordInfo(BaseModel):
     """更新时间(iso)"""
 
     @classmethod
-    async def init(cls, data: dict, id: str, rank: int | str) -> "LevelRecordInfo":
+    def init(cls, data: dict, id: str, rank: int | str) -> "LevelRecordInfo":
         """
         :param data: 原始数据
         :param id: 曲目id
@@ -56,18 +56,18 @@ class LevelRecordInfo(BaseModel):
         """
         data_ = {"fc": data["fc"], "score": data["score"], "acc": data["acc"], "id": id}
         song = getInfo.idgetsong(id)
-        info = await getInfo.info(song, True) if song else None
+        info = getInfo.info(song) if song else None
         data_["rank"] = (
             getInfo.Level[rank] if isinstance(rank, int) else rank
         )  # EZ HD IN AT LEGACY
         data_["Rating"] = Rating(data_["score"], data_["fc"])  # V S A
-        if info is None:
+        if not info:
             data_["song"] = id
             data_["difficulty"] = 0
             data_["rks"] = 0
             return cls(**data_)
         data_["song"] = info.song  # 曲名
-        data_["illustration"] = await getInfo.getill(data_["song"])  # 曲绘链接
+        data_["illustration"] = getInfo.getill(data_["song"])  # 曲绘链接
         difficulty = (
             info.chart[data_["rank"]].difficulty
             if data_["rank"] in info.chart

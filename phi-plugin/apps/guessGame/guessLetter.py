@@ -142,7 +142,7 @@ class guessLetter:
         totNameList = []
         gameSelectList[group_id] = []
         if not song_name:
-            totNameList = await getInfo.all_info()
+            totNameList = getInfo.all_info()
             gameSelectList[group_id].append("phigros")
         else:
             for i in getInfo.DLC_Info.keys():
@@ -180,7 +180,7 @@ class guessLetter:
             randsong = getRandomSong(group_id)
             # 防止抽到重复的曲目
             cnnt = 0
-            songinfo = await getInfo.info(randsong)
+            songinfo = getInfo.info(randsong)
             assert songinfo
             while randsong in chose or songinfo.can_t_be_letter:
                 cnnt += 1
@@ -358,9 +358,9 @@ class guessLetter:
                     await send.sendWithAt(f"没有第{num}个啦！看清楚再回答啊喂！￣へ￣")
                     return
                 songs = (
-                    await getdata.fuzzysongsnick(content, 0.95)
+                    getdata.fuzzysongsnick(content, 0.95)
                     if isfuzzymatch
-                    else await getdata.songsnick(content)
+                    else getdata.songsnick(content)
                 )
                 standard_song = gamelist[group_id].get(num)
                 if songs:
@@ -380,17 +380,15 @@ class guessLetter:
                                 True,
                             )
                             # 发送曲绘
-                            if song_info := await getdata.info(standard_song):
+                            if song_info := getdata.info(standard_song):
                                 if song_info.illustration:
                                     match PluginConfig.get("LetterIllustration"):
                                         case "水印版":
                                             await send.sendWithAt(
                                                 await getdata.getillpicmodle(
                                                     {
-                                                        "illustration": (
-                                                            await getdata.getill(
-                                                                standard_song
-                                                            )
+                                                        "illustration": getdata.getill(
+                                                            standard_song
                                                         ),
                                                         "illustrator": (
                                                             song_info.illustrator

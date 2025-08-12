@@ -19,7 +19,8 @@ from ..model.getRksRank import getRksRank
 from ..model.getSave import getSave
 from ..model.picmodle import picmodle
 from ..model.send import send
-from ..utils import can_be_call, to_dict
+from ..rule import can_be_call
+from ..utils import to_dict
 
 rankList = on_alconna(
     Alconna(
@@ -136,8 +137,7 @@ async def _(session: Uninfo):
             godRecord = PhigrosUser(item)
             await godRecord.buildRecord()
             record = to_dict(godRecord)
-            god = await Save().constructor(record, True)
-            await god.init()
+            god = Save(**record)
             data["users"].append(await makeLargeLine(god, saveHistory(record)))
             data["users"][len(data["users"])]["index"] = index
     await send.sendWithAt(await picmodle.common("rankingList", data))
@@ -163,10 +163,10 @@ async def makeLargeLine(save: Save, history: saveHistory):
     )
     b30Data = await save.getB19(33)
     b30list = {
-        "P3": {"title": "Perfect 3", "list": b30Data["phi"]},
-        "B3": {"title": "Best 3", "list": b30Data["b19_list"][3]},
-        "F3": {"title": "Floor 3", "list": b30Data["b19_list"][24:27]},
-        "L3": {"title": "Overflow 3", "list": b30Data["b19_list"][27:30]},
+        "P3": {"title": "Perfect 3", "list": b30Data.phi},
+        "B3": {"title": "Best 3", "list": b30Data.b19_list[3]},
+        "F3": {"title": "Floor 3", "list": b30Data.b19_list[24:27]},
+        "L3": {"title": "Overflow 3", "list": b30Data.b19_list[27:30]},
     }
     return {
         "backgroundurl": await getInfo.getBackground(save.gameuser.background),

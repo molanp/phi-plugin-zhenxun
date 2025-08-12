@@ -10,35 +10,22 @@ from zhenxun.services.db_context import Model
 
 from .utils import Date
 
+INITDATABASE = True
 
 class SstkData(Model):
     id = fields.IntField(pk=True, generated=True, auto_increment=True)
     """自增id"""
-    uid = fields.CharField(255, description="用户uid", unique=True)
+    uid = fields.CharField(255, description="用户uid")
     """用户uid"""
     sessionToken = fields.CharField(255, description="用户SessionToken")
     """用户sstk"""
-    is_banned = fields.BooleanField(
-        default=False,
-        description="是否被封禁",
-        help_text="True: 被封禁, False: 未被封禁",
-    )
+    is_banned = fields.BooleanField(default=False, description="是否被封禁")
     """是否被封禁"""
 
     class Meta:  # pyright: ignore [reportIncompatibleVariableOverride]
         table = "phiPlugin_sstkData"
         table_description = "Phi sstk 数据表"
         indexes: ClassVar = [("uid", "sessionToken")]
-
-    @classmethod
-    async def _exists(cls, **filters) -> bool:
-        """
-        检测符合过滤条件的用户是否存在
-
-        :param filters: 过滤条件（如uid='123', uin='456'）
-        :return: 存在返回True，否则False
-        """
-        return await cls.filter(**filters).exists()
 
     @classmethod
     async def get_sstk(cls, uid: str) -> str | None:
@@ -73,8 +60,7 @@ class SstkData(Model):
         :param uid: 用户uid
         :return: 是否删除成功
         """
-        deleted = await cls.filter(uid=uid).delete()
-        return deleted > 0
+        return bool(await cls.filter(uid=uid).delete())
 
     @classmethod
     async def ban_sstk(cls, uid: str) -> bool:
@@ -84,8 +70,7 @@ class SstkData(Model):
         :param uid: 用户uid
         :return: 是否封禁成功
         """
-        updated = await cls.filter(uid=uid, is_banned=False).update(is_banned=True)
-        return updated > 0
+        return bool(await cls.filter(uid=uid, is_banned=False).update(is_banned=True))
 
     @classmethod
     async def unban_sstk(cls, uid: str) -> bool:
@@ -95,8 +80,7 @@ class SstkData(Model):
         :param uid: 用户uid
         :return: 是否解封成功
         """
-        updated = await cls.filter(uid=uid, is_banned=True).update(is_banned=False)
-        return updated > 0
+        return bool(await cls.filter(uid=uid, is_banned=True).update(is_banned=False))
 
     @classmethod
     async def is_ban_sessionToken(cls, sessionToken: str) -> bool:
@@ -254,7 +238,7 @@ class banGroup(Model):
             "dan",
         ],
     ) -> bool:
-        return await cls.filter(group_id=group_id, func=func).exists()
+        return await cls.exists(group_id=group_id, func=func)
 
     @classmethod
     async def add(
@@ -276,7 +260,7 @@ class banGroup(Model):
             "dan",
         ],
     ):
-        if not await cls.filter(group_id=group_id, func=func).exists():
+        if not await cls.exists(group_id=group_id, func=func):
             await cls.create(group_id=group_id, func=func)
 
     @classmethod
@@ -309,7 +293,7 @@ class banGroup(Model):
 def calculate_jrrp_expiration():
     """计算过期时间"""
     now = datetime.now()
-    today_8am = now.replace(hour=8, minute=0, second=0, microsecond=0)
+    today_8am = now.replace(hour=8, minute=0, second=0)
 
     return today_8am + timedelta(days=1)
 
@@ -444,7 +428,7 @@ class Comment(Model):
     """自增id"""
     songId = fields.CharField(255, description="歌曲id")
     """歌曲id"""
-    commentId = fields.IntField(10, description="评论id", default=secrets.randbits(32))
+    commentId = fields.IntField(description="评论id", default=secrets.randbits(32))
     """评论id"""
     sessionToken = fields.CharField(255, description="评论者SessionToken")
     """评论者sessionToken"""
@@ -474,6 +458,7 @@ class Comment(Model):
     """创建时间"""
     updated_at = fields.DatetimeField(auto_now=True)
     """最后更新时间"""
+
     class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
         table = "phiPlugin_comment"
         table_description = "Phi 评论数据"

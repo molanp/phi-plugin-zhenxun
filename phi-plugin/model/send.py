@@ -66,4 +66,4 @@ class send:
                 )
             return None
 
-        return await Save().constructor(to_dict(user_save))
+        return Save(**to_dict(user_save))

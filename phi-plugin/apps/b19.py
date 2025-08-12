@@ -17,14 +17,15 @@ from zhenxun.services.log import logger
 from ..config import PluginConfig, cmdhead, recmdhead
 from ..lib.PhigrosUser import PhigrosUser
 from ..model.cls.LevelRecordInfo import LevelRecordInfo
-from ..model.constNum import Level, LevelNum
+from ..model.constNum import Level
 from ..model.fCompute import fCompute
 from ..model.getdata import getdata
 from ..model.getInfo import getInfo
 from ..model.getPic import pic
 from ..model.picmodle import picmodle
 from ..model.send import send
-from ..utils import can_be_call, to_dict
+from ..rule import can_be_call
+from ..utils import Number, to_dict
 
 ChallengeModeName = ["白", "绿", "蓝", "红", "金", "彩"]
 
@@ -137,23 +138,23 @@ async def _(session: Uninfo, nnum: Match[int]):
                 f"{v}{u} "
                 for v, u in zip(money, ["KiB", "MiB", "GiB", "TiB", "PiB"])
                 if v
-            ]
+            ][::-1]
         ),
         "PlayerId": fCompute.convertRichText(save.saveInfo.PlayerId),
     }
     data = {
-        "phi": save_b19["phi"],
-        "b19_list": save_b19["b19_list"],
+        "phi": save_b19.phi,
+        "b19_list": save_b19.b19_list,
         "Date": save.saveInfo.summary.updatedAt,
-        "background": await getInfo.getill(random.choice(getInfo.illlist)),
+        "background": getInfo.getill(random.choice(getInfo.illlist)),
         "theme": plugin_data.plugin_data.theme,
         "gameuser": gameuser,
         "stats": stats,
     }
     res: list = [await picmodle.b19(to_dict(data))]
-    if abs(save_b19.get("com_rks", 0) - save.saveInfo.summary.rankingScore) > 0.1:  # type: ignore
+    if abs(save_b19.com_rks - save.saveInfo.summary.rankingScore) > 0.1:
         res.append(
-            f"请注意，当前版本可能更改了计算规则\n计算rks: {save_b19['com_rks']}\n"
+            f"请注意，当前版本可能更改了计算规则\n计算rks: {save_b19.com_rks}\n"
             f"存档rks:{save.saveInfo.summary.rankingScore}"
         )
     await send.sendWithAt(res, True)
@@ -183,28 +184,28 @@ async def _(session: Uninfo, nnum: Match[int]):
         logger.error("p30更新存档失败", "phi-plugin", session=session, e=e)
         await send.sendWithAt("p30生成失败了...", True)
         return
-    save_b19 = await save.getBestWithLimit(num, [{"type": "acc", "value": [100, 100]}])
+    save_b19 = save.getBestWithLimit(num, [{"type": "acc", "value": [100, 100]}])
     stats = save.getStats()
     money = getattr(save.gameProgress, "money", [0])
     gameuser = {
         "avatar": getdata.idgetavatar(save.gameuser.avatar),
         "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
         "ChallengeModeRank": save.saveInfo.summary.challengeModeRank % 100,
-        "rks": save_b19["com_rks"],
+        "rks": save_b19.com_rks,
         "data": "".join(
             [
                 f"{v}{u} "
                 for v, u in zip(money, ["KiB", "MiB", "GiB", "TiB", "PiB"])
                 if v
-            ]
+            ][::-1]
         ),
         "PlayerId": fCompute.convertRichText(save.saveInfo.PlayerId),
     }
     data = {
-        "phi": save_b19["phi"],
-        "b19_list": save_b19["b19_list"],
+        "phi": save_b19.phi,
+        "b19_list": save_b19.b19_list,
         "Date": save.saveInfo.summary.updatedAt,
-        "background": await getInfo.getill(random.choice(getInfo.illlist)),
+        "background": getInfo.getill(random.choice(getInfo.illlist)),
         "theme": plugin_data.plugin_data.theme,
         "gameuser": gameuser,
         "stats": stats,
@@ -213,7 +214,7 @@ async def _(session: Uninfo, nnum: Match[int]):
     res: list = [await picmodle.b19(data)]
     if abs(save_b19.get("com_rks", 0) - save.saveInfo.summary.rankingScore) > 0.1:  # type: ignore
         res.append(
-            f"计算rks: {save_b19['com_rks']}\n"
+            f"计算rks: {save_b19.com_rks}\n"
             f"存档rks:{save.saveInfo.summary.rankingScore}"
         )
     await send.sendWithAt(res, True)
@@ -244,22 +245,22 @@ async def _(session: Uninfo, nnum: Match[str]):
         "avatar": getdata.idgetavatar(save.gameuser.avatar),
         "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
         "ChallengeModeRank": save.saveInfo.summary.challengeModeRank % 100,
-        "rks": save_b19["com_rks"],
+        "rks": save_b19.com_rks,
         "data": "".join(
             [
                 f"{v}{u} "
                 for v, u in zip(money, ["KiB", "MiB", "GiB", "TiB", "PiB"])
                 if v
-            ]
+            ][::-1]
         ),
-        "backgroundUrl": await fCompute.getBackground(save.gameuser.background),
+        "backgroundUrl": fCompute.getBackground(save.gameuser.background),
         "PlayerId": fCompute.convertRichText(save.saveInfo.PlayerId),
     }
     data = {
-        "phi": save_b19["phi"],
-        "b19_list": save_b19["b19_list"],
+        "phi": save_b19.phi,
+        "b19_list": save_b19.b19_list,
         "Date": save.saveInfo.summary.updatedAt,
-        "background": await getInfo.getill(random.choice(getInfo.illlist)),
+        "background": getInfo.getill(random.choice(getInfo.illlist)),
         "theme": plugin_data.plugin_data.theme,
         "gameuser": gameuser,
         "spInfo": "All Perfect Only Mode",
@@ -290,9 +291,7 @@ async def _(session: Uninfo, acc: Match[float]):
         await send.sendWithAt(
             "正在生成图片，请稍等一下哦！\n//·/w\\·\\\\", recallTime=5
         )
-    save_b19 = await save.getBestWithLimit(
-        nnum, [{"type": "acc", "value": [_acc, 100]}]
-    )
+    save_b19 = save.getBestWithLimit(nnum, [{"type": "acc", "value": [_acc, 100]}])
     stats = save.getStats()
     money = getattr(save.gameProgress, "money", [0])
     gameuser = {
@@ -305,24 +304,24 @@ async def _(session: Uninfo, acc: Match[float]):
                 f"{v}{u} "
                 for v, u in zip(money, ["KiB", "MiB", "GiB", "TiB", "PiB"])
                 if v
-            ]
+            ][::-1]
         ),
         "PlayerId": fCompute.convertRichText(save.saveInfo.PlayerId),
     }
     data = {
-        "phi": save_b19["phi"],
-        "b19_list": save_b19["b19_list"],
+        "phi": save_b19.phi,
+        "b19_list": save_b19.b19_list,
         "Date": save.saveInfo.summary.updatedAt,
-        "background": await getInfo.getill(random.choice(getInfo.illlist)),
+        "background": getInfo.getill(random.choice(getInfo.illlist)),
         "theme": plugin_data.plugin_data.theme,
         "gameuser": gameuser,
         "stats": stats,
         "spInfo": f"ACC is limited to {_acc}%",
     }
     res: list = [await picmodle.b19(to_dict(data))]
-    if abs(save_b19["com_rks"] - save.saveInfo.summary.rankingScore) > 0.1:
+    if abs(save_b19.com_rks - save.saveInfo.summary.rankingScore) > 0.1:
         res.append(
-            f"计算rks: {save_b19['com_rks']}\n"
+            f"计算rks: {save_b19.com_rks}\n"
             f"存档rks:{save.saveInfo.summary.rankingScore}"
         )
     await send.sendWithAt(res, True)
@@ -335,7 +334,7 @@ async def _(session: Uninfo, picversion: Match[int], song: Match[str]):
     if not _song:
         await send.sendWithAt(f"请指定曲名哦！\n格式：{cmdhead} score <曲名>")
         return
-    __song = await getdata.fuzzysongsnick(_song)
+    __song = getdata.fuzzysongsnick(_song)
     if not __song:
         await send.sendWithAt(
             f"未找到 {_song} 的有关信息哦！",
@@ -366,12 +365,13 @@ async def _(session: Uninfo, picversion: Match[int], song: Match[str]):
         "CLGMOD": dan.get("Dan") if dan else None,
         "EX": dan.get("EX") if dan else None,
     }
-    data["illustration"] = await getInfo.getill(_song)
-    songsinfo = await getInfo.info(_song, True)
+    data["illustration"] = getInfo.getill(_song)
+    songsinfo = getInfo.info(_song)
     assert songsinfo
     match _picversion:
         case 2:
-            for level, a in ans.items():
+            for lv, a in enumerate(ans):
+                level = Level[lv]
                 if a:
                     a.acc = round(a.acc, 4)
                     a.rks = round(a.rks, 4)
@@ -381,7 +381,7 @@ async def _(session: Uninfo, picversion: Match[int], song: Match[str]):
                             songId,
                             level,
                             4,
-                            songsinfo.chart[level].difficulty,
+                            Number(songsinfo.chart[level].difficulty),
                         ),
                     }
                 else:
@@ -394,7 +394,8 @@ async def _(session: Uninfo, picversion: Match[int], song: Match[str]):
                 data["scoreData"][level] = {
                     "difficulty": songsinfo.chart[level].difficulty
                 }
-            for level, a in ans.items():
+            for lv, a in enumerate(ans):
+                level = Level[lv]
                 if a:
                     a.acc = round(a.acc, 4)
                     a.rks = round(a.rks, 4)
@@ -404,7 +405,7 @@ async def _(session: Uninfo, picversion: Match[int], song: Match[str]):
                             songId,
                             level,
                             4,
-                            songsinfo.chart[level].difficulty,
+                            Number(songsinfo.chart[level].difficulty),
                         ),
                     }
                 else:
@@ -433,7 +434,7 @@ async def _(session: Uninfo, input: Match):
         if not song:
             logger.warning(f"曲目无信息: {id}", "phi-plugin")
             continue
-        info = await getdata.info(song, True)
+        info = getdata.info(song)
         assert info
         record = Record[id]
         for lv in range(4):
@@ -442,8 +443,8 @@ async def _(session: Uninfo, input: Match):
             difficulty = info.chart[Level[lv]].difficulty
             assert isinstance(difficulty, float)
             if range_[0] <= difficulty and difficulty <= range_[1] and isask[lv]:
-                level = LevelNum[lv]
-                rlv = record[level]
+                level = Level[lv]
+                rlv = record[lv]
                 if not rlv and not scoreAsk.NEW:
                     continue
                 if rlv and not getattr(scoreAsk, rlv.Rating.upper()):
@@ -457,7 +458,7 @@ async def _(session: Uninfo, input: Match):
                     {
                         **to_dict(rlv),
                         **to_dict(info),
-                        "illustration": await getdata.getill(song, "low"),
+                        "illustration": getdata.getill(song, "low"),
                         "difficulty": difficulty,
                         "rank": Level[lv],
                     }
@@ -475,7 +476,7 @@ async def _(session: Uninfo, input: Match):
             {
                 "head_title": "推分建议",
                 "song": data,
-                "background": await getdata.getill(random.choice(getInfo.illlist)),
+                "background": getdata.getill(random.choice(getInfo.illlist)),
                 "theme": plugin_data.plugin_data.theme,
                 "PlayerId": save.saveInfo.PlayerId,
                 "Rks": round(save.saveInfo.summary.rankingScore, 4),
@@ -529,13 +530,13 @@ async def _(session: Uninfo, song: Match):
     for _song in getInfo.ori_info:
         if getInfo.ori_info[_song].chapter == chap or msg == "ALL":
             song_box[_song] = {
-                "illustration": await getInfo.getill(_song, "low"),
+                "illustration": getInfo.getill(_song, "low"),
                 "chart": {},
             }
             id = getInfo.idssong[_song]
             # 曲目成绩对象
             songRecord = save.getSongsRecord(id)
-            info = await getInfo.info(_song, True)
+            info = getInfo.info(_song)
             assert info
             for level in info.chart:
                 # 跳过旧谱

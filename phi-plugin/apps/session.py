@@ -26,15 +26,16 @@ from ..model.getdata import getdata
 from ..model.getInfo import getInfo
 from ..model.getNotes import getNotes
 from ..model.getSave import getSave
-from ..model.getUpdateSave import getUpdateSave
+from ..model.getUpdateSave import UpdateSaveResult, getUpdateSave
 from ..model.send import send
 from ..models import qrCode
-from ..utils import Date, can_be_call, to_dict
+from ..rule import can_be_call
+from ..utils import Date, to_dict
 
 bind = on_alconna(
     Alconna(
         rf"re:{recmdhead}\s*(绑定|bind)",
-        Args["sessionToken?", str],
+        Args["sstk?", str],
         meta=CommandMeta(compact=True),
     ),
     rule=can_be_call("bind"),
@@ -159,7 +160,7 @@ async def _(bot, session: Uninfo, sstk: Match[str]):
     )
     updateData = await getUpdateSave.getNewSaveFromLocal(session, sessionToken)
     history = await getSave.getHistory(session.user.id)
-    await build(session, to_dict(updateData), history)
+    await build(session, updateData, history)
 
 
 @update.handle()
@@ -177,7 +178,7 @@ async def _(session: Uninfo):
     try:
         updateData = await getUpdateSave.getNewSaveFromLocal(session, sessionToken)
         history = await getSave.getHistory(session.user.id)
-        await build(session, to_dict(updateData), history)
+        await build(session, updateData, history)
     except Exception as e:
         logger.error("更新信息失败", "phi-plugin", e=e)
         await send.sendWithAt(
@@ -287,48 +288,37 @@ async def waitResponse(bot, QRCodetimeout: int, request, recall_id, qrCodeMsg):
 
 async def build(
     session: Uninfo,
-    updateData: dict,
+    _updateData: UpdateSaveResult,
     history: saveHistory,
 ):
-    """
-    保存PhigrosUser
-
-    :param session: Uninfo
-    :param updateData: {save:Save, added_rks_notes: [number, number]}
-    :param history: saveHistory
-    :return: Promise<void>
-    """
-    updateData = to_dict(updateData)
+    updateData = to_dict(_updateData)
     added_rks_notes = updateData.get("added_rks_notes", [0, 0])
     save = updateData.get("save", {})
     if added_rks_notes[0]:
         value = added_rks_notes[0]
         sign = "+" if value > 0 else ""
-        formatted = f"{value:.4f}" if value >= 1e-4 else ""
+        formatted = f"{value:.4f}" if abs(value) >= 1e-4 else ""
         added_rks_notes[0] = f"{sign}{formatted}"
-
     if added_rks_notes[1]:
         value = added_rks_notes[1]
         sign = "+" if value > 0 else ""
         added_rks_notes[1] = f"{sign}{value}"
-    # 标记数据中含有的时间
-    time_vis: dict[str, int] = {}
-    # 总信息
-    tot_update: list[dict] = []
 
-    now = await Save().constructor(save)
+    now = Save(**save)
     pluginData = await getNotes.getNotesData(session.user.id)
-    for song in history.scoreHistory:
-        tem = history.scoreHistory[song]
-        for level in tem:
-            _history = tem[level]
-            for i, _ in enumerate(_history):
-                score_date = fCompute.date_to_string(scoreHistory.date(_history[i]))
-                score_info = await scoreHistory.extend(
-                    song, level, _history[i], _history[i - 1]
-                )
-                if time_vis.get(score_date) is None:
-                    time_vis[score_date] = len(tot_update)
+
+    # 1. 聚合历史分数
+    time_vis = {}
+    tot_update = []
+    for song, levels in history.scoreHistory.items():
+        for level, records in levels.items():
+            prev = None
+            for record in records:
+                score_date = fCompute.date_to_string(scoreHistory.date(record))
+                score_info = scoreHistory.extend(song, level, record, prev)
+                prev = record
+                idx = time_vis.setdefault(score_date, len(tot_update))
+                if idx == len(tot_update):
                     tot_update.append(
                         {
                             "date": score_date,
@@ -337,93 +327,62 @@ async def build(
                             "song": [],
                         }
                     )
-                tot_update[time_vis[score_date]]["update_num"] += 1
-                tot_update[time_vis[score_date]]["song"].append(score_info)
-    tot_update = sorted(tot_update, key=lambda x: Date(x["date"]), reverse=True)
-    # 实际显示的数量
+                tot_update[idx]["update_num"] += 1
+                tot_update[idx]["song"].append(score_info)
+                await asyncio.sleep(0)
+            await asyncio.sleep(0)
+        await asyncio.sleep(0)
+
+    tot_update.sort(key=lambda x: Date(x["date"]), reverse=True)
+
+    # 2. 日期和数量裁剪
     show = 0
-    # 每日显示上限
     DayNum = max(PluginConfig.get("HistoryDayNum"), 2)
-    # 显示日期上限
     DateNum = PluginConfig.get("HistoryScoreDate")
-    # 总显示上限
     TotNum = PluginConfig.get("HistoryScoreNum")
-    for date, _ in enumerate(tot_update):
-        # 天数上限
-        if date > DateNum or TotNum <= show + min(
-            DayNum, tot_update[date]["update_num"]
-        ):
-            tot_update = tot_update[:date]
+    filtered_update = []
+    for date_idx, day in enumerate(tot_update):
+        if date_idx > DateNum or TotNum <= show + min(DayNum, day["update_num"]):
             break
-        # 预处理每日显示上限
-        tot_update[date]["song"] = sorted(
-            tot_update[date]["song"], key=lambda x: x.get("rks_new", 0), reverse=True
-        )
-        tot_update[date]["song"] = tot_update[date]["song"][
-            : min(DayNum, TotNum - show)
-        ]
-        # 总上限
-        show += len(tot_update[date]["song"])
-    # 预分行
+        day["song"].sort(key=lambda x: x.get("rks_new", 0), reverse=True)
+        day["song"] = day["song"][: min(DayNum, TotNum - show)]
+        show += len(day["song"])
+        filtered_update.append(day)
+    tot_update = filtered_update
+
+    # 3. 分行处理
     box_line = []
-    # 循环中当前行的数量
-    line_num = 5
-    flag = False
-    while tot_update:
-        if line_num == 5:
-            if flag:
-                box_line.append(
-                    [
-                        {
-                            "color": tot_update[0]["color"],
-                            "song": tot_update[0]["song"][:5],
-                        }
-                    ]
-                )
+    for day in tot_update:
+        songs = day["song"]
+        for i in range(0, len(songs), 5):
+            line = {
+                "color": day["color"],
+                "song": songs[i : i + 5],
+                "width": comWidth(len(songs[i : i + 5])),
+            }
+            if i == 0:
+                line["date"] = day["date"]
+            if i + 5 >= len(songs):
+                line["update_num"] = day["update_num"]
+            if not box_line or "date" in line:
+                box_line.append([line])
             else:
-                box_line.append(
-                    [
-                        {
-                            "date": tot_update[0]["date"],
-                            "color": tot_update[0]["color"],
-                            "song": tot_update[0]["song"][:5],
-                        }
-                    ]
-                )
-            line_num = len(box_line[-1][-1]["song"])
-        elif flag:
-            box_line[-1].append(
-                {
-                    "color": tot_update[0]["color"],
-                    "song": tot_update[0]["song"][: 5 - line_num],
-                }
-            )
-        else:
-            box_line[-1].append(
-                {
-                    "date": tot_update[0]["date"],
-                    "color": tot_update[0]["color"],
-                    "song": tot_update[0]["song"][: 5 - line_num],
-                }
-            )
-        box_line[-1][-1]["width"] = comWidth(len(box_line[-1][-1]["song"]))
-        flag = True
-        if not tot_update[0].get("song"):
-            box_line[-1][-1]["update_num"] = tot_update[0]["update_num"]
-            del tot_update[0]
-            flag = False
-        del tot_update[0]
-    # 添加任务信息
+                box_line[-1].append(line)
+
+    # 4. 任务信息和曲绘
     task_data = pluginData.plugin_data.task
     task_time = fCompute.date_to_string(pluginData.plugin_data.task_time)
-    # 添加曲绘
     if task_data:
         for task in task_data:
-            task.illustration = await getdata.getill(task.song)
+            task.illustration = getdata.getill(task.song)
+
+    # 5. rks历史
     d_ = history.getRksLine()
     rks_history = d_.rks_history
     rks_range = d_.rks_range
     rks_date = d_.rks_date
+
+    # 6. 汇总数据
     data = {
         "PlayerId": fCompute.convertRichText(now.saveInfo.PlayerId),
         "Rks": round(now.saveInfo.summary.rankingScore, 4),
@@ -436,7 +395,7 @@ async def build(
             / 100
         ),
         "ChallengeModeRank": now.saveInfo.summary.challengeModeRank % 100,
-        "background": await getdata.getill(random.choice(getInfo.illlist)),
+        "background": getdata.getill(random.choice(getInfo.illlist)),
         "box_line": box_line,
         "Notes": pluginData.plugin_data.money,
         "tips": random.choice(getInfo.Tips),

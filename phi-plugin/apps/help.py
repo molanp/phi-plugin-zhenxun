@@ -9,12 +9,14 @@ from nonebot_plugin_uninfo import Uninfo
 
 from ..config import cmdhead, recmdhead
 from ..model.getdata import getdata
-from ..model.getFile import readFile
+from ..model.getFile import FileManager
 from ..model.getInfo import getInfo
 from ..model.path import infoPath
 from ..model.picmodle import picmodle
 from ..model.send import send
-from ..utils import can_be_call
+from ..rule import can_be_call
+
+helpGroup = {}
 
 help = on_alconna(
     Alconna(
@@ -26,7 +28,7 @@ help = on_alconna(
 )
 tkhelp = on_alconna(
     Alconna(
-        rf"re:{recmdhead}\s*tok(?:en)?(命令|帮助|菜单|help|说明|功能|指令|使用说明)",
+        rf"re:{recmdhead}\s*t(?:o)?k(?:en)?(命令|帮助|菜单|help|说明|功能|指令|使用说明)",
     ),
     rule=can_be_call("tkhelp"),
     priority=5,
@@ -36,15 +38,17 @@ tkhelp = on_alconna(
 
 @help.handle()
 async def _(bot, session: Uninfo):
+    global helpGroup
     pluginData = await getdata.getNotesData(session.user.id)
-    helpGroup = await readFile.FileReader(infoPath / "help.json")
+    if not helpGroup:
+        helpGroup = await FileManager.ReadFile(infoPath / "help.json")
     await send.sendWithAt(
         await picmodle.help(
             {
                 "helpGroup": helpGroup,
                 "cmdHead": cmdhead,
                 "isMaster": session.user.id in bot.config.superusers,
-                "background": await getdata.getill(random.choice(getInfo.illlist)),
+                "background": getdata.getill(random.choice(getInfo.illlist)),
                 "theme": pluginData.plugin_data.theme,
             }
         ),

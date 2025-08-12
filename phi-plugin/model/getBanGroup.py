@@ -2,7 +2,6 @@ from typing import Literal
 
 from nonebot_plugin_uninfo import Uninfo
 
-from ..models import banGroup
 from .getSave import getSave
 from .send import send
 
@@ -27,6 +26,8 @@ class getBanGroup:
             "dan",
         ],
     ) -> bool:
+        from ..models import banGroup
+
         return await banGroup.getStatus(group_id, func)
 
     @staticmethod

@@ -8,11 +8,11 @@ class Chart(BaseModel):
 
     id: str = ""
     """曲目ID(一般包含.0)"""
-    rank: LevelItem = "EZ"
+    rank: LevelItem | str = ""
     """Level"""
     charter: str = ""
     """谱师"""
-    difficulty: float = 0.0
+    difficulty: float | str = 0.0
     """定数"""
     tap: int = 0
     drag: int = 0

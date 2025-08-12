@@ -8,9 +8,7 @@ from nonebot_plugin_alconna import File, UniMessage
 from nonebot_plugin_uninfo import Uninfo
 from pydantic import BaseModel
 
-from zhenxun.models.level_user import LevelUser
 from zhenxun.services.log import logger
-from zhenxun.utils.rules import ensure_group
 
 from ..utils import Date
 from .constNum import MAX_DIFFICULTY
@@ -81,7 +79,7 @@ class fCompute:
             await UniMessage(f"文件上传错误: {err}").send()
 
     @staticmethod
-    async def getBackground(save_background: str) -> Path | str | Literal[False]:
+    def getBackground(save_background: str) -> Path | str | Literal[False]:
         """获取角色介绍背景曲绘"""
         from .getInfo import getInfo
 
@@ -101,7 +99,7 @@ class fCompute:
 
                 case "Le temps perdu-":
                     save_background = "Le temps perdu"
-            return await getInfo.getill(
+            return getInfo.getill(
                 getInfo.idgetsong(save_background) or save_background
             )
         except Exception as e:

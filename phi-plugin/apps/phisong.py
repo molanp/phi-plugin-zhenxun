@@ -38,14 +38,15 @@ from ..model.fCompute import fCompute, match_request_return
 from ..model.getChartTag import getChartTag
 from ..model.getComment import CommentDict, getComment
 from ..model.getdata import getdata
-from ..model.getFile import readFile
+from ..model.getFile import FileManager
 from ..model.getInfo import getInfo
 from ..model.getPic import pic
 from ..model.getSave import getSave
 from ..model.path import configPath
 from ..model.picmodle import picmodle
 from ..model.send import send
-from ..utils import can_be_call, to_dict
+from ..rule import can_be_call
+from ..utils import Number, to_dict
 
 wait_to_del_comment = {}
 
@@ -148,7 +149,7 @@ tips = on_alconna(
     Alconna(rf"re:{recmdhead}\s*tips"), block=True, priority=5, rule=can_be_call("tips")
 )
 newSong = on_alconna(
-    Alconna(rf"re{recmdhead}\s*new"),
+    Alconna(rf"re:{recmdhead}\s*new"),
     block=True,
     priority=5,
     rule=can_be_call("newSong"),
@@ -222,8 +223,7 @@ async def _(
     if not song:
         await send.sendWithAt(f"请指定曲名哦！\n格式：{cmdhead} song <曲名>")
         return
-    songs = await getInfo.fuzzysongsnick(song)
-    if songs:
+    if songs := getInfo.fuzzysongsnick(song):
         if len(songs) > 1:
             msgRes = f"找到了{len(songs)}首歌曲！"
             for i in songs:
@@ -231,7 +231,7 @@ async def _(
             msgRes += f"\n请发送 {cmdhead} song <曲目id> 来查看详细信息！"
         else:
             songs = songs[0]
-            infoData = await getInfo.info(songs)
+            infoData = getInfo.info(songs)
             assert infoData
             data = to_dict(infoData)
             if PluginConfig.get("allowComment") and (addComment or page):
@@ -293,7 +293,7 @@ async def _(session: Uninfo, _input: Match):
             and any(b <= level.combo <= t for level in item.chart.values()),
         },
     }
-    remain = await getdata.info()
+    remain = getdata.info()
     result: dict[str, SongsInfoObject] = {}
     filters: dict[Literal["bpm", "difficulty", "combo"], tuple[float, float]] = {}
 
@@ -393,13 +393,13 @@ async def _(_old_nick: Match[str], _new_nick: Match[str]):
         _new_nick.result if _new_nick.available else "",
     )
     if msg[1]:
-        mic = await getdata.fuzzysongsnick(msg[0], 1)
+        mic = getdata.fuzzysongsnick(msg[0], 1)
         if mic:
             mic = mic[0]
         else:
             await send.sendWithAt(f"输入有误哦！没有找到“{msg[0]}”这首曲子呢！")
             return
-        if mic in await getdata.fuzzysongsnick(msg[1], 1):
+        if mic in getdata.fuzzysongsnick(msg[1], 1):
             # 已经添加过该别名
             await send.sendWithAt(f"{mic} 已经有 {msg[1]} 这个别名了哦！")
             return
@@ -415,17 +415,17 @@ async def _(_old_nick: Match[str], _new_nick: Match[str]):
 @delnick.handle()
 async def _(session: Uninfo, _nick: Match[str]):
     nick = _nick.result if _nick.available else ""
-    anss: dict[str, list] = await readFile.FileReader(configPath / "nickconfig.yaml")
+    anss = getInfo.nickconfig
     if ans := anss.get(nick):
         if len(ans) == 1:
             del anss[nick]
-            await readFile.SetFile(configPath / "nickconfig.yaml", anss)
+            await FileManager.SetFile(configPath / "nickconfig.yaml", anss)
             await send.sendWithAt("删除成功！")
         else:
             wait_to_del_list = ans
             wait_to_del_nick = nick
             Remsg = ["找到了多个别名！请发送 序号 进行选择！"]
-            Remsg.extend(f"#{i}\n{wait_to_del_list[i]}" for i in wait_to_del_list)
+            Remsg.extend(f"#{i}\n{v}" for i, v in enumerate(wait_to_del_list))
             await MessageUtils.alc_forward_msg(
                 Remsg, session.user.id, str(session.user.name)
             ).send()
@@ -445,7 +445,7 @@ async def choosesdelnick(anss, wait_to_del_list, wait_to_del_nick, choose):
     if choose in wait_to_del_list:
         del wait_to_del_list[choose]
         anss[wait_to_del_nick] = wait_to_del_list
-        await readFile.SetFile(configPath / "nickconfig.yaml", anss)
+        await FileManager.SetFile(configPath / "nickconfig.yaml", anss)
         await send.sendWithAt("删除成功！")
     else:
         await send.sendWithAt(f"未找到 {choose} 所对应的别名哦！")
@@ -457,8 +457,7 @@ async def _(session: Uninfo, songname: Match[str]):
     if not msg:
         await send.sendWithAt(f"请指定曲名哦！\n格式：{cmdhead} ill <曲名>")
         return
-    songs = await getdata.fuzzysongsnick(msg)
-    if songs:
+    if songs := getdata.fuzzysongsnick(msg):
         if len(songs) >= 1:
             msgRes = []
             for song in songs:
@@ -552,7 +551,7 @@ async def _(_input: Match):
         top += 0.9  # type: ignore
     songsname = []
     for i, obj in getInfo.ori_info.items():
-        for level, lv in LevelNum.items():
+        for lv, level in LevelNum.items():
             if level < len(isask) and isask[level] and lv in obj.chart:
                 difficulty = obj.chart[lv].difficulty
                 if difficulty >= bottom and difficulty <= top:  # type: ignore
@@ -560,7 +559,7 @@ async def _(_input: Match):
                         {
                             **to_dict(obj.chart[lv]),
                             "rank": lv,
-                            "illustration": await getdata.getill(i),
+                            "illustration": getdata.getill(i),
                             "song": obj.song,
                             "illustrator": obj.illustrator,
                             "composer": obj.composer,
@@ -581,14 +580,13 @@ async def _(_input: Match):
 async def _(songname: Match[str]):
     """查询歌曲别名"""
     msg = songname.result if songname.available else ""
-    song = getInfo.idgetsong(msg) or await getInfo.fuzzysongsnick(msg)
-    if song:
+    if song := getInfo.idgetsong(msg) or getInfo.fuzzysongsnick(msg):
         if isinstance(song, list):
             song = song[0]
-        info = await getInfo.info(song)
+        info = getInfo.info(song)
         assert info
         nick = "======================\n已有别名：\n"
-        anss: dict[str, list] = await readFile.FileReader(
+        anss: dict[str, list] = await FileManager.ReadFile(
             configPath / "nickconfig.yaml"
         )
         if usernick := anss.get(song):
@@ -647,11 +645,13 @@ async def _(session: Uninfo, _input: Match):
         range[0] += 1
     chartList: dict[float, list[Chart]] = {}
     for dif, charts in getInfo.info_by_difficulty.items():
-        if dif < range[1]:
+        if Number(dif) < range[1]:
             for chart in charts:
                 difficulty = chart.difficulty
+                assert isinstance(difficulty, float)
                 if (
                     chart.rank
+                    and chart.rank in Level
                     and isask[Level.index(chart.rank)]
                     and chartMatchReq(songAsk, chart)
                 ):
@@ -667,7 +667,7 @@ async def _(session: Uninfo, _input: Match):
         songs = []
         plugin_data = await getdata.getNotesData(session.user.id)
         for r in res:
-            info = await getInfo.info(getInfo.idgetsong(r.id) or "")
+            info = getInfo.info(getInfo.idgetsong(r.id) or "")
             assert info
             songs.append(
                 {
@@ -675,7 +675,7 @@ async def _(session: Uninfo, _input: Match):
                     "song": info.song,
                     "rank": r.rank,
                     "difficulty": r.difficulty,
-                    "illustration": await getInfo.getill(info.song),
+                    "illustration": getInfo.getill(info.song),
                     **to_dict(info.chart[r.rank]),
                 }
             )
@@ -684,10 +684,10 @@ async def _(session: Uninfo, _input: Match):
                 "clg",
                 {
                     "songs": songs,
-                    "tot_clg": math.floor(res[0].difficulty)
-                    + math.floor(res[1].difficulty)
-                    + math.floor(res[2].difficulty),
-                    "background": await getInfo.getill(
+                    "tot_clg": math.floor(Number(res[0].difficulty))
+                    + math.floor(Number(res[1].difficulty))
+                    + math.floor(Number(res[2].difficulty)),
+                    "background": getInfo.getill(
                         random.choice(getInfo.illlist), "blur"
                     ),
                     "theme": plugin_data.plugin_data.theme,
@@ -715,7 +715,7 @@ async def _():
     ans += f"信息文件版本：{Version['phigros']}\n"
     ans += "新曲速递：\n"
     for song in getInfo.updatedSong:
-        info = await getInfo.info(song)
+        info = getInfo.info(song)
         assert info
         ans += f"{info.song}\n"
         for j, c in info.chart.items():
@@ -779,7 +779,7 @@ async def _(session: Uninfo, songname: Match[str], rank: Match[str], content: Ma
             rankNum = 4
         case _:
             rankNum = -1
-    song = await getInfo.fuzzysongsnick(nickname)
+    song = getInfo.fuzzysongsnick(nickname)
     if not song:
         await send.sendWithAt(
             f"未找到{nickname}的相关曲目信息QAQ\n如果想要提供别名的话请访问"
@@ -787,7 +787,7 @@ async def _(session: Uninfo, songname: Match[str], rank: Match[str], content: Ma
             True,
         )
         return
-    songInfo = await getInfo.info(song[0])
+    songInfo = getInfo.info(song[0])
     assert songInfo
     if songInfo.sp_vis:
         rankKind = "IN"
@@ -823,8 +823,8 @@ async def _(session: Uninfo, songname: Match[str], rank: Match[str], content: Ma
     songRecord = save.getSongsRecord(songId)
     if not songInfo.sp_vis and rankKind in songRecord:
         r = await save.getB19(27)
-        phi = r["phi"]
-        b19_list = r["b19_list"]
+        phi = r.phi
+        b19_list = r.b19_list
         spInfo = ""
         for i, r in enumerate(phi):
             if r and r.id == songId and r.rank == rankKind:
@@ -920,7 +920,7 @@ async def _(session: Uninfo):
 async def _(songanme: Match[str], _rank: Match[str]):
     rank = _rank.result.upper() if _rank.available else None
     msg = songanme.result if songanme.available else ""
-    song = await getInfo.fuzzysongsnick(msg)
+    song = getInfo.fuzzysongsnick(msg)
     if not song:
         await send.sendWithAt(
             f"未找到{msg}的相关曲目信息QAQ！如果想要提供别名的话请访问"
@@ -928,7 +928,7 @@ async def _(songanme: Match[str], _rank: Match[str]):
             True,
         )
         return
-    info = await getInfo.info(song[0], True)
+    info = getInfo.info(song[0])
     assert info
     if rank not in info.chart:
         await send.sendWithAt(f"{song[0]} 没有 {rank} 这个难度QAQ！")
@@ -936,7 +936,7 @@ async def _(songanme: Match[str], _rank: Match[str]):
     chart = info.chart[rank]
     allowChartTag = PluginConfig.get("allowChartTag")
     data = {
-        "illustration": info.illustration,
+        "illustration": getInfo.getill(song[0]),
         "song": info.song,
         "length": info.length,
         "rank": rank,
@@ -984,7 +984,7 @@ async def _(
         await send.sendWithAt(f"{tag} 太长了呐QAQ！请限制在6个字符以内嗷！")
         return
     name = songname.result if songname.available else ""
-    song = await getInfo.fuzzysongsnick(name)
+    song = getInfo.fuzzysongsnick(name)
     if not song:
         await send.sendWithAt(
             f"未找到{name}的相关曲目信息QAQ！如果想要提供别名的话请访问"
@@ -992,7 +992,7 @@ async def _(
             True,
         )
         return
-    info = await getInfo.info(song[0], True)
+    info = getInfo.info(song[0])
     assert info
     if rank not in info.chart:
         await send.sendWithAt(f"{song[0]} 没有 {rank} 这个难度QAQ！")
@@ -1063,13 +1063,9 @@ def chartMatchReq(ask: match_request_return, chart: Chart):
         r in ask.isask
         and (
             ask.isask[Level.index(r)]
-            and (chart.difficulty >= ask.range[0] and chart.difficulty <= ask.range[1])
+            and (
+                Number(chart.difficulty) >= ask.range[0]
+                and Number(chart.difficulty) <= ask.range[1]
+            )
         )
     )
-
-
-def Number(x: Any):
-    try:
-        return float(x)
-    except ValueError:
-        return float("NaN")

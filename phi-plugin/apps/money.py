@@ -18,7 +18,8 @@ from ..model.getdata import getdata
 from ..model.getInfo import getInfo
 from ..model.getNotes import getNotes, taskData
 from ..model.send import send
-from ..utils import Date, can_be_call, to_dict
+from ..rule import can_be_call
+from ..utils import Date, to_dict
 
 theme_data = [
     {"id": "default", "src": "默认"},
@@ -230,14 +231,14 @@ async def _retask(session: Uninfo):
     # 添加曲绘
     if data.plugin_data.task:
         for t in data.plugin_data.task:
-            t.illustration = await getInfo.getill(t.song)
+            t.illustration = getInfo.getill(t.song)
     picdata = {
         "PlayerId": save.saveInfo.PlayerId,
         "Rks": round(save.saveInfo.summary.rankingScore, 4),
         "Date": now_time.strftime("%H:%M:%S %b.%d %Y"),
         "ChallengeMode": math.floor(save.saveInfo.summary.challengeModeRank / 100),
         "ChallengeModeRank": save.saveInfo.summary.challengeModeRank % 100,
-        "background": await getInfo.getill(random.choice(getInfo.illlist)),
+        "background": getInfo.getill(random.choice(getInfo.illlist)),
         "task": data.plugin_data.task,
         "task_ans": Remsg,
         "task_ans1": Remsg1,
@@ -291,14 +292,14 @@ async def _tasks(session: Uninfo):
     # 添加曲绘
     if data.plugin_data.task:
         for t in data.plugin_data.task:
-            t.illustration = await getInfo.getill(t.song)
+            t.illustration = getInfo.getill(t.song)
     picdata = {
         "PlayerId": now.saveInfo.PlayerId,
         "Rks": round(now.saveInfo.summary.rankingScore, 4),
         "Date": now_time.strftime("%H:%M:%S %b.%d %Y"),
         "ChallengeMode": math.floor(now.saveInfo.summary.challengeModeRank / 100),
         "ChallengeModeRank": now.saveInfo.summary.challengeModeRank % 100,
-        "background": await getInfo.getill(random.choice(getInfo.illlist)),
+        "background": getInfo.getill(random.choice(getInfo.illlist)),
         "task": data.plugin_data.task,
         "task_ans": Remsg,
         "task_ans1": Remsg1,
@@ -388,7 +389,7 @@ def randtask(save: Save, task: list[taskData] | None = None):
     if task is None:
         task = []
     rks = save.saveInfo.summary.rankingScore
-    gameRecord: dict[str, dict[LevelItem, LevelRecordInfo | None]] = {}
+    gameRecord: dict[str, list[LevelRecordInfo | None]] = {}
     for song in save.gameRecord:
         if s := getInfo.idgetsong(song):
             gameRecord[s] = save.gameRecord[song]
@@ -433,11 +434,15 @@ def randtask(save: Save, task: list[taskData] | None = None):
         if not aim:
             continue
         song = aim["song"]
-        level = aim["level"]
+        level = Level.index(aim["level"])
         _type = random.randint(0, 1)  # 0: acc, 1: score
         old_acc = 0
         old_score = 0
-        if song in gameRecord and level in gameRecord[song] and gameRecord[song][level]:
+        if (
+            song in gameRecord
+            and level < len(gameRecord[song])
+            and gameRecord[song][level]
+        ):
             old_acc = gameRecord[song][level].acc  # pyright: ignore[reportOptionalMemberAccess]
             old_score = gameRecord[song][level].score  # pyright: ignore[reportOptionalMemberAccess]
         if _type:

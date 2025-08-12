@@ -13,7 +13,7 @@ class scoreHistory:
         return [round(acc, 4), score, date, fc]
 
     @staticmethod
-    async def extend(
+    def extend(
         songsid: str,
         level: LevelItem,
         now: tuple[float, int, datetime, bool],
@@ -26,13 +26,13 @@ class scoreHistory:
         :param level: 难度
         """
         song = getInfo.idgetsong(songsid) or songsid
-        info = await getInfo.info(song, True)
+        info = getInfo.info(song)
         if not info or not info.chart.get(level) or not info.chart[level].difficulty:
             # 无难度信息
             return {
                 "song": song,
                 "rank": level,
-                "illustration": await getInfo.getill(song),
+                "illustration": getInfo.getill(song),
                 "Rating": Rating(now[1], now[3]),
                 "acc_new": now[0],
                 "acc_old": old[0] if old else None,
@@ -47,7 +47,7 @@ class scoreHistory:
         return {
             "song": song,
             "rank": level,
-            "illustration": await getInfo.getill(song),
+            "illustration": getInfo.getill(song),
             "Rating": Rating(now[1], now[3]),
             "rks_new": fCompute.rks(now[0], difficulty),
             "rks_old": (fCompute.rks(old[0], difficulty) if old is not None else None),

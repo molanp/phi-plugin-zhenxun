@@ -13,8 +13,8 @@ from ..utils import to_dict
 from .cls.common import Save
 from .cls.models import LevelData
 from .cls.SongsInfo import SongsInfoObject
-from .constNum import LevelItem
-from .getFile import SUPPORTED_FORMATS, readFile
+from .constNum import Level, LevelItem
+from .getFile import SUPPORTED_FORMATS, FileManager
 from .getInfo import getInfo
 from .getNotes import getNotes
 from .getPic import SongsIllAtlasData, pic
@@ -25,7 +25,7 @@ from .send import send
 
 class getdata:
     @staticmethod
-    async def fuzzysongsnick(mic: str, Distance: float = 0.85):
+    def fuzzysongsnick(mic: str, Distance: float = 0.85):
         """
         根据参数模糊匹配返回原曲名称
 
@@ -33,27 +33,23 @@ class getdata:
         :param Distance: 匹配阈值，猜词0.95
         :return: 原曲名称
         """
-        return await getInfo.fuzzysongsnick(mic, Distance)
+        return getInfo.fuzzysongsnick(mic, Distance)
 
     @staticmethod
     @overload
-    async def info(song: str, original: bool = False) -> SongsInfoObject | None: ...
+    def info(song: str) -> SongsInfoObject | None: ...
     @staticmethod
     @overload
-    async def info(
-        song: None = None, original: bool = False
-    ) -> dict[str, SongsInfoObject]: ...
+    def info() -> dict[str, SongsInfoObject]: ...
     @staticmethod
-    async def info(
-        song: str | None = None, original: bool = False
+    def info(
+        song: str | None = None,
     ) -> SongsInfoObject | None | dict[str, SongsInfoObject]:
         """
         :param song: 原曲曲名
         :param original: 是否仅使用原版曲库
         """
-        if song:
-            return await getInfo.info(song, original)
-        return await getInfo.all_info(original)
+        return getInfo.info(song) if song else getInfo.all_info()
 
     @staticmethod
     async def getData(
@@ -68,10 +64,10 @@ class getdata:
         :param fatherPath: 路径
         :param style: 指定格式
         """
-        return await readFile.FileReader(Path(fatherPath) / fileName, style)
+        return await FileManager.ReadFile(Path(fatherPath) / fileName, style)
 
     @staticmethod
-    async def setData(
+    def setData(
         fileName: str,
         data: Any,
         fatherPath: str | Path,
@@ -85,17 +81,17 @@ class getdata:
         :param fatherPath: 父路径
         :param style: 文件类型
         """
-        return await readFile.SetFile(Path(fatherPath) / fileName, data, style)
+        return FileManager.SetFile(Path(fatherPath) / fileName, data, style)
 
     @staticmethod
-    async def delData(fileName: str, fatherPath: str | Path):
+    def delData(fileName: str, fatherPath: str | Path):
         """
         删除 chos.yaml 文件
 
         :param fileName: 文件名称 含后缀
         :param fatherPath: 路径
         """
-        return await readFile.DelFile(Path(fatherPath) / fileName)
+        return FileManager.DelFile(Path(fatherPath) / fileName)
 
     @staticmethod
     async def getsave(id: str):
@@ -125,16 +121,16 @@ class getdata:
         return await getSave.delSave(id)
 
     @staticmethod
-    async def delNotesData(user_id: str):
+    def delNotesData(user_id: str):
         """
         删除user_id对应的娱乐数据
 
         :param user_id: user_id
         """
-        return await getNotes.delNotesData(user_id)
+        return getNotes.delNotesData(user_id)
 
     @staticmethod
-    async def getNotesData(user_id: str, islock: bool = False):
+    def getNotesData(user_id: str, islock: bool = False):
         """
         获取user_id对应的娱乐数据
 
@@ -142,17 +138,17 @@ class getdata:
         :param islock:  是否锁定
         :return: 娱乐数据
         """
-        return await getNotes.getNotesData(user_id, islock)
+        return getNotes.getNotesData(user_id, islock)
 
     @staticmethod
-    async def putNotesData(user_id: str, data: dict):
+    def putNotesData(user_id: str, data: dict):
         """
         保存user_id对应的娱乐数据
 
         :param id: user_id
         :param data: 娱乐数据
         """
-        return await getNotes.putNotesData(user_id, data)
+        return getNotes.putNotesData(user_id, data)
 
     @staticmethod
     def getimg(img: str, style: str = "png"):
@@ -174,14 +170,14 @@ class getdata:
         return await getSave.getDan(id)
 
     @staticmethod
-    async def songsnick(mic: str):
+    def songsnick(mic: str):
         """
         匹配歌曲名称，根据参数返回原曲名称
 
         :param mic: 别名
         :return: 原曲名称
         """
-        return await getInfo.songsnick(mic)
+        return getInfo.songsnick(mic)
 
     @staticmethod
     async def setnick(mic: str, nick: str):
@@ -247,7 +243,7 @@ class getdata:
             await send.sendWithAt(f"保存存档失败!\n{err}")
             logger.error("保存存档失败", "phi-plugin", e=err)
             return False
-        now = await Save().constructor(to_dict(User))
+        now = Save(**to_dict(User))
         if old and (old.sessionToken and old.sessionToken != User.sessionToken):
             await send.sendWithAt(
                 "检测到新的sessionToken，将自动更换绑定。如果需要删除统计"
@@ -267,7 +263,7 @@ class getdata:
             for id in now.gameRecord:
                 for t in task:
                     if not t.finished and getInfo.idgetsong(id) == t.song:
-                        temp = now.gameRecord[id][t.request.rank]
+                        temp = now.gameRecord[id][Level.index(t.request.rank)]
                         if not temp:
                             continue
                         match t.request.type:
@@ -336,7 +332,7 @@ class getdata:
         return await picmodle.rand(data)
 
     @staticmethod
-    async def getill(name: str, kind: Literal["common", "blur", "low"] = "common"):
+    def getill(name: str, kind: Literal["common", "blur", "low"] = "common"):
         """
         获取曲绘，返回地址
 
@@ -344,7 +340,7 @@ class getdata:
         :param kind: 清晰度
         :return: 网址或文件地址
         """
-        return await getInfo.getill(name, kind)
+        return getInfo.getill(name, kind)
 
     @staticmethod
     def idgetavatar(id: str):

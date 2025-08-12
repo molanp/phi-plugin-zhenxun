@@ -8,7 +8,7 @@
   <div class="line">
     <div class="order">
       {% if cmdHead %}
-      <p name="pvis">{{ help.title | replace('/',  cmdHead ~ ' ') }}</p>
+      <p name="pvis">{{ help.title | replace('/', cmdHead ~ ' ') }}</p>
       {% else %}
       <p name="pvis">{{ help.title }}</p>
       {% endif %}
@@ -52,20 +52,4 @@
     <p>{{ Version.ver }}</p>
   </div>
 </div>
-
-{% if theme == "snow" %}
-<div class="snow-box"></div>
-<script>
-  themeSnow();
-</script>
-{% elif theme in ["topText", "foolsDay"] %}
-<div class="topTextBox" id="topTextBox"></div>
-<script>
-  themeTopText();
-</script>
-{% elif theme == "star" %}
-<canvas id="stars"></canvas>
-<script>
-  themeStar();
-</script>
-{% endif %} {% endblock %}
+{% endblock %}

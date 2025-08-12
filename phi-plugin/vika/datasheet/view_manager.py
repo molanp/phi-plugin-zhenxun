@@ -1,6 +1,6 @@
 from typing import List
 
-from vika.types import MetaView
+from ..types import MetaView
 
 
 class ViewManager:

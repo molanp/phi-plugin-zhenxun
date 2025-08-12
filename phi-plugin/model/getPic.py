@@ -28,7 +28,7 @@ class pic:
         :param name: 曲名
         :param data: 自定义数据
         """
-        data = data or to_dict(await getInfo.info(name))
+        data = data or to_dict(getInfo.info(name))
         if not data:
             return f"未找到{name}的相关曲目信息!QAQ"
         data["illustration"] = getInfo.getill(name)
@@ -49,10 +49,10 @@ class pic:
                     "illustrator": data.illustrator,
                 }
             )
-        info = await getInfo.info(name)
+        info = getInfo.info(name)
         return await picmodle.ill(
             {
-                "illustration": await getInfo.getill(name),
+                "illustration": getInfo.getill(name),
                 "illustrator": info.illustrator if info else None,
             }
         )
@@ -86,5 +86,5 @@ class pic:
         :param kind: 清晰度
         :return: 图片消息段
         """
-        res = await getInfo.getill(name, kind)
+        res = getInfo.getill(name, kind)
         return Image(url=res) if isinstance(res, str) else Image(path=res)

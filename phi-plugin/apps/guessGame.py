@@ -59,9 +59,9 @@ reveal = on_alconna(
     block=True,
 )
 getTip = on_alconna(
-    Alconna(rf"re:{cmdhead}\s*(tip|提示)"), rule=is_started(), priority=5, block=True
+    Alconna(rf"re:{recmdhead}\s*(tip|提示)"), rule=is_started(), priority=5, block=True
 )
-ans = on_alconna(Alconna(rf"re:{cmdhead}\s*(ans|答案|结束)"), priority=5, block=True)
+ans = on_alconna(Alconna(rf"re:{recmdhead}\s*(ans|答案|结束)"), priority=5, block=True)
 
 
 @start.handle()

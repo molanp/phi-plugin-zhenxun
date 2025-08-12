@@ -9,6 +9,7 @@ from ..config import cmdhead
 from ..lib.PhigrosUser import PhigrosUser
 from ..utils import to_dict
 from .cls.common import Save
+from .constNum import Level
 from .getInfo import getInfo
 from .getNotes import getNotes
 from .getSave import getSave
@@ -46,7 +47,7 @@ class getUpdateSave:
             await send.sendWithAt(f"[getUpdateSave]保存存档失败!\n{err}")
             logger.error("[getUpdateSave]保存存档失败", "phi-plugin", e=err)
             raise err
-        now = await Save().constructor(to_dict(User))
+        now = Save(**to_dict(User))
 
         if old and (old.sessionToken and old.sessionToken != User.sessionToken):
             await send.sendWithAt(
@@ -56,7 +57,6 @@ class getUpdateSave:
             )
             await getSave.add_user_token(session.user.id, User.sessionToken)
             old = await getSave.getSave(session.user.id)
-        # await now.init()
         history = await getSave.getHistory(session.user.id)
         history.update(now)
         await getSave.putHistory(session.user.id, to_dict(history))
@@ -89,7 +89,7 @@ class getUpdateSave:
                     if song != getInfo.idgetsong(song_id):
                         continue
 
-                    current_record = record_levels.get(task_info.request.rank)
+                    current_record = record_levels[Level.index(task_info.request.rank)]
 
                     if not current_record:
                         continue

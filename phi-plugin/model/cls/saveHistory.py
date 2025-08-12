@@ -3,7 +3,7 @@ import math
 from typing import Any
 
 from ...utils import Date, to_dict
-from ..constNum import MAX_DIFFICULTY, LevelItem
+from ..constNum import MAX_DIFFICULTY, Level, LevelItem
 from ..fCompute import fCompute
 from .common import Save
 from .LevelRecordInfo import LevelRecordInfo
@@ -187,14 +187,15 @@ class saveHistory:
         for id in save.gameRecord:
             if self.scoreHistory.get(id) is None:
                 self.scoreHistory[id] = {}
-                for level, record in save.gameRecord.get(id, {}).items():
+                for lv, record in enumerate(save.gameRecord.get(id, [])):
                     # 提取成绩
                     now = record
                     if not now:
                         continue
                     now.date = save.saveInfo.modifiedAt.iso
+                    level = Level[lv]
                     # 本地无记录
-                    if not self.scoreHistory[id].get(level):
+                    if level not in self.scoreHistory[id]:
                         self.scoreHistory[id][level] = [
                             createHistory(
                                 now.acc,
@@ -345,7 +346,7 @@ class saveHistory:
                 )
             )
 
-    async def getSongsLastRecord(
+    def getSongsLastRecord(
         self, id: str
     ) -> dict[str, list[tuple[float, int, datetime, bool]]]:
         """
@@ -359,7 +360,9 @@ class saveHistory:
                 # 获取最新的一条记录并展开信息
                 last_record = openHistory(records[-1])
                 # 创建 LevelRecordInfo 实例
-                level_info = await LevelRecordInfo.init(to_dict(last_record), id, level)
+                level_info = LevelRecordInfo.init(
+                    to_dict(last_record), id=id, rank=level
+                )
                 # 保留原始日期
                 level_info.date = last_record.date
                 t[level] = [level_info.to_tuple()]

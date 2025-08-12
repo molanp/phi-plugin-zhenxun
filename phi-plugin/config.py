@@ -13,8 +13,8 @@ PATH = Path(__file__).parent
 VERSION_PATTERN = re.compile(
     r"https://img\.shields\.io/badge/(?P<type>插件版本|Phigros)-(?P<version>(.*))-9cf"
 )
-currentVersion = ""
-phigros_ver = ""
+currentVersion = "未知"
+phigros_ver = "未知"
 with contextlib.suppress(Exception):
     if (PATH / "README.md").exists():
         with open(PATH / "README.md", encoding="utf-8") as f:

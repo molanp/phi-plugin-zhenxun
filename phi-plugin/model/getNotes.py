@@ -5,7 +5,7 @@ from typing import Any, Literal
 from pydantic import BaseModel
 
 from .constNum import LevelItem
-from .getFile import readFile
+from .getFile import FileManager
 from .path import pluginDataPath
 
 
@@ -36,7 +36,6 @@ class NotesData(BaseModel):
 
 
 class getNotes:
-
     @staticmethod
     async def getNotesData(user_id: str, islock: bool = False) -> NotesData:
         """
@@ -45,17 +44,14 @@ class getNotes:
         :param str user_id: 用户id
         :returns:
         """
-        data = await readFile.FileReader(pluginDataPath / f"{user_id}_.json")
-        if not data or not data.get("plugin_data"):
-            return NotesData()
-        else:
-            return NotesData(**data.get("plugin_data"))
+        data = await FileManager.ReadFile(pluginDataPath / f"{user_id}_.json")
+        return NotesData(**data) if data else NotesData()
 
     @staticmethod
     async def putNotesData(user_id: str, data: dict[str, Any]) -> bool:
         """保存用户数据"""
-        return await readFile.SetFile(pluginDataPath / f"{user_id}_.json", data)
+        return await FileManager.SetFile(pluginDataPath / f"{user_id}_.json", data)
 
     @staticmethod
     async def delNotesData(user_id: str) -> bool:
-        return await readFile.DelFile(pluginDataPath / f"{user_id}_.json")
+        return await FileManager.DelFile(pluginDataPath / f"{user_id}_.json")

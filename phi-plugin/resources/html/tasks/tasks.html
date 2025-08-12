@@ -96,19 +96,4 @@
 <div class="tips">
   <p>Tip:{{ tips }}</p>
 </div>
-{% endif %} {% if theme == "snow" %}
-<div class="snow-box"></div>
-<script>
-  themeSnow();
-</script>
-{% elif theme in ["topText", "foolsDay"] %}
-<div class="topTextBox" id="topTextBox"></div>
-<script>
-  themeTopText();
-</script>
-{% elif theme == "star" %}
-<canvas id="stars"></canvas>
-<script>
-  themeStar();
-</script>
-{% endif %} {% endblock %}
+{% endif %}{% endblock %}

@@ -10,9 +10,6 @@ import ujson as json
 
 from zhenxun.services.log import logger
 
-# from .getRksRank import getRksRank
-# from .path import dataPath, pluginDataPath, savePath
-
 SUPPORTED_FORMATS = Literal["JSON", "YAML", "CSV", "TXT"]
 
 
@@ -72,9 +69,9 @@ async def csv_read(file_path: str | Path) -> list[dict[str, Any]]:
     return [dict(row) for row in reader]
 
 
-class readFile:
+class FileManager:
     @classmethod
-    async def FileReader(
+    async def ReadFile(
         cls,
         file_path: str | Path,
         style: SUPPORTED_FORMATS | None = None,

@@ -18,7 +18,8 @@ from ..model.getNotes import getNotes
 from ..model.getSave import getSave
 from ..model.picmodle import picmodle
 from ..model.send import send
-from ..utils import can_be_call, to_dict
+from ..rule import can_be_call
+from ..utils import Number, to_dict
 
 data = on_alconna(
     Alconna(rf"re:{recmdhead}\s*data"), block=True, priority=5, rule=can_be_call("data")
@@ -71,7 +72,7 @@ async def _(session: Uninfo):
                         User.gameProgress.money, ["KiB", "MiB", "GiB", "TiB", "PiB"]
                     )
                     if v
-                ]
+                ][::-1]
             )
             await send.sendWithAt(f"您的data数为：{_data}")
         else:
@@ -89,10 +90,10 @@ async def _(session: Uninfo, _bksong: Match[str], _kind: Match[Literal[1, 2]]):
     bksong = _bksong.result if _bksong.available else None
     kind = _kind.result if _kind.available else 1
     if bksong:
-        tem = await getInfo.fuzzysongsnick(bksong)
-        bksong = await getInfo.getill(tem[0]) if tem else None
+        tem = getInfo.fuzzysongsnick(bksong)
+        bksong = getInfo.getill(tem[0]) if tem else None
     if not bksong:
-        bksong = await getInfo.getill(random.choice(getInfo.illlist))
+        bksong = getInfo.getill(random.choice(getInfo.illlist))
 
     save = await send.getsaveResult(session, 1.0)
     if not save:
@@ -100,7 +101,7 @@ async def _(session: Uninfo, _bksong: Match[str], _kind: Match[Literal[1, 2]]):
 
     stats = save.getStats()
     money = getattr(save.gameProgress, "money", [0])
-    userbackground = await fCompute.getBackground(save.gameuser.background)
+    userbackground = fCompute.getBackground(save.gameuser.background)
 
     if not userbackground:
         await send.sendWithAt(f"ERROR: 未找到[{save.gameuser.background}]的有关信息！")
@@ -118,7 +119,7 @@ async def _(session: Uninfo, _bksong: Match[str], _kind: Match[Literal[1, 2]]):
                 f"{v}{u} "
                 for v, u in zip(money, ["KiB", "MiB", "GiB", "TiB", "PiB"])
                 if v
-            ]
+            ][::-1]
         ),
         "selfIntro": fCompute.convertRichText(save.gameuser.selfIntro),
         "backgroundurl": userbackground,
@@ -289,7 +290,7 @@ async def _(session: Uninfo, _input: Match):
         "C": 0,
         "F": 0,
     }
-    totRank: dict[LevelItem, int] = {
+    totRank: dict[LevelItem | str, int] = {
         "AT": 0,
         "IN": 0,
         "HD": 0,
@@ -305,13 +306,14 @@ async def _(session: Uninfo, _input: Match):
 
     Record = save.gameRecord
 
-    for song, info in getInfo.ori_info.items():
+    for info in getInfo.ori_info.values():
         vis = False
         for lv in info.chart:
-            difficulty = info.chart[lv].difficulty
+            difficulty = Number(info.chart[lv].difficulty)
             if (
                 _range[0] <= difficulty
                 and difficulty <= _range[1]
+                and lv in Level
                 and isask[Level.index(lv)]
             ):
                 totcharts += 1
@@ -321,13 +323,13 @@ async def _(session: Uninfo, _input: Match):
                     vis = True
 
     for id in Record:
-        info = await getInfo.info(getInfo.idgetsong(id) or "", True)
+        info = getInfo.info(getInfo.idgetsong(id) or "")
         record = Record[id]
         vis = False
         for lv in Level:
             if not info or lv not in info.chart:
                 continue
-            difficulty = info.chart[lv].difficulty
+            difficulty = Number(info.chart[lv].difficulty)
             if (
                 _range[0] < difficulty
                 and difficulty <= _range[1]
@@ -355,7 +357,7 @@ async def _(session: Uninfo, _input: Match):
 
                 tothighest += max(rlv.rks, tothighest)
                 totlowest += min(rlv.rks, totlowest)
-    illustration = await fCompute.getBackground(save.gameuser.background)
+    illustration = fCompute.getBackground(save.gameuser.background)
     if not illustration:
         await send.sendWithAt(
             f"ERROR: 未找到[{save.gameuser.background}]背景的有关信息！"
@@ -408,7 +410,7 @@ async def _(session: Uninfo, _input: Match):
             "ChallengeModeRank": save.saveInfo.summary.challengeModeRank % 100,
             "rks": save.saveInfo.summary.rankingScore,
             "PlayerId": fCompute.convertRichText(save.saveInfo.PlayerId),
-            "background": await getInfo.getill(random.choice(getInfo.illlist), "blur"),
+            "background": getInfo.getill(random.choice(getInfo.illlist), "blur"),
         }
         await send.sendWithAt(await getdata.getlvsco(data))
 
@@ -431,12 +433,12 @@ async def _(session: Uninfo, _input: Match):
         if not song:
             logger.warning(f"{id} 曲目无信息", "phi-plugin:user:list")
             continue
-        info = await getInfo.info(song, True)
+        info = getInfo.info(song)
         record = Record[id]
         for lv in Level:
             if not info or lv not in info.chart:
                 continue
-            difficulty = info.chart[lv].difficulty
+            difficulty = Number(info.chart[lv].difficulty)
             if (
                 _range[0] < difficulty
                 and difficulty <= _range[1]
@@ -452,12 +454,12 @@ async def _(session: Uninfo, _input: Match):
                     continue
                 if lv not in record:
                     setattr(record, lv, LevelRecordInfo())
-                record[lv].suggest = save.getSuggest(id, lv, 4, difficulty)  # pyright: ignore[reportOptionalMemberAccess]
+                record[Level.index(lv)].suggest = save.getSuggest(id, lv, 4, difficulty)  # pyright: ignore[reportOptionalMemberAccess]
                 data.append(
                     {
-                        **to_dict(record[lv]),
+                        **to_dict(record[Level.index(lv)]),
                         **to_dict(info),
-                        "illustration": await getInfo.getill(
+                        "illustration": getInfo.getill(
                             getInfo.idgetsong(id) or "", "low"
                         ),
                         "difficulty": difficulty,
@@ -479,7 +481,7 @@ async def _(session: Uninfo, _input: Match):
             {
                 "head_title": "成绩筛选",
                 "song": data,
-                "background": await getInfo.getill(random.choice(getInfo.illlist)),
+                "background": getInfo.getill(random.choice(getInfo.illlist)),
                 "theme": plugin_data.plugin_data.theme,
                 "PlayerId": save.saveInfo.PlayerId,
                 "Rks": round(save.saveInfo.summary.rankingScore, 4),

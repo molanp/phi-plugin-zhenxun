@@ -29,7 +29,7 @@ class guessTips:
         songList = []
         totInfo = getInfo.ori_info
         for i in totInfo:
-            if not await getInfo.getill(i):
+            if not getInfo.getill(i):
                 continue
             songList.append(i)
         if not songList:
@@ -76,8 +76,8 @@ class guessTips:
             "tips": tip,
             "tipNum": 1,  # 已发送提示的数量
             "ill": {
-                "illustration": await getInfo.getill(song),
-                "ans": await getInfo.getill(song),
+                "illustration": getInfo.getill(song),
+                "ans": getInfo.getill(song),
                 "width": w_,
                 "height": h_,
                 "x": x_,
@@ -193,7 +193,7 @@ class guessTips:
         if group_id not in gameList:
             return
         group_id = group_id
-        song = await getInfo.fuzzysongsnick(msg, 0.95)
+        song = getInfo.fuzzysongsnick(msg, 0.95)
         if song and song[0]:
             for i in song:
                 if gameList[group_id]["song"] == i:

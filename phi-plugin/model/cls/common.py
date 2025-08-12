@@ -1,3 +1,4 @@
+import asyncio
 import copy
 from datetime import datetime
 import math
@@ -6,13 +7,10 @@ from typing import Any, Literal, TypedDict
 from nonebot.compat import field_validator
 from pydantic import BaseModel
 
-from zhenxun.services.log import logger
-
 from ...utils import Date
-from ..constNum import LevelItem, LevelNum
+from ..constNum import LevelItem
 from ..fCompute import fCompute
 from ..getInfo import getInfo
-from ..getRksRank import getRksRank
 from .LevelRecordInfo import LevelRecordInfo
 
 
@@ -21,10 +19,10 @@ class LimitObject(TypedDict):
     value: list[float]
 
 
-class B19Result(TypedDict):
-    phi: list[LevelRecordInfo | None]
-    b19_list: list[LevelRecordInfo]
-    com_rks: float
+class B19Result(BaseModel):
+    phi: list[LevelRecordInfo | None] = []
+    b19_list: list[LevelRecordInfo] = []
+    com_rks: float = 0.0
 
 
 def checkLimit(record: LevelRecordInfo, limit: list[LimitObject]):
@@ -225,7 +223,7 @@ class GameProgress(BaseModel):
     """第八章各曲目解锁"""
 
 
-class Save:
+class Save(BaseModel):
     sessionToken: str
     saveInfo: SaveInfo
     saveUrl: str
@@ -233,84 +231,26 @@ class Save:
     """官方存档版本号"""
     gameProgress: GameProgress | None
     gameuser: GameUser
-    gameRecord: dict[
-        str, dict[Literal["EZ", "HD", "IN", "AT", "LEGACY"], "LevelRecordInfo | None"]
-    ]
-    sortedRecord: list["LevelRecordInfo"] = []  # noqa: RUF012
-    B19List: B19Result
-    b19_rks: float
+    gameRecord: dict[str, list["LevelRecordInfo | None"]]
+    sortedRecord: list["LevelRecordInfo"] = []
+    B19List: B19Result | None = None
+    b19_rks: float = 0.0
 
-    async def constructor(self, data: dict[str, Any], ignore: bool = False) -> "Save":
-        """
-        :param data: 原始数据
-        :param ignore: 跳过存档检查
-        """
-        self.sessionToken = data["sessionToken"]
-        if isinstance(data["saveInfo"], list):
-            data["saveInfo"] = data["saveInfo"][0]
-        self.saveInfo = SaveInfo(**data["saveInfo"])
-        self.saveUrl = data["saveUrl"]
-        self.Recordver = data["Recordver"]
-        self.gameProgress = (
-            GameProgress(**data["gameProgress"]) if "gameProgress" in data else None
-        )
-        self.gameuser = GameUser(**(data["gameuser"] if data.get("gameuser") else {}))
-        if self.checkIg():
-            await getRksRank.delUserRks(self.sessionToken)
-            logger.warning(f"封禁tk {self.sessionToken}", "phi-plugin")
-            raise ValueError(
-                "您的存档rks异常，该 token 已禁用，如有异议请联系机器人管理员。\n"
-                f"{self.sessionToken}"
-            )
-        self.gameRecord = {}
-        for id in data.get("gameRecord", {}):
-            self.gameRecord[id] = {}
-            for level, record in data["gameRecord"][id].items():
-                if not record:
-                    self.gameRecord[id][level] = None
-                    continue
+    @field_validator("gameRecord", mode="before")
+    @classmethod
+    def parse_game_record(cls, v):
+        return {
+            song_id: [
+                LevelRecordInfo.init(record, song_id, index)
+                for index, record in enumerate(records)
+            ]
+            for song_id, records in v.items()
+        }
 
-                if not ignore:
-                    if record["acc"] > 100 or record["acc"] < 0:
-                        # Starduster.Quree EZ难度 远古存档BUG特判
-                        if (
-                            id == "Starduster.Quree.0"
-                            and level == 0
-                            and record["acc"] <= 102.57
-                            and record["acc"] >= 0
-                        ):
-                            continue
-                        logger.error(
-                            f"acc > 100 封禁tk {self.sessionToken}", "phi-plugin"
-                        )
-                        await getRksRank.delUserRks(self.sessionToken)
-                        raise ValueError(
-                            "您的存档 acc 异常，该 token 已禁用"
-                            f"，如有异议请联系机器人管理员。\n{self.sessionToken}\n{id}"
-                            f"{level} {record['acc']}"
-                        )
-                    if record["score"] > 1000000 or record["score"] < 0:
-                        logger.error(
-                            f"score > 1000000 封禁tk {self.sessionToken}", "phi-plugin"
-                        )
-                        await getRksRank.delUserRks(self.sessionToken)
-                        raise ValueError(
-                            "您的存档 score 异常，该 token 已禁用，"
-                            f"如有异议请联系机器人管理员。\n{self.sessionToken}\n{id}"
-                            f" {level} {record['score']}"
-                        )
-                self.gameRecord[id][level] = await LevelRecordInfo.init(
-                    record, id, level
-                )
-        return self
-
-    async def init(self):
-        # for id in self.gameRecord:
-        #     for i in self.gameRecord[id]:
-        #         level = int(i)
-        #         if not self.gameRecord[id].get(level):
-        #             continue
-        pass
+    @field_validator("saveInfo", mode="before")
+    @classmethod
+    def parse_list(cls, value: Any) -> SaveInfo:
+        return value[0] if isinstance(value, list) else value
 
     async def checkNoInfo(self) -> list[str]:
         """
@@ -318,11 +258,9 @@ class Save:
         返回无效 ID 列表。
         """
 
-        err = []
-        err.extend(
+        return [
             song_id for song_id in self.gameRecord if not getInfo.idgetsong(song_id)
-        )
-        return err
+        ]
 
     def getRecord(self) -> list[LevelRecordInfo]:
         """
@@ -334,8 +272,8 @@ class Save:
             return self.sortedRecord
         sortedRecord: list[LevelRecordInfo] = []
         for record_list in self.gameRecord.values():
-            for level, record in record_list.items():
-                if level == "LEGACY":
+            for level, record in enumerate(record_list):
+                if level == 4:
                     break
                 if not record or not record.score:
                     continue
@@ -354,8 +292,8 @@ class Save:
         """
         record = []
         for record_list in self.gameRecord.values():
-            for level, r in record_list.items():
-                if level == "LEGACY":
+            for level, r in enumerate(record_list):
+                if level == 4:
                     break
                 if not r:
                     continue
@@ -379,15 +317,18 @@ class Save:
         minuprks = (math.floor(ranking_score * 100) / 100) + 0.005 - ranking_score
         return minuprks + 0.01 if minuprks < 0 else minuprks
 
-    def checkRecord(self) -> str:
+    async def checkRecord(self) -> str:
+        return await asyncio.to_thread(self._checkRecord)
+
+    def _checkRecord(self) -> str:
         """
         检查存档中的成绩是否存在问题。
         :return: 错误信息字符串
         """
-        error = ""
+        errors = []
 
         for song_id, records in self.gameRecord.items():
-            for level, record in records.items():
+            for level, record in enumerate(records):
                 if not record:
                     continue
 
@@ -395,112 +336,44 @@ class Save:
                 score_val = record.score
                 fc = record.fc
                 if acc < 0 or acc > 100 or score_val < 0 or score_val > 1000000:
-                    error += (
+                    errors.append(
                         f"\n{song_id} {level} {fc} {acc:.2f} {score_val} 非法的成绩"
                     )
                 if not fc and (score_val >= 1000000 or acc >= 100):
-                    error += (
+                    errors.append(
                         f"\n{song_id} {level} {fc} {acc:.2f} {score_val} 不符合预期的值"
                     )
                 if (score_val >= 1000000 and acc < 100) or (
                     score_val < 1000000 and acc >= 100
                 ):
-                    error += (
+                    errors.append(
                         f"\n{song_id} {level} {fc} {acc:.2f} {score_val} 成绩不自洽"
                     )
 
-        return error
+        return "".join(errors)
 
-    def getSongsRecord(self, id: str) -> dict[LevelItem, LevelRecordInfo | None]:
+    def getSongsRecord(self, id: str) -> list[LevelRecordInfo | None]:
         """
         :param str id: 曲目id
         """
-        return record_list if (record_list := self.gameRecord.get(id)) else {}
+        return record_list if (record_list := self.gameRecord.get(id)) else []
 
     async def getB19(self, num: int) -> B19Result:
+        return await asyncio.to_thread(self._getB19, num)
+
+    def _getB19(self, num: int) -> B19Result:
         """
         :param num: B几
         """
-        if hasattr(self, "B19List"):
+        if self.B19List:
             return self.B19List
         # 计算得到的rks，仅作为测试使用
         sum_rks: float = 0
         # 满分且 rks 最高的成绩数组
         philist = self.findAccRecord(100)
-        # p3
-        phi: list[LevelRecordInfo | None] = [
-            philist.pop(0) for _ in range(min(3, len(philist)))
-        ]
-        # logger.info(phi, "phi-plugin")
-        if len(phi) < 3:
-            # 在末尾补到3位
-            phi += [None] * (3 - len(phi))
-        # 处理数据
-        for i in range(3):
-            record = phi[i]
-            if not record:
-                continue
+        return self._extracted_from_getBestWithLimit_12(philist, sum_rks, num)
 
-            if record.rks:
-                temp = copy.deepcopy(record)  # 防止污染原数据
-                sum_rks += temp.rks  # 计算 rks
-                temp.illustration = await getInfo.getill(temp.song)
-                temp.suggest = "无法推分"
-                phi[i] = temp
-        # 所有成绩
-        rkslist = self.getRecord()
-        # 真实 rks
-        userrks = self.saveInfo.summary.rankingScore
-        # 考虑屁股肉四舍五入原则的最小上升rks
-        minuprks = math.floor(userrks * 100) / 100 + 0.005 - userrks
-        if minuprks < 0:
-            minuprks += 0.01
-        # bestN 列表
-        b19_list: list[LevelRecordInfo] = []
-        for i in range(min(num, len(rkslist))):
-            record = rkslist[i]
-            # 计算 rks
-            if i < 27:
-                sum_rks += float(record.rks)
-            # 是 Best 几
-            record.num = i + 1
-            # 推分建议
-            if record.rks < 100:
-                base_rks = (
-                    record.rks if i < 26 else rkslist[min(26, len(rkslist) - 1)].rks
-                )
-                suggest = fCompute.suggest(
-                    base_rks + minuprks * 30, record.difficulty, 2
-                )
-                if (
-                    "无" in suggest
-                    and (not phi or (record.rks > getattr(phi[-1], "rks", 0)))
-                    and record.rks < 100
-                ):
-                    suggest = "100.00%"
-                record.suggest = suggest
-            else:
-                record.suggest = "无法推分"
-
-            # 曲绘
-            record.illustration = await getInfo.getill(record.song, "common")
-
-            # b19列表
-            b19_list.append(record)
-        com_rks = sum_rks / 30
-        self.B19List = {
-            "phi": phi,
-            "b19_list": b19_list,
-            "com_rks": com_rks,
-        }
-        self.b19_rks = b19_list[min(len(b19_list) - 1, 26)].rks
-        return {
-            "phi": phi,
-            "b19_list": b19_list,
-            "com_rks": com_rks,
-        }
-
-    async def getBestWithLimit(self, num: int, limit: list[LimitObject]) -> B19Result:
+    def getBestWithLimit(self, num: int, limit: list[LimitObject]) -> B19Result:
         """
         :param num: B几
         :param limit: 限制条件
@@ -515,43 +388,38 @@ class Save:
             if not checkLimit(philist[i], limit):
                 philist.pop(i)
             i -= 1
-        # p3
+        return self._extracted_from_getBestWithLimit_12(philist, sum_rks, num)
+
+    # TODO Rename this here and in `_getB19` and `getBestWithLimit`
+    def _extracted_from_getBestWithLimit_12(
+        self, philist: list[LevelRecordInfo], sum_rks: float, num: int
+    ):
         phi: list[LevelRecordInfo | None] = [
             philist.pop(0) for _ in range(min(3, len(philist)))
         ]
-        # logger.info(phi, "phi-plugin")
         if len(phi) < 3:
-            # 在末尾补到3位
             phi += [None] * (3 - len(phi))
-        # 处理数据
         for i in range(3):
             record = phi[i]
             if not record:
                 continue
             if record.rks:
-                temp = copy.deepcopy(record)  # 防止污染原数据
-                sum_rks += temp.rks  # 计算 rks
-                temp.illustration = await getInfo.getill(temp.song)
+                temp = copy.deepcopy(record)
+                sum_rks += temp.rks
+                temp.illustration = getInfo.getill(temp.song)
                 temp.suggest = "无法推分"
                 phi[i] = temp
-        # 所有成绩
         rkslist = self.getRecord()
-        # 真实 rks
         userrks = self.saveInfo.summary.rankingScore
-        # 考虑屁股肉四舍五入原则的最小上升rks
         minuprks = math.floor(userrks * 100) / 100 + 0.005 - userrks
         if minuprks < 0:
             minuprks += 0.01
-        # bestN 列表
         b19_list: list[LevelRecordInfo] = []
         for i in range(min(num, len(rkslist))):
             record = rkslist[i]
-            # 计算 rks
             if i < 27:
-                sum_rks += float(record.rks)
-            # 是 Best 几
+                sum_rks += record.rks
             record.num = i + 1
-            # 推分建议
             if record.rks < 100:
                 base_rks = (
                     record.rks if i < 26 else rkslist[min(26, len(rkslist) - 1)].rks
@@ -561,40 +429,28 @@ class Save:
                 )
                 if (
                     "无" in suggest
-                    and (not phi or (record.rks > getattr(phi[-1], "rks", 0)))
+                    and (not phi or record.rks > getattr(phi[-1], "rks", 0))
                     and record.rks < 100
                 ):
                     suggest = "100.00%"
                 record.suggest = suggest
             else:
                 record.suggest = "无法推分"
-
-            # 曲绘
-            record.illustration = await getInfo.getill(record.song, "common")
-
-            # b19列表
+            record.illustration = getInfo.getill(record.song, "common")
             b19_list.append(record)
         com_rks = sum_rks / 30
-        self.B19List = {
-            "phi": phi,
-            "b19_list": b19_list,
-            "com_rks": com_rks,
-        }
+        self.B19List = B19Result(phi=phi, b19_list=b19_list, com_rks=com_rks)
         self.b19_rks = b19_list[min(len(b19_list) - 1, 26)].rks
-        return {
-            "phi": phi,
-            "b19_list": b19_list,
-            "com_rks": com_rks,
-        }
+        return self.B19List
 
     def getSuggest(
-        self, id: str | None, rank: LevelItem, count: int, difficulty: float
+        self, id: str | None, rank: LevelItem | str, count: int, difficulty: float
     ) -> str:
         """
         :param id: id
         :param rank: 难度等级
         :param count: 保留位数
-        :param difficulty: difficulty
+        :param difficulty: 定数
         :return: 推分建议
         """
         if not id:
@@ -604,7 +460,11 @@ class Save:
             self.b19_rks = record[26].rks if len(record) > 26 else 0
             acc_record = self.findAccRecord(100, True)
             self.b0_rks = acc_record[0].rks if acc_record else None
-        if id not in self.gameRecord or self.gameRecord[id][rank] is None:
+        if (
+            id not in self.gameRecord
+            or rank not in self.gameRecord[id]
+            or self.gameRecord[id][rank] is None
+        ):
             suggest = fCompute.suggest(
                 max(self.b19_rks, 0) + self.minUpRks() * 30, difficulty, count
             )
@@ -670,11 +530,10 @@ class Save:
                 continue
             record = Record[id]
             for lv in [0, 1, 2, 3]:
-                level = LevelNum[lv]
-                if lv >= len(record) or not record.get(level):
+                if lv >= len(record) or not record[lv]:
                     continue
                 stats[lv].unlock += 1
-                rlv = record[level]
+                rlv = record[lv]
                 assert rlv
                 if rlv.score > 700000:
                     stats[lv].cleared += 1

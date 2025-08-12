@@ -4,7 +4,7 @@ from typing import Any, overload
 from ..models import SstkData
 from .cls.common import Save
 from .cls.saveHistory import saveHistory
-from .getFile import readFile
+from .getFile import FileManager
 from .getRksRank import getRksRank
 from .path import savePath
 
@@ -39,15 +39,11 @@ class getSave:
         if await cls.isBanSessionToken(sstk):
             raise ValueError(f"{sstk} 已被禁用")
 
-        result = await readFile.FileReader(savePath / sstk / "save.json")
+        result = await FileManager.ReadFile(savePath / sstk / "save.json")
         if not result:
             return None
-        tem = await Save().constructor(result)
-        if tem.saveInfo:
-            await tem.init()
-        else:
-            return None
-        return tem
+        tem = Save(**result)
+        return tem if tem.saveInfo else None
 
     @classmethod
     async def getSaveBySessionToken(cls, sstk: str | None) -> Save | None:
@@ -62,15 +58,11 @@ class getSave:
         if await cls.isBanSessionToken(sstk):
             raise ValueError(f"{sstk} 已被禁用")
 
-        result = await readFile.FileReader(savePath / sstk / "save.json")
+        result = await FileManager.ReadFile(savePath / sstk / "save.json")
         if not result:
             return None
-        tem = await Save().constructor(result)
-        if tem.saveInfo:
-            await tem.init()
-        else:
-            return None
-        return tem
+        tem = Save(**result)
+        return tem if tem.saveInfo else None
 
     @classmethod
     async def putSave(cls, user_id: str, data: dict):
@@ -84,7 +76,7 @@ class getSave:
         if await cls.isBanSessionToken(sstk):
             raise ValueError(f"{sstk} 已被禁用")
         await cls.add_user_token(user_id, sstk)
-        return await readFile.SetFile(savePath / sstk / "save.json", data)
+        return await FileManager.SetFile(savePath / sstk / "save.json", data)
 
     @classmethod
     async def getHistory(cls, user_id: str) -> "saveHistory":
@@ -98,7 +90,7 @@ class getSave:
         if await cls.isBanSessionToken(sstk):
             raise ValueError(f"{sstk} 已被禁用")
         result = (
-            (await readFile.FileReader(savePath / sstk / "history.json"))
+            (await FileManager.ReadFile(savePath / sstk / "history.json"))
             if sstk
             else {}
         )
@@ -108,7 +100,7 @@ class getSave:
     async def getHistoryBySessionToken(cls, sstk: str) -> "saveHistory":
         if await cls.isBanSessionToken(sstk):
             raise ValueError(f"{sstk} 已被禁用")
-        result = await readFile.FileReader(savePath / sstk / "history.json")
+        result = await FileManager.ReadFile(savePath / sstk / "history.json")
         return saveHistory(result) if result else saveHistory({})
 
     @classmethod
@@ -122,7 +114,7 @@ class getSave:
         sstk = await SstkData.get_sstk(user_id)
         if sstk is None:
             return None
-        return await readFile.SetFile(savePath / (sstk) / "history.json", data)
+        return await FileManager.SetFile(savePath / (sstk) / "history.json", data)
 
     @overload
     @classmethod
@@ -160,8 +152,8 @@ class getSave:
         if sstk is None:
             return False
         fPath = savePath / sstk
-        await readFile.DelFile(fPath / "save.json")
-        await readFile.DelFile(fPath / "history.json")
+        await FileManager.DelFile(fPath / "save.json")
+        await FileManager.DelFile(fPath / "history.json")
         await getRksRank.delUserRks(sstk)
         shutil.rmtree(fPath, ignore_errors=True)
         await cls.del_user_token(user_id)
@@ -177,8 +169,8 @@ class getSave:
         if sstk is None:
             return False
         fPath = savePath / sstk
-        await readFile.DelFile(fPath / "save.json")
-        await readFile.DelFile(fPath / "history.json")
+        await FileManager.DelFile(fPath / "save.json")
+        await FileManager.DelFile(fPath / "history.json")
         await getRksRank.delUserRks(sstk)
         shutil.rmtree(fPath, ignore_errors=True)
         return True
@@ -208,7 +200,7 @@ class getSave:
 
         :param str|None token: sessionToken
         """
-        return False if token is None else await SstkData.is_ban_sessionToken(token)
+        return await SstkData.is_ban_sessionToken(token) if token else False
 
     @classmethod
     async def getGod(cls):
