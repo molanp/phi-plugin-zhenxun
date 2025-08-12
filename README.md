@@ -20,9 +20,9 @@
 
 当前同步的版本
 
-[9a34bf433c341a2159c6eeb16426cd95d77e6a97](https://github.com/Catrong/phi-plugin/commit/9a34bf433c341a2159c6eeb16426cd95d77e6a97)
+[9d8a6d86ad050382783993536c212a0f11c5a8b8](https://github.com/Catrong/phi-plugin/commit/9d8a6d86ad050382783993536c212a0f11c5a8b8)
 
-[已落后的变更](https://github.com/Catrong/phi-plugin/compare/9a34bf433c341a2159c6eeb16426cd95d77e6a97...main)
+[已落后的变更](https://github.com/Catrong/phi-plugin/compare/9d8a6d86ad050382783993536c212a0f11c5a8b8...main)
 
 </details>
 
@@ -131,6 +131,8 @@
 | :------------------------------------- | :--------------------------------------------------------------------------------------------------- |
 | `/phi backup (back)?`                  | 备份存档文件，+ back 发送该备份文件，自动保存在 /phi-plugin/backup/ 目录下                           |
 | `/phi restore`                         | 从备份中还原，不会丢失已有数据，需要将文件放在 /phi-plugin/backup/ 目录下                            |
+| `/phi(设置别名\|setnick) xxx ---> xxx` | 设置某一歌曲的别名，格式为 原名(或已有别名) ---> 别名（会自动过滤--->两边的空格）                    |
+| `/phi(删除别名\|delnick) xxx`          | 删除某一歌曲的别名                                                                                   |
 | `/phi(强制\|qz)?(更新\|gx)`            | 更新本插件                                                                                           |
 | `/phi repu`                            | 重启 puppeteer                                                                                       |
 | `/phi 下载曲绘\|downill`               | 下载曲绘到本地                                                                                       |
