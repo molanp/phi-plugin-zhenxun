@@ -30,6 +30,10 @@
 >
 > 当前 `Save -> gameRecord: dict[str, list["LevelRecordInfo | None"]]` 的 `LevelRecordInfo` 补全存在严重的性能问题，正在着手解决但希望渺茫
 
+## 🏃‍♀️ 我跑路了
+
+由于无法解决性能问题，我跑路了，等有大佬能解决了再说，不写了不写了(˙꒫˙`)
+
 
 ## 长期寻求合作者共同开发
 

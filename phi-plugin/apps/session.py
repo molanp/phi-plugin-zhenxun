@@ -99,8 +99,7 @@ async def _(bot, session: Uninfo, sstk: Match[str]):
                         f"二维码剩余时间:{QRCodetimeout}",
                         await getQRcode.getQRcode(qrcode),
                     ],
-                    False,
-                    recallTime,
+                    recallTime=recallTime,
                 )
             else:
                 qrCodeMsg = await send.sendWithAt(

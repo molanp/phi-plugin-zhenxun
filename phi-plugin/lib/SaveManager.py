@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from zhenxun.services.log import logger
 from zhenxun.utils.http_utils import AsyncHttpx
 
@@ -78,9 +76,7 @@ class SaveManager:
         for item in array:
             item["summary"] = to_dict(Summary(item["summary"]))
             item.update(await SaveManager.getPlayerId(session))
-            date = datetime.fromisoformat(item["updatedAt"].replace("Z", "+00:00"))
-            item["updatedAt"] = date.strftime("%Y %b.%d %H:%M:%S")
-            if item.get("gameFile"):
+            if "gameFile" in item:
                 item["PlayerId"] = item["nickname"]
                 results.append(item)
         return results

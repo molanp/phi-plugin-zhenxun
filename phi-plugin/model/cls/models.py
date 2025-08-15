@@ -2,21 +2,14 @@ from datetime import datetime
 from typing import Any
 from typing_extensions import Self
 
-from nonebot.compat import field_validator
 from pydantic import BaseModel
 
-from ...utils import Date, to_dict
+from ...utils import to_dict
 
 
 class RecordModel(BaseModel):
     date: datetime
     value: Any
-
-    @field_validator("date")
-    @classmethod
-    def parse_iso(cls, value: Any) -> datetime:
-        """自动将字符串转换为datetime对象"""
-        return Date(value)
 
 
 class LevelData(BaseModel):

@@ -1,3 +1,4 @@
+import asyncio
 import io
 import re
 from typing import Any
@@ -89,13 +90,9 @@ class PhigrosUser:
             raise ValueError("设置saveUrl失败") from e
         return self.saveInfo[0]
 
-    async def buildRecord(self) -> bool:
+    async def buildRecord(self):
         """
-        返回未绑定的信息数组，没有则为false
-
-        (注: 看实际逻辑感觉是构建记录，然后不会有返回，失败直接抛出)
-
-        :return: 是否成功
+        构建记录
         """
         if not hasattr(self, "saveUrl"):
             await self.getSaveInfo()
@@ -103,56 +100,44 @@ class PhigrosUser:
         if self.saveInfo[0].summary.saveVersion == "1":
             raise ValueError("存档版本过低，请更新Phigros！")
 
-        if getattr(self, "saveUrl", None):
-            # 从saveurl获取存档zip
-            try:
-                response = await AsyncHttpx.get(self.saveUrl)
-                if not response:
-                    raise ValueError("获取存档失败")
-                savezip = readZip(response.content)
-
-                # 插件存档版本
-                self.Recordver = 1.0
-
-                # 获取 gameProgress
-                file = ByteReader(await savezip.file("gameProgress"))
-                file.getByte()
-                self.gameProgress = GameProgress(
-                    await SaveManager.decrypt(file.getAllByte())
-                )
-
-                # 获取 gameuser
-                file = ByteReader(await savezip.file("user"))
-                file.getByte()
-                self.gameuser = GameUser(await SaveManager.decrypt(file.getAllByte()))
-
-                # 获取 gamesetting
-                file = ByteReader(await savezip.file("settings"))
-                file.getByte()
-                self.gamesettings = GameSettings(
-                    await SaveManager.decrypt(file.getAllByte())
-                )
-
-                # 获取gameRecord
-                file = ByteReader(await savezip.file("gameRecord"))
-                if file.getByte() != GameRecord.version:
-                    self.gameRecord = {}
-                    logger.info(
-                        "[PhigrosUser]版本号已更新，请更新PhigrosLibrary。",
-                        "phi-plugin",
-                    )
-                    raise ValueError("版本号已更新")
-
-                record = GameRecord(await SaveManager.decrypt(file.getAllByte()))
-                self.gameRecord = record.Record
-                return True
-
-            except Exception as e:
-                if isinstance(e, ValueError):
-                    raise e
-                logger.error("解压zip文件失败", "phi-plugin", e=e)
-                raise RuntimeError("解压zip文件失败") from e
-
-        else:
+        save_url = getattr(self, "saveUrl", None)
+        if not save_url:
             logger.info("获取存档链接失败！", "phi-plugin")
             raise RuntimeError("获取存档链接失败！")
+
+        try:
+            response = await AsyncHttpx.get(save_url)
+            if not response:
+                raise ValueError("获取存档失败")
+            savezip = readZip(response.content)
+            self.Recordver = 1.0
+
+            # 并发读取和解密各文件
+            async def read_and_decrypt(filename):
+                file = ByteReader(await savezip.file(filename))
+                file.getByte()
+                return await SaveManager.decrypt(file.getAllByte())
+
+            files = ["gameProgress", "user", "settings", "gameRecord"]
+            results = await asyncio.gather(*(read_and_decrypt(f) for f in files))
+
+            self.gameProgress = GameProgress(results[0])
+            self.gameuser = GameUser(results[1])
+            self.gamesettings = GameSettings(results[2])
+
+            # gameRecord版本校验
+            file = ByteReader(await savezip.file("gameRecord"))
+            if file.getByte() != GameRecord.version:
+                self.gameRecord = {}
+                logger.info(
+                    "[PhigrosUser]版本号已更新，请更新PhigrosLibrary。",
+                    "phi-plugin",
+                )
+                raise ValueError("版本号已更新")
+
+            record = GameRecord(results[3])
+            self.gameRecord = record.Record
+
+        except Exception as e:
+            logger.error("解压zip文件失败", "phi-plugin", e=e)
+            raise RuntimeError("解压zip文件失败") from e

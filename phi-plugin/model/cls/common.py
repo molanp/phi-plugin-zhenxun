@@ -69,8 +69,8 @@ class statsRecord(BaseModel):
 
 
 class SaveInfoSummary(BaseModel):
-    updatedAt: str
-    """插件获取存档时间 2023 Oct.06 11:46:33"""
+    updatedAt: datetime
+    """插件获取存档时间"""
     saveVersion: int
     """存档版本"""
     challengeModeRank: int
@@ -88,13 +88,19 @@ class SaveInfoSummary(BaseModel):
     phi: tuple[float, float, float, float]
     """AP曲目数量"""
 
+    @field_validator("updatedAt", mode="before")
+    @classmethod
+    def parse_updatedAt(cls, value: Any) -> datetime:
+        """自动将字符串转换为datetime对象"""
+        return Date(value)
+
 
 class SaveInfoGameFile(BaseModel):
     __type: str  # type: ignore
     """文件类型"""
     bucket: str
     """存档bucket"""
-    createdAt: str
+    createdAt: datetime
     """存档创建时间 2023-10-05T07:41:24.503Z"""
     key: str
     """gamesaves/{32}/.save"""
@@ -108,7 +114,7 @@ class SaveInfoGameFile(BaseModel):
     """存档id length:24"""
     provider: str
     """provider"""
-    updatedAt: str
+    updatedAt: datetime
     """存档更新时间 2023-10-05T07:41:24.503Z"""
     url: str
     """https://rak3ffdi.tds1.tapfiles.cn/gamesaves/{32}/.save"""
@@ -120,12 +126,6 @@ class DateField(BaseModel):
     iso: datetime
     """iso格式日期"""
 
-    @field_validator("iso")
-    @classmethod
-    def parse_iso(cls, value: Any) -> datetime:
-        """自动将字符串转换为datetime对象"""
-        return Date(value)
-
 
 class ACLValue(BaseModel):
     read: bool = True
@@ -135,8 +135,8 @@ class ACLValue(BaseModel):
 
 
 class SaveInfo(BaseModel):
-    createdAt: str
-    """账户创建时间 2022-09-03T10:21:48.613Z"""
+    createdAt: datetime
+    """账户创建时间"""
     gameFile: SaveInfoGameFile
     """gameFile 子信息"""
     modifiedAt: DateField
@@ -163,8 +163,8 @@ class SaveInfo(BaseModel):
     """短ID"""
     username: str
     """用户名"""
-    updatedAt: str
-    """存档上传时间 2023 Oct.06 11:46:33"""
+    updatedAt: datetime
+    """存档上传时间"""
     user: dict
     """用户信息"""
     PlayerId: str
@@ -241,7 +241,7 @@ class Save(BaseModel):
     def parse_game_record(cls, v):
         return {
             song_id: [
-                LevelRecordInfo.init(record, song_id, index)
+                LevelRecordInfo.lazy_init(record, song_id, index)
                 for index, record in enumerate(records)
             ]
             for song_id, records in v.items()
